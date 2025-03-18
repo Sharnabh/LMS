@@ -7,6 +7,13 @@
 
 import Foundation
 
+enum issueStatus: String, Codable {
+    case issued = "Issue"
+    case returned = "Returned"
+    case overdue = "Overdue"
+    case lost = "Lost"
+}
+
 struct Admin: Codable, Identifiable {
     var id: UUID
     var name: String
@@ -25,7 +32,7 @@ struct Member: Codable, Identifiable {
     var id: UUID
     var name: String
     var email: String
-    var memberType: String // "Student" or "Faculty"
+//  var memberType: String // "Student" or "Faculty"
     var createdAt: Date
 }
 
@@ -34,18 +41,20 @@ struct Book: Codable, Identifiable {
     var title: String
     var author: String
     var genre: String?
-    var isbn: String
+    //var isbn: String
     var publicationYear: Int
     var totalCopies: Int
     var availableCopies: Int
-    var createdAt: Date
 }
 
-struct Borrowing: Codable, Identifiable {
+struct BookIssue: Codable, Identifiable {
     var id: UUID
     var memberID: UUID
     var bookID: UUID
-    var borrowDate: Date
+    var issueDate: Date
+    var dueDate: Date
     var returnDate: Date?
-    var status: String // "Borrowed" or "Returned"
+    var fine: Double = 0.0
+    var status: issueStatus
 }
+

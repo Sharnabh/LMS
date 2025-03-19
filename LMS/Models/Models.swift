@@ -1,8 +1,8 @@
 //
-//  Models.swift
-//  LMS
+//  DataModels.swift
+//  SampleLMS
 //
-//  Created by Sharnabh on 17/03/25.
+//  Created by Madhav Saxena on 18/03/25.
 //
 
 import Foundation

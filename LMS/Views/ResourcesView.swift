@@ -221,8 +221,7 @@ struct AddBookView: View {
     private func addBook() {
         Task {
             do {
-                // Now we pass a single ISBN instead of an array
-                try await BookService.shared.addBook(
+                let result = try await BookService.shared.addBook(
                     title: title,
                     author: author,
                     genre: genre,
@@ -230,8 +229,13 @@ struct AddBookView: View {
                     publicationYear: Int(publicationYear) ?? 0,
                     totalCopies: Int(totalCopies) ?? 0
                 )
+                
                 isSuccess = true
-                alertMessage = "Book added successfully!"
+                if result.isNewBook {
+                    alertMessage = "New book added successfully!"
+                } else {
+                    alertMessage = "Book already exists! Updated total copies from \(result.book.totalCopies - Int(totalCopies)!) to \(result.book.totalCopies)"
+                }
                 showAlert = true
             } catch {
                 isSuccess = false
@@ -259,10 +263,14 @@ struct CSVUploadView: View {
                     .padding()
                 
                 VStack(alignment: .leading, spacing: 10) {
+                    Text("Required CSV Format:")
+                        .font(.headline)
+                        .padding(.bottom, 5)
+                    
                     Text("• title")
                     Text("• author")
                     Text("• genre")
-                    Text("• ISBN (semicolon-separated for multiple)")
+                    Text("• ISBN")
                     Text("• publicationYear")
                     Text("• totalCopies")
                 }
@@ -274,17 +282,17 @@ struct CSVUploadView: View {
                 Button(action: {
                     showFileImporter = true
                 }) {
-                    if isLoading {
-                        ProgressView()
-                    } else {
+                    HStack {
+                        Image(systemName: "doc.badge.plus")
+                            .font(.title2)
                         Text("Select CSV File")
                             .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.purple)
-                            .cornerRadius(12)
                     }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(isLoading ? Color.gray : Color.purple)
+                    .cornerRadius(12)
                 }
                 .disabled(isLoading)
                 .padding(.horizontal, 30)
@@ -319,6 +327,14 @@ struct CSVUploadView: View {
                     }
                 )
             }
+            .overlay {
+                if isLoading {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.black.opacity(0.2))
+                }
+            }
         }
     }
     
@@ -332,9 +348,13 @@ struct CSVUploadView: View {
             }
             
             let books = try BookService.shared.parseCSVFile(url: url)
-            try await BookService.shared.addBooksFromCSV(books: books)
+            let importResult = try await BookService.shared.addBooksFromCSV(books: books)
             
-            alertMessage = "Successfully imported \(books.count) books!"
+            alertMessage = """
+                Import completed successfully!
+                New books added: \(importResult.newBooks)
+                Existing books updated: \(importResult.updatedBooks)
+                """
         } catch {
             alertMessage = "Error importing books: \(error.localizedDescription)"
         }

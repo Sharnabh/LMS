@@ -10,9 +10,71 @@ class BookService {
         self.supabase = SupabaseConfig.client
     }
     
-    // Add a single book
-    func addBook(title: String, author: String, genre: String, ISBN: String, publicationYear: Int, totalCopies: Int) async throws {
-        let book = Book(
+    // Check if a book already exists
+    private func findExistingBook(title: String, author: String, genre: String, ISBN: String, publicationYear: Int) async throws -> Book? {
+        let response = try await supabase
+            .from("Books")
+            .select()
+            .eq("title", value: title)
+            .eq("author", value: author)
+            .eq("genre", value: genre)
+            .eq("ISBN", value: ISBN)
+            .eq("publicationYear", value: publicationYear)
+            .execute()
+        
+        let decoder = JSONDecoder()
+        let books = try decoder.decode([Book].self, from: response.data)
+        return books.first
+    }
+    
+    // Update existing book's copies
+    private func updateBookCopies(id: UUID, totalCopies: Int, availableCopies: Int) async throws {
+        try await supabase
+            .from("Books")
+            .update([
+                "totalCopies": totalCopies,
+                "availableCopies": availableCopies
+            ])
+            .eq("id", value: id)
+            .execute()
+    }
+    
+    // Add a single book with duplicate check
+    func addBook(title: String, author: String, genre: String, ISBN: String, publicationYear: Int, totalCopies: Int) async throws -> (isNewBook: Bool, book: Book) {
+        // Check for existing book
+        if let existingBook = try await findExistingBook(
+            title: title,
+            author: author,
+            genre: genre,
+            ISBN: ISBN,
+            publicationYear: publicationYear
+        ) {
+            // Update copies of existing book
+            let newTotalCopies = existingBook.totalCopies + totalCopies
+            let newAvailableCopies = existingBook.availableCopies + totalCopies
+            
+            try await updateBookCopies(
+                id: existingBook.id,
+                totalCopies: newTotalCopies,
+                availableCopies: newAvailableCopies
+            )
+            
+            // Return updated book information
+            let updatedBook = Book(
+                id: existingBook.id,
+                title: existingBook.title,
+                author: existingBook.author,
+                genre: existingBook.genre,
+                ISBN: existingBook.ISBN,
+                publicationYear: existingBook.publicationYear,
+                totalCopies: newTotalCopies,
+                availableCopies: newAvailableCopies
+            )
+            return (false, updatedBook)
+        }
+        
+        // If no existing book found, add new book
+        let newBook = Book(
             id: UUID(),
             title: title,
             author: author,
@@ -25,14 +87,19 @@ class BookService {
         
         try await supabase
             .from("Books")
-            .insert(book)
+            .insert(newBook)
             .execute()
+        
+        return (true, newBook)
     }
     
-    // Add multiple books from CSV
-    func addBooksFromCSV(books: [Book]) async throws {
+    // Add multiple books from CSV with duplicate check
+    func addBooksFromCSV(books: [Book]) async throws -> (newBooks: Int, updatedBooks: Int) {
+        var newBooksCount = 0
+        var updatedBooksCount = 0
+        
         for book in books {
-            try await addBook(
+            let result = try await addBook(
                 title: book.title,
                 author: book.author,
                 genre: book.genre,
@@ -40,7 +107,15 @@ class BookService {
                 publicationYear: book.publicationYear,
                 totalCopies: book.totalCopies
             )
+            
+            if result.isNewBook {
+                newBooksCount += 1
+            } else {
+                updatedBooksCount += 1
+            }
         }
+        
+        return (newBooksCount, updatedBooksCount)
     }
     
     // Parse CSV file

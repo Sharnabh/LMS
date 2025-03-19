@@ -12,6 +12,7 @@
 		CE8AE2C62D8890A4001A93FF /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = CE8AE2C52D8890A4001A93FF /* PostgREST */; };
 		CE8AE2C82D8890A4001A93FF /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = CE8AE2C72D8890A4001A93FF /* Realtime */; };
 		CE8AE2CA2D8890A4001A93FF /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = CE8AE2C92D8890A4001A93FF /* Storage */; };
+		CECF3DE02D8AC354002CB6BA /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = CECF3DDF2D8AC354002CB6BA /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 			files = (
 				CE8AE2C62D8890A4001A93FF /* PostgREST in Frameworks */,
 				CE8AE2C42D8890A4001A93FF /* Functions in Frameworks */,
+				CECF3DE02D8AC354002CB6BA /* Supabase in Frameworks */,
 				CE8AE2C22D8890A4001A93FF /* Auth in Frameworks */,
 				CE8AE2CA2D8890A4001A93FF /* Storage in Frameworks */,
 				CE8AE2C82D8890A4001A93FF /* Realtime in Frameworks */,
@@ -46,6 +48,7 @@
 			isa = PBXGroup;
 			children = (
 				CE8AE2AC2D888E2C001A93FF /* LMS */,
+				CECF3DDE2D8AC354002CB6BA /* Frameworks */,
 				CE8AE2AB2D888E2C001A93FF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -56,6 +59,13 @@
 				CE8AE2AA2D888E2C001A93FF /* LMS.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CECF3DDE2D8AC354002CB6BA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -83,6 +93,7 @@
 				CE8AE2C52D8890A4001A93FF /* PostgREST */,
 				CE8AE2C72D8890A4001A93FF /* Realtime */,
 				CE8AE2C92D8890A4001A93FF /* Storage */,
+				CECF3DDF2D8AC354002CB6BA /* Supabase */,
 			);
 			productName = LMS;
 			productReference = CE8AE2AA2D888E2C001A93FF /* LMS.app */;
@@ -382,6 +393,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = CE8AE2C02D8890A4001A93FF /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Storage;
+		};
+		CECF3DDF2D8AC354002CB6BA /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CE8AE2C02D8890A4001A93FF /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

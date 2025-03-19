@@ -16,6 +16,7 @@ struct AdminLoginView: View {
     @State private var showPasswordReset = false
     
     // Sample admin credentials (in a real app, these would be stored securely)
+    // TODO: Replace with secure authentication system
     private let validAdminID = "ADMIN001"
     private let validPassword = "password123"
     

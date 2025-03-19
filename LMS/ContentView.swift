@@ -10,15 +10,15 @@ import SwiftUI
 struct ContentView: View {
     @State private var selectedRole: UserRole?
     @State private var showMainApp = false
-    @State private var showAdminLogin = false
     
     var body: some View {
-        if showMainApp {
-            MainAppView(userRole: selectedRole ?? .member)
-        } else if showAdminLogin {
-            AdminLoginView(showMainApp: $showMainApp)
-        } else {
-            OnboardingView(selectedRole: $selectedRole, showMainApp: $showMainApp, showAdminLogin: $showAdminLogin)
+        NavigationView {
+            if showMainApp {
+                MainAppView(userRole: selectedRole ?? .member)
+            } else {
+                OnboardingView(selectedRole: $selectedRole,
+                              showMainApp: $showMainApp)
+            }
         }
     }
 }
@@ -26,7 +26,6 @@ struct ContentView: View {
 struct OnboardingView: View {
     @Binding var selectedRole: UserRole?
     @Binding var showMainApp: Bool
-    @Binding var showAdminLogin: Bool
     
     var body: some View {
         VStack(spacing: 30) {
@@ -84,27 +83,46 @@ struct OnboardingView: View {
             
             Spacer()
             
-            // Continue button
-            Button(action: {
-                withAnimation {
-                    if selectedRole == .admin {
-                        showAdminLogin = true
-                    } else {
-                        showMainApp = true
+            // Combined continue button
+            Group {
+                if selectedRole == .member {
+                    NavigationLink(destination: {
+                        MemberAuthView(showMainApp: $showMainApp)
+                    }) {
+                        Text("Continue")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(minWidth: 120, maxWidth: 280)
+                            .padding(.vertical, 16)
+                            .padding(.horizontal, 24)
+                            .background(selectedRole != nil ? Color.blue : Color.gray)
+                            .cornerRadius(12)
+                    }
+                } else {
+                    NavigationLink(destination: {
+                        if selectedRole == .admin {
+                            AdminLoginView(showMainApp: $showMainApp)
+                        } else if selectedRole == .librarian {
+                            LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $selectedRole)
+                        } else {
+                            EmptyView()
+                        }
+                    }) {
+                        Text("Continue")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(minWidth: 120, maxWidth: 280)
+                            .padding(.vertical, 16)
+                            .padding(.horizontal, 24)
+                            .background(selectedRole != nil ? Color.blue : Color.gray)
+                            .cornerRadius(12)
                     }
                 }
-            }) {
-                Text("Continue")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(selectedRole != nil ? Color.blue : Color.gray)
-                    .cornerRadius(12)
             }
             .disabled(selectedRole == nil)
             .padding(.horizontal, 30)
             .padding(.bottom, 40)
+            
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
@@ -192,6 +210,7 @@ enum UserRole: String {
     case member = "Member"
 }
 
+// The rest of the file remains the same
 #Preview {
     ContentView()
 }

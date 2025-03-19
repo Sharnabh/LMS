@@ -104,7 +104,7 @@ struct AdminLoginView: View {
             }
             .sheet(isPresented: $showPasswordReset) {
                 if let adminId = currentAdminId {
-                    PasswordResetView(showMainApp: $showMainApp, 
+                    PasswordResetView(showMainApp: $showMainApp,
                                       showOnboarding: $showOnboarding, adminId: adminId)
                 }
             }
@@ -304,3 +304,4 @@ struct PasswordResetView: View {
 #Preview {
     AdminLoginView(showMainApp: .constant(false))
 }
+

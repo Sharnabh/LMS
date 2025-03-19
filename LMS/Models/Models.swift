@@ -39,15 +39,19 @@ struct Member: Codable, Identifiable {
     var createdAt: Date
 }
 
-struct Book: Codable, Identifiable {
-    var id: UUID
-    var title: String
-    var author: String
-    var genre: String?
-    var isbn: [String]
-    var publicationYear: Int
-    var totalCopies: Int
-    var availableCopies: Int
+struct Book: Codable {
+    let id: UUID
+    let title: String
+    let author: String
+    let genre: String
+    let ISBN: String  // Changed from [String] to String
+    let publicationYear: Int
+    let totalCopies: Int
+    let availableCopies: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case id, title, author, genre, ISBN, publicationYear, totalCopies, availableCopies
+    }
 }
 
 struct BookIssue: Codable, Identifiable {

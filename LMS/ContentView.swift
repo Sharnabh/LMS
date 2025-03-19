@@ -173,7 +173,7 @@ struct MainAppView: View {
                     Label("Patrons", systemImage: "person.2")
                 }
             
-            Text("Resources")
+            ResourcesView()
                 .tabItem {
                     Label("Resources", systemImage: "folder")
                 }

@@ -186,14 +186,19 @@ struct MainAppView: View {
                     Label("Home", systemImage: "house")
                 }
             
-            Text("Library")
+            Text("Patrons")
                 .tabItem {
-                    Label("Library", systemImage: "books.vertical")
+                    Label("Patrons", systemImage: "person.2")
                 }
             
-            Text("Profile")
+            Text("Resources")
                 .tabItem {
-                    Label("Profile", systemImage: "person")
+                    Label("Resources", systemImage: "folder")
+                }
+            
+            Text("Policies")
+                .tabItem {
+                    Label("Policies", systemImage: "book.pages")
                 }
         }
     }

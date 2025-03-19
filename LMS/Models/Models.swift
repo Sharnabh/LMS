@@ -15,11 +15,21 @@ enum issueStatus: String, Codable {
 }
 
 struct Admin: Codable, Identifiable {
-    var id: UUID
-    var name: String
-    var email: String
-    var password: String
-    var createdAt: Date
+    let id: String
+    let name: String
+    let email: String
+    let password: String
+    let is_first_login: Bool
+    let created_at: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case email
+        case password
+        case is_first_login
+        case created_at
+    }
 }
 
 struct Librarian: Codable, Identifiable {

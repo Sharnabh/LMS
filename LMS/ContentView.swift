@@ -10,15 +10,15 @@ import SwiftUI
 struct ContentView: View {
     @State private var selectedRole: UserRole?
     @State private var showMainApp = false
-    @State private var showAdminLogin = false
     
     var body: some View {
-        if showMainApp {
-            MainAppView(userRole: selectedRole ?? .member)
-        } else if showAdminLogin {
-            AdminLoginView(showMainApp: $showMainApp)
-        } else {
-            OnboardingView(selectedRole: $selectedRole, showMainApp: $showMainApp, showAdminLogin: $showAdminLogin)
+        NavigationView {
+            if showMainApp {
+                MainAppView(userRole: selectedRole ?? .member)
+            } else {
+                OnboardingView(selectedRole: $selectedRole, 
+                              showMainApp: $showMainApp)
+            }
         }
     }
 }
@@ -26,7 +26,6 @@ struct ContentView: View {
 struct OnboardingView: View {
     @Binding var selectedRole: UserRole?
     @Binding var showMainApp: Bool
-    @Binding var showAdminLogin: Bool
     
     var body: some View {
         VStack(spacing: 30) {
@@ -85,13 +84,30 @@ struct OnboardingView: View {
             Spacer()
             
             // Continue button
+            NavigationLink(destination: {
+                if selectedRole == .admin {
+                    AdminLoginView(showMainApp: $showMainApp)
+                } else if selectedRole == .librarian {
+                    LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $selectedRole)
+                } else {
+                    EmptyView()
+                }
+            }, label: {
+                Text("Continue")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(selectedRole != nil ? Color.blue : Color.gray)
+                    .cornerRadius(12)
+            })
+            .disabled(selectedRole == nil)
+            .opacity(selectedRole == .member ? 0 : 1)
+            
+            // Show main app directly for members
             Button(action: {
-                withAnimation {
-                    if selectedRole == .admin {
-                        showAdminLogin = true
-                    } else {
-                        showMainApp = true
-                    }
+                if selectedRole == .member {
+                    showMainApp = true
                 }
             }) {
                 Text("Continue")
@@ -103,6 +119,7 @@ struct OnboardingView: View {
                     .cornerRadius(12)
             }
             .disabled(selectedRole == nil)
+            .opacity(selectedRole == .member ? 1 : 0)
             .padding(.horizontal, 30)
             .padding(.bottom, 40)
         }
@@ -180,7 +197,6 @@ struct MainAppView: View {
         }
     }
 }
-
 enum UserRole: String {
     case admin = "Admin"
     case librarian = "Librarian"

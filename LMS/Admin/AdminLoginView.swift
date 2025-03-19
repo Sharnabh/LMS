@@ -104,7 +104,8 @@ struct AdminLoginView: View {
             }
             .sheet(isPresented: $showPasswordReset) {
                 if let adminId = currentAdminId {
-                    PasswordResetView(showMainApp: $showMainApp, adminId: adminId)
+                    PasswordResetView(showMainApp: $showMainApp, 
+                                      showOnboarding: $showOnboarding, adminId: adminId)
                 }
             }
             .fullScreenCover(isPresented: $showOnboarding) {
@@ -150,10 +151,10 @@ struct PasswordResetView: View {
     @State private var confirmPassword = ""
     @State private var showAlert = false
     @State private var alertMessage = ""
-    @State private var showOnboarding = false
     @State private var isLoading = false
     @Environment(\.dismiss) private var dismiss
     @Binding var showMainApp: Bool
+    @Binding var showOnboarding: Bool
     let adminId: String
     
     private let dataController = SupabaseDataController()
@@ -277,9 +278,6 @@ struct PasswordResetView: View {
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("Reset Password")
             .navigationBarTitleDisplayMode(.large)
-            .fullScreenCover(isPresented: $showOnboarding) {
-                AdminOnboardingView()
-            }
         }
     }
     

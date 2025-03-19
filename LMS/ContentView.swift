@@ -16,7 +16,7 @@ struct ContentView: View {
             if showMainApp {
                 MainAppView(userRole: selectedRole ?? .member)
             } else {
-                OnboardingView(selectedRole: $selectedRole, 
+                OnboardingView(selectedRole: $selectedRole,
                               showMainApp: $showMainApp)
             }
         }
@@ -83,45 +83,46 @@ struct OnboardingView: View {
             
             Spacer()
             
-            // Continue button
-            NavigationLink(destination: {
-                if selectedRole == .admin {
-                    AdminLoginView(showMainApp: $showMainApp)
-                } else if selectedRole == .librarian {
-                    LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $selectedRole)
-                } else {
-                    EmptyView()
-                }
-            }, label: {
-                Text("Continue")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(selectedRole != nil ? Color.blue : Color.gray)
-                    .cornerRadius(12)
-            })
-            .disabled(selectedRole == nil)
-            .opacity(selectedRole == .member ? 0 : 1)
-            
-            // Show main app directly for members
-            Button(action: {
+            // Combined continue button
+            Group {
                 if selectedRole == .member {
-                    showMainApp = true
+                    NavigationLink(destination: {
+                        MemberAuthView(showMainApp: $showMainApp)
+                    }) {
+                        Text("Continue")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(minWidth: 120, maxWidth: 280)
+                            .padding(.vertical, 16)
+                            .padding(.horizontal, 24)
+                            .background(selectedRole != nil ? Color.blue : Color.gray)
+                            .cornerRadius(12)
+                    }
+                } else {
+                    NavigationLink(destination: {
+                        if selectedRole == .admin {
+                            AdminLoginView(showMainApp: $showMainApp)
+                        } else if selectedRole == .librarian {
+                            LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $selectedRole)
+                        } else {
+                            EmptyView()
+                        }
+                    }) {
+                        Text("Continue")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(minWidth: 120, maxWidth: 280)
+                            .padding(.vertical, 16)
+                            .padding(.horizontal, 24)
+                            .background(selectedRole != nil ? Color.blue : Color.gray)
+                            .cornerRadius(12)
+                    }
                 }
-            }) {
-                Text("Continue")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(selectedRole != nil ? Color.blue : Color.gray)
-                    .cornerRadius(12)
             }
             .disabled(selectedRole == nil)
-            .opacity(selectedRole == .member ? 1 : 0)
             .padding(.horizontal, 30)
             .padding(.bottom, 40)
+            
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
@@ -197,12 +198,14 @@ struct MainAppView: View {
         }
     }
 }
+
 enum UserRole: String {
     case admin = "Admin"
     case librarian = "Librarian"
     case member = "Member"
 }
 
+// The rest of the file remains the same
 #Preview {
     ContentView()
 }

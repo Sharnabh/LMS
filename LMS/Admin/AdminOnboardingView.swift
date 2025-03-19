@@ -1,9 +1,9 @@
 import SwiftUI
+import MessageUI
 
 struct AdminOnboardingView: View {
     @State private var librarianName = ""
     @State private var librarianEmail = ""
-    @State private var librarianID = ""
     @State private var bookTitle = ""
     @State private var bookAuthor = ""
     @State private var bookISBN = ""
@@ -12,7 +12,18 @@ struct AdminOnboardingView: View {
     @State private var alertMessage = ""
     @State private var showLibrarianForm = false
     @State private var showBookForm = false
+    @State private var isLoading = false
+    @State private var showMailComposer = false
+    @State private var mailData: MailData?
     @Environment(\.dismiss) private var dismiss
+    
+    private let dataController = SupabaseDataController()
+    
+    struct MailData {
+        let recipient: String
+        let subject: String
+        let body: String
+    }
     
     var body: some View {
         ScrollView {
@@ -120,48 +131,29 @@ struct AdminOnboardingView: View {
                                         .keyboardType(.emailAddress)
                                         .autocapitalization(.none)
                                 }
-                                
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Librarian ID")
-                                        .font(.headline)
-                                        .foregroundColor(.secondary)
-                                    
-                                    TextField("Enter unique librarian ID", text: $librarianID)
-                                        .padding()
-                                        .background(Color(.secondarySystemBackground))
-                                        .cornerRadius(10)
-                                }
                             }
                             .padding(.horizontal)
                             
                             // Add Librarian Button
                             Button(action: {
-                                // In a real app, you would save the librarian data
-                                if librarianName.isEmpty || librarianEmail.isEmpty || librarianID.isEmpty {
-                                    alertMessage = "Please fill in all librarian details."
-                                    showAlert = true
-                                } else {
-                                    alertMessage = "Librarian added successfully!"
-                                    showAlert = true
-                                    // Clear fields after successful addition
-                                    librarianName = ""
-                                    librarianEmail = ""
-                                    librarianID = ""
-                                    
-                                    // Return to card view
-                                    withAnimation {
-                                        showLibrarianForm = false
-                                    }
+                                Task {
+                                    await addLibrarian()
                                 }
                             }) {
-                                Text("Add Librarian")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.purple)
-                                    .cornerRadius(12)
+                                if isLoading {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                } else {
+                                    Text("Add Librarian")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(Color.purple)
+                                        .cornerRadius(12)
+                                }
                             }
+                            .disabled(isLoading)
                             .padding(.horizontal)
                         }
                     }
@@ -343,6 +335,105 @@ struct AdminOnboardingView: View {
                 message: Text(alertMessage),
                 dismissButton: .default(Text("OK"))
             )
+        }
+        .sheet(isPresented: $showMailComposer) {
+            if let mailData = mailData {
+                MailComposeView(
+                    recipient: mailData.recipient,
+                    subject: mailData.subject,
+                    body: mailData.body,
+                    isShowing: $showMailComposer,
+                    result: { result in
+                        switch result {
+                        case .sent:
+                            alertMessage = "Welcome email sent successfully!"
+                        case .saved:
+                            alertMessage = "Email saved as draft"
+                        case .failed:
+                            alertMessage = "Failed to send email"
+                        case .cancelled:
+                            alertMessage = "Email cancelled"
+                        @unknown default:
+                            alertMessage = "Unknown email result"
+                        }
+                        showAlert = true
+                    }
+                )
+            }
+        }
+    }
+    
+    private func addLibrarian() async {
+        if librarianName.isEmpty || librarianEmail.isEmpty {
+            alertMessage = "Please fill in all librarian details."
+            showAlert = true
+            return
+        }
+        
+        isLoading = true
+        
+        do {
+            _ = try await dataController.createLibrarian(
+                name: librarianName,
+                email: librarianEmail
+            )
+            
+            DispatchQueue.main.async {
+                isLoading = false
+                alertMessage = "Librarian added successfully! A welcome email has been sent with login credentials."
+                showAlert = true
+                
+                // Clear fields after successful addition
+                librarianName = ""
+                librarianEmail = ""
+                
+                // Return to card view
+                withAnimation {
+                    showLibrarianForm = false
+                }
+            }
+        } catch {
+            DispatchQueue.main.async {
+                isLoading = false
+                alertMessage = "Error adding librarian: \(error.localizedDescription)"
+                showAlert = true
+            }
+        }
+    }
+}
+
+struct MailComposeView: UIViewControllerRepresentable {
+    let recipient: String
+    let subject: String
+    let body: String
+    @Binding var isShowing: Bool
+    let result: (MFMailComposeResult) -> Void
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    func makeUIViewController(context: Context) -> MFMailComposeViewController {
+        let vc = MFMailComposeViewController()
+        vc.mailComposeDelegate = context.coordinator
+        vc.setToRecipients([recipient])
+        vc.setSubject(subject)
+        vc.setMessageBody(body, isHTML: false)
+        return vc
+    }
+    
+    func updateUIViewController(_ uiViewController: MFMailComposeViewController, context: Context) {}
+    
+    class Coordinator: NSObject, MFMailComposeViewControllerDelegate {
+        var parent: MailComposeView
+        
+        init(_ parent: MailComposeView) {
+            self.parent = parent
+        }
+        
+        func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
+            parent.isShowing = false
+            parent.result(result)
         }
     }
 }

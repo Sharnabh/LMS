@@ -636,22 +636,19 @@ struct CSVImportView: View {
 }
 
 struct AdminOnboardingView: View {
-    @State private var showAlert = false
-    @State private var alertMessage = ""
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var dataController = SupabaseDataController()
     @State private var showLibrarianForm = false
     @State private var showBookForm = false
+    @State private var showManualForm = false
+    @State private var showCSVImport = false
+    @State private var showAlert = false
+    @State private var alertMessage = ""
     @State private var isLoading = false
     @State private var showMailComposer = false
-    @State private var mailData: MailData?
-    @Environment(\.dismiss) private var dismiss
-    
-    private let dataController = SupabaseDataController()
-    
-    struct MailData {
-        let recipient: String
-        let subject: String
-        let body: String
-    }
+    @State private var mailData: (recipient: String, subject: String, body: String)?
+    @State private var librarianName = ""
+    @State private var librarianEmail = ""
     
     var body: some View {
         ScrollView {
@@ -677,7 +674,9 @@ struct AdminOnboardingView: View {
                 // Librarian Card
                 VStack {
                     Button(action: {
-                        showLibrarianForm = true
+                        withAnimation(.spring()) {
+                            showLibrarianForm.toggle()
+                        }
                     }) {
                         HStack {
                             Image(systemName: "person.badge.plus")
@@ -689,39 +688,47 @@ struct AdminOnboardingView: View {
                                     .font(.title2)
                                     .fontWeight(.bold)
                                 
-                                Spacer()
+                                Text("Add a new librarian to your library")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
                             }
-                            .padding(.horizontal)
                             
-                            // Librarian Form
-                            VStack(spacing: 15) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Full Name")
-                                        .font(.headline)
-                                        .foregroundColor(.secondary)
-                                    
-                                    TextField("Enter librarian's full name", text: $librarianName)
-                                        .padding()
-                                        .background(Color(.secondarySystemBackground))
-                                        .cornerRadius(10)
-                                }
+                            Spacer()
+                            
+                            Image(systemName: showLibrarianForm ? "chevron.up" : "chevron.down")
+                                .foregroundColor(.purple)
+                        }
+                        .padding(.vertical, 20)
+                        .padding(.horizontal)
+                        .frame(maxWidth: .infinity)
+                    }
+                    
+                    if showLibrarianForm {
+                        VStack(spacing: 15) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Full Name")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
                                 
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Email")
-                                        .font(.headline)
-                                        .foregroundColor(.secondary)
-                                    
-                                    TextField("Enter librarian's email", text: $librarianEmail)
-                                        .padding()
-                                        .background(Color(.secondarySystemBackground))
-                                        .cornerRadius(10)
-                                        .keyboardType(.emailAddress)
-                                        .autocapitalization(.none)
-                                }
+                                TextField("Enter librarian's full name", text: $librarianName)
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(10)
                             }
-                            .padding(.horizontal)
                             
-                            // Add Librarian Button
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Email")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                
+                                TextField("Enter librarian's email", text: $librarianEmail)
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(10)
+                                    .keyboardType(.emailAddress)
+                                    .autocapitalization(.none)
+                            }
+                            
                             Button(action: {
                                 Task {
                                     await addLibrarian()
@@ -741,14 +748,11 @@ struct AdminOnboardingView: View {
                                 }
                             }
                             .disabled(isLoading)
-                            .padding(.horizontal)
                         }
-                        .padding(.vertical, 20)
                         .padding(.horizontal)
-                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, 20)
                     }
                 }
-                .frame(height: 100)
                 .background(Color.white)
                 .cornerRadius(16)
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
@@ -757,7 +761,9 @@ struct AdminOnboardingView: View {
                 // Books Card
                 VStack {
                     Button(action: {
-                        showBookForm = true
+                        withAnimation(.spring()) {
+                            showBookForm.toggle()
+                        }
                     }) {
                         HStack {
                             Image(systemName: "book.fill")
@@ -777,15 +783,64 @@ struct AdminOnboardingView: View {
                             
                             Spacer()
                             
-                            Image(systemName: "chevron.right")
+                            Image(systemName: showBookForm ? "chevron.up" : "chevron.down")
                                 .foregroundColor(.purple)
                         }
                         .padding(.vertical, 20)
                         .padding(.horizontal)
                         .frame(maxWidth: .infinity)
                     }
+                    
+                    if showBookForm {
+                        VStack(spacing: 20) {
+                            Button(action: {
+                                showManualForm = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "square.and.pencil")
+                                        .font(.system(size: 30))
+                                        .foregroundColor(.purple)
+                                    
+                                    Text("Add Manually")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.purple)
+                                }
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                            }
+                            
+                            Button(action: {
+                                showCSVImport = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "doc.text.fill")
+                                        .font(.system(size: 30))
+                                        .foregroundColor(.purple)
+                                    
+                                    Text("Import from CSV")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.purple)
+                                }
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
+                    }
                 }
-                .frame(height: 100)
                 .background(Color.white)
                 .cornerRadius(16)
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
@@ -839,6 +894,12 @@ struct AdminOnboardingView: View {
                     }
                 )
             }
+        }
+        .sheet(isPresented: $showManualForm) {
+            BookFormView()
+        }
+        .sheet(isPresented: $showCSVImport) {
+            CSVImportView()
         }
     }
     

@@ -1,4 +1,5 @@
 import SwiftUI
+import MessageUI
 
 struct LibrarianFormView: View {
     @Environment(\.dismiss) private var dismiss
@@ -699,12 +700,21 @@ struct CSVImportView: View {
 }
 
 struct AdminOnboardingView: View {
-    @State private var showAlert = false
-    @State private var alertMessage = ""
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var dataController = SupabaseDataController()
     @State private var showLibrarianForm = false
     @State private var showBookForm = false
     @State private var showMainApp = false
     @Environment(\.dismiss) private var dismiss
+    @State private var showManualForm = false
+    @State private var showCSVImport = false
+    @State private var showAlert = false
+    @State private var alertMessage = ""
+    @State private var isLoading = false
+    @State private var showMailComposer = false
+    @State private var mailData: (recipient: String, subject: String, body: String)?
+    @State private var librarianName = ""
+    @State private var librarianEmail = ""
     
     var body: some View {
         ScrollView {
@@ -730,7 +740,9 @@ struct AdminOnboardingView: View {
                 // Librarian Card
                 VStack {
                     Button(action: {
-                        showLibrarianForm = true
+                        withAnimation(.spring()) {
+                            showLibrarianForm.toggle()
+                        }
                     }) {
                         HStack {
                             Image(systemName: "person.badge.plus")
@@ -741,24 +753,72 @@ struct AdminOnboardingView: View {
                                 Text("Add Librarian")
                                     .font(.title2)
                                     .fontWeight(.bold)
-                                    .foregroundColor(.primary)
                                 
-                                Text("Create accounts for library staff members")
+                                Text("Add a new librarian to your library")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
                             
                             Spacer()
                             
-                            Image(systemName: "chevron.right")
+                            Image(systemName: showLibrarianForm ? "chevron.up" : "chevron.down")
                                 .foregroundColor(.purple)
                         }
                         .padding(.vertical, 20)
                         .padding(.horizontal)
                         .frame(maxWidth: .infinity)
                     }
+                    
+                    if showLibrarianForm {
+                        VStack(spacing: 15) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Full Name")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                
+                                TextField("Enter librarian's full name", text: $librarianName)
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(10)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Email")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                
+                                TextField("Enter librarian's email", text: $librarianEmail)
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(10)
+                                    .keyboardType(.emailAddress)
+                                    .autocapitalization(.none)
+                            }
+                            
+                            Button(action: {
+                                Task {
+                                    await addLibrarian()
+                                }
+                            }) {
+                                if isLoading {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                } else {
+                                    Text("Add Librarian")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(Color.purple)
+                                        .cornerRadius(12)
+                                }
+                            }
+                            .disabled(isLoading)
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
+                    }
                 }
-                .frame(height: 100)
                 .background(Color.white)
                 .cornerRadius(16)
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
@@ -767,7 +827,9 @@ struct AdminOnboardingView: View {
                 // Books Card
                 VStack {
                     Button(action: {
-                        showBookForm = true
+                        withAnimation(.spring()) {
+                            showBookForm.toggle()
+                        }
                     }) {
                         HStack {
                             Image(systemName: "book.fill")
@@ -787,15 +849,64 @@ struct AdminOnboardingView: View {
                             
                             Spacer()
                             
-                            Image(systemName: "chevron.right")
+                            Image(systemName: showBookForm ? "chevron.up" : "chevron.down")
                                 .foregroundColor(.purple)
                         }
                         .padding(.vertical, 20)
                         .padding(.horizontal)
                         .frame(maxWidth: .infinity)
                     }
+                    
+                    if showBookForm {
+                        VStack(spacing: 20) {
+                            Button(action: {
+                                showManualForm = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "square.and.pencil")
+                                        .font(.system(size: 30))
+                                        .foregroundColor(.purple)
+                                    
+                                    Text("Add Manually")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.purple)
+                                }
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                            }
+                            
+                            Button(action: {
+                                showCSVImport = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "doc.text.fill")
+                                        .font(.system(size: 30))
+                                        .foregroundColor(.purple)
+                                    
+                                    Text("Import from CSV")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.purple)
+                                }
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
+                    }
                 }
-                .frame(height: 100)
                 .background(Color.white)
                 .cornerRadius(16)
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
@@ -827,11 +938,110 @@ struct AdminOnboardingView: View {
                 dismissButton: .default(Text("OK"))
             )
         }
-        .sheet(isPresented: $showLibrarianForm) {
-            LibrarianFormView()
+        .sheet(isPresented: $showMailComposer) {
+            if let mailData = mailData {
+                MailComposeView(
+                    recipient: mailData.recipient,
+                    subject: mailData.subject,
+                    body: mailData.body,
+                    isShowing: $showMailComposer,
+                    result: { result in
+                        switch result {
+                        case .sent:
+                            alertMessage = "Welcome email sent successfully!"
+                        case .saved:
+                            alertMessage = "Email saved as draft"
+                        case .failed:
+                            alertMessage = "Failed to send email"
+                        case .cancelled:
+                            alertMessage = "Email cancelled"
+                        @unknown default:
+                            alertMessage = "Unknown email result"
+                        }
+                        showAlert = true
+                    }
+                )
+            }
         }
-        .sheet(isPresented: $showBookForm) {
-            AddBooksSelectionView()
+        .sheet(isPresented: $showManualForm) {
+            BookFormView()
+        }
+        .sheet(isPresented: $showCSVImport) {
+            CSVImportView()
+        }
+    }
+    
+    private func addLibrarian() async {
+        if librarianName.isEmpty || librarianEmail.isEmpty {
+            alertMessage = "Please fill in all librarian details."
+            showAlert = true
+            return
+        }
+        
+        isLoading = true
+        
+        do {
+            _ = try await dataController.createLibrarian(
+                name: librarianName,
+                email: librarianEmail
+            )
+            
+            DispatchQueue.main.async {
+                isLoading = false
+                alertMessage = "Librarian added successfully! A welcome email has been sent with login credentials."
+                showAlert = true
+                
+                // Clear fields after successful addition
+                librarianName = ""
+                librarianEmail = ""
+                
+                // Return to card view
+                withAnimation {
+                    showLibrarianForm = false
+                }
+            }
+        } catch {
+            DispatchQueue.main.async {
+                isLoading = false
+                alertMessage = "Error adding librarian: \(error.localizedDescription)"
+                showAlert = true
+            }
+        }
+    }
+}
+
+struct MailComposeView: UIViewControllerRepresentable {
+    let recipient: String
+    let subject: String
+    let body: String
+    @Binding var isShowing: Bool
+    let result: (MFMailComposeResult) -> Void
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    func makeUIViewController(context: Context) -> MFMailComposeViewController {
+        let vc = MFMailComposeViewController()
+        vc.mailComposeDelegate = context.coordinator
+        vc.setToRecipients([recipient])
+        vc.setSubject(subject)
+        vc.setMessageBody(body, isHTML: false)
+        return vc
+    }
+    
+    func updateUIViewController(_ uiViewController: MFMailComposeViewController, context: Context) {}
+    
+    class Coordinator: NSObject, MFMailComposeViewControllerDelegate {
+        var parent: MailComposeView
+        
+        init(_ parent: MailComposeView) {
+            self.parent = parent
+        }
+        
+        func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
+            parent.isShowing = false
+            parent.result(result)
         }
         .fullScreenCover(isPresented: $showMainApp) {
             MainAppView(userRole: .admin, initialTab: 0)

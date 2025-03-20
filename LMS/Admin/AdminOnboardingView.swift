@@ -716,260 +716,263 @@ struct AdminOnboardingView: View {
     @State private var librarianEmail = ""
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 30) {
-                // Header
-                VStack(spacing: 16) {
-                    Image(systemName: "building.columns.fill")
-                        .font(.system(size: 60))
-                        .foregroundColor(.purple)
-                    
-                    Text("Library Management")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
-                    Text("Manage your library resources")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-                .padding(.top, 30)
-                
-                // Librarian Card
-                VStack {
-                    Button(action: {
-                        withAnimation(.spring()) {
-                            showLibrarianForm.toggle()
-                        }
-                    }) {
-                        HStack {
-                            Image(systemName: "person.badge.plus")
-                                .font(.system(size: 40))
-                                .foregroundColor(.purple)
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Add Librarian")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                
-                                Text("Add a new librarian to your library")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            Image(systemName: showLibrarianForm ? "chevron.up" : "chevron.down")
-                                .foregroundColor(.purple)
-                        }
-                        .padding(.vertical, 20)
-                        .padding(.horizontal)
-                        .frame(maxWidth: .infinity)
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 30) {
+                    // Header
+                    VStack(spacing: 16) {
+                        Image(systemName: "building.columns.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.purple)
+                        
+                        Text("Library Management")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                        
+                        Text("Manage your library resources")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
                     }
+                    .padding(.top, 30)
                     
-                    if showLibrarianForm {
-                        VStack(spacing: 15) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Full Name")
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
-                                
-                                TextField("Enter librarian's full name", text: $librarianName)
-                                    .padding()
-                                    .background(Color(.secondarySystemBackground))
-                                    .cornerRadius(10)
+                    // Librarian Card
+                    VStack {
+                        Button(action: {
+                            withAnimation(.spring()) {
+                                showLibrarianForm.toggle()
                             }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Email")
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
+                        }) {
+                            HStack {
+                                Image(systemName: "person.badge.plus")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.purple)
                                 
-                                TextField("Enter librarian's email", text: $librarianEmail)
-                                    .padding()
-                                    .background(Color(.secondarySystemBackground))
-                                    .cornerRadius(10)
-                                    .keyboardType(.emailAddress)
-                                    .autocapitalization(.none)
-                            }
-                            
-                            Button(action: {
-                                Task {
-                                    await addLibrarian()
-                                }
-                            }) {
-                                if isLoading {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                } else {
+                                VStack(alignment: .leading, spacing: 4) {
                                     Text("Add Librarian")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                    
+                                    Text("Add a new librarian to your library")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: showLibrarianForm ? "chevron.up" : "chevron.down")
+                                    .foregroundColor(.purple)
+                            }
+                            .padding(.vertical, 20)
+                            .padding(.horizontal)
+                            .frame(maxWidth: .infinity)
+                        }
+                        
+                        if showLibrarianForm {
+                            VStack(spacing: 15) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Full Name")
                                         .font(.headline)
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
+                                        .foregroundColor(.secondary)
+                                    
+                                    TextField("Enter librarian's full name", text: $librarianName)
                                         .padding()
-                                        .background(Color.purple)
-                                        .cornerRadius(12)
+                                        .background(Color(.secondarySystemBackground))
+                                        .cornerRadius(10)
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Email")
+                                        .font(.headline)
+                                        .foregroundColor(.secondary)
+                                    
+                                    TextField("Enter librarian's email", text: $librarianEmail)
+                                        .padding()
+                                        .background(Color(.secondarySystemBackground))
+                                        .cornerRadius(10)
+                                        .keyboardType(.emailAddress)
+                                        .autocapitalization(.none)
+                                }
+                                
+                                Button(action: {
+                                    Task {
+                                        await addLibrarian()
+                                    }
+                                }) {
+                                    if isLoading {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    } else {
+                                        Text("Add Librarian")
+                                            .font(.headline)
+                                            .foregroundColor(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .padding()
+                                            .background(Color.purple)
+                                            .cornerRadius(12)
+                                    }
+                                }
+                                .disabled(isLoading)
+                            }
+                            .padding(.horizontal)
+                            .padding(.bottom, 20)
+                        }
+                    }
+                    .background(Color.white)
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                    .padding(.horizontal)
+                    
+                    // Books Card
+                    VStack {
+                        Button(action: {
+                            withAnimation(.spring()) {
+                                showBookForm.toggle()
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "book.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.purple)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Add Books")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.primary)
+                                    
+                                    Text("Add books to your library collection")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: showBookForm ? "chevron.up" : "chevron.down")
+                                    .foregroundColor(.purple)
+                            }
+                            .padding(.vertical, 20)
+                            .padding(.horizontal)
+                            .frame(maxWidth: .infinity)
+                        }
+                        
+                        if showBookForm {
+                            VStack(spacing: 20) {
+                                Button(action: {
+                                    showManualForm = true
+                                }) {
+                                    HStack {
+                                        Image(systemName: "square.and.pencil")
+                                            .font(.system(size: 30))
+                                            .foregroundColor(.purple)
+                                        
+                                        Text("Add Manually")
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(.purple)
+                                    }
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(12)
+                                }
+                                
+                                Button(action: {
+                                    showCSVImport = true
+                                }) {
+                                    HStack {
+                                        Image(systemName: "doc.text.fill")
+                                            .font(.system(size: 30))
+                                            .foregroundColor(.purple)
+                                        
+                                        Text("Import from CSV")
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(.purple)
+                                    }
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(12)
                                 }
                             }
-                            .disabled(isLoading)
+                            .padding(.horizontal)
+                            .padding(.bottom, 20)
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom, 20)
                     }
-                }
-                .background(Color.white)
-                .cornerRadius(16)
-                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
-                .padding(.horizontal)
-                
-                // Books Card
-                VStack {
+                    .background(Color.white)
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                    .padding(.horizontal)
+                    
+                    // Finish Button
                     Button(action: {
-                        withAnimation(.spring()) {
-                            showBookForm.toggle()
+                        withAnimation {
+                            showMainApp = true
                         }
                     }) {
-                        HStack {
-                            Image(systemName: "book.fill")
-                                .font(.system(size: 40))
-                                .foregroundColor(.purple)
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Add Books")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.primary)
-                                
-                                Text("Add books to your library collection")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            Image(systemName: showBookForm ? "chevron.up" : "chevron.down")
-                                .foregroundColor(.purple)
-                        }
-                        .padding(.vertical, 20)
-                        .padding(.horizontal)
-                        .frame(maxWidth: .infinity)
+                        Text("Finish Setup")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.green)
+                            .cornerRadius(12)
                     }
-                    
-                    if showBookForm {
-                        VStack(spacing: 20) {
-                            Button(action: {
-                                showManualForm = true
-                            }) {
-                                HStack {
-                                    Image(systemName: "square.and.pencil")
-                                        .font(.system(size: 30))
-                                        .foregroundColor(.purple)
-                                    
-                                    Text("Add Manually")
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                    
-                                    Spacer()
-                                    
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.purple)
-                                }
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(12)
-                            }
-                            
-                            Button(action: {
-                                showCSVImport = true
-                            }) {
-                                HStack {
-                                    Image(systemName: "doc.text.fill")
-                                        .font(.system(size: 30))
-                                        .foregroundColor(.purple)
-                                    
-                                    Text("Import from CSV")
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                    
-                                    Spacer()
-                                    
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.purple)
-                                }
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(12)
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.bottom, 20)
-                    }
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, 40)
                 }
-                .background(Color.white)
-                .cornerRadius(16)
-                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
-                .padding(.horizontal)
-                
-                // Finish Button
-                Button(action: {
-                    withAnimation {
-                        showMainApp = true
-                    }
-                }) {
-                    Text("Finish Setup")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.green)
-                        .cornerRadius(12)
-                }
-                .padding(.horizontal, 30)
-                .padding(.bottom, 40)
             }
-        }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .alert(isPresented: $showAlert) {
-            Alert(
-                title: Text("Notification"),
-                message: Text(alertMessage),
-                dismissButton: .default(Text("OK"))
-            )
-        }
-        .sheet(isPresented: $showMailComposer) {
-            if let mailData = mailData {
-                MailComposeView(
-                    recipient: mailData.recipient,
-                    subject: mailData.subject,
-                    body: mailData.body,
-                    isShowing: $showMailComposer,
-                    result: { result in
-                        switch result {
-                        case .sent:
-                            alertMessage = "Welcome email sent successfully!"
-                        case .saved:
-                            alertMessage = "Email saved as draft"
-                        case .failed:
-                            alertMessage = "Failed to send email"
-                        case .cancelled:
-                            alertMessage = "Email cancelled"
-                        @unknown default:
-                            alertMessage = "Unknown email result"
-                        }
-                        showAlert = true
-                    }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .alert(isPresented: $showAlert) {
+                Alert(
+                    title: Text("Notification"),
+                    message: Text(alertMessage),
+                    dismissButton: .default(Text("OK"))
                 )
             }
-        }
-        .sheet(isPresented: $showManualForm) {
-            BookFormView()
-        }
-        .sheet(isPresented: $showCSVImport) {
-            CSVImportView()
-        }
-        .fullScreenCover(isPresented: $showMainApp) {
-            MainAppView(userRole: .admin, initialTab: 0)
+            .sheet(isPresented: $showMailComposer) {
+                if let mailData = mailData {
+                    MailComposeView(
+                        recipient: mailData.recipient,
+                        subject: mailData.subject,
+                        body: mailData.body,
+                        isShowing: $showMailComposer,
+                        result: { result in
+                            switch result {
+                            case .sent:
+                                alertMessage = "Welcome email sent successfully!"
+                            case .saved:
+                                alertMessage = "Email saved as draft"
+                            case .failed:
+                                alertMessage = "Failed to send email"
+                            case .cancelled:
+                                alertMessage = "Email cancelled"
+                            @unknown default:
+                                alertMessage = "Unknown email result"
+                            }
+                            showAlert = true
+                        }
+                    )
+                }
+            }
+            .sheet(isPresented: $showManualForm) {
+                BookFormView()
+            }
+            .sheet(isPresented: $showCSVImport) {
+                CSVImportView()
+            }
+            .fullScreenCover(isPresented: $showMainApp) {
+                MainAppView(userRole: .admin, initialTab: 0)
+                    .ignoresSafeArea()
+            }
         }
     }
     

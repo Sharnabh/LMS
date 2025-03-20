@@ -10,6 +10,7 @@ struct LibrarianLoginView: View {
     @Binding var showMainApp: Bool
     @Binding var selectedRole: UserRole?
     @StateObject private var dataController = SupabaseDataController()
+    @State private var showLibrarianInitialView = false
     
     var body: some View {
         VStack(spacing: 30) {
@@ -96,8 +97,8 @@ struct LibrarianLoginView: View {
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationBarBackButtonHidden(false)
-        .sheet(isPresented: $showPasswordReset) {
-            LibrarianPasswordResetView(showMainApp: $showMainApp)
+        .fullScreenCover(isPresented: $showPasswordReset) {
+            LibrarianPasswordResetView(showMainApp: $showMainApp, showLibrarianInitialView: $showLibrarianInitialView)
         }
         .alert(isPresented: $showAlert) {
             Alert(
@@ -105,6 +106,9 @@ struct LibrarianLoginView: View {
                 message: Text(alertMessage),
                 dismissButton: .default(Text("OK"))
             )
+        }
+        .fullScreenCover(isPresented: $showLibrarianInitialView) {
+            LibrarianInitialView()
         }
     }
     
@@ -122,7 +126,7 @@ struct LibrarianLoginView: View {
                 if isFirstLogin {
                     showPasswordReset = true
                 } else {
-                    showMainApp = true
+                    showLibrarianInitialView = true
                 }
             }
         } catch {
@@ -158,6 +162,7 @@ struct LibrarianPasswordResetView: View {
     @State private var isLoading = false
     @Environment(\.dismiss) private var dismiss
     @Binding var showMainApp: Bool
+    @Binding var showLibrarianInitialView: Bool
     @StateObject private var dataController = SupabaseDataController()
     
     var body: some View {
@@ -279,7 +284,7 @@ struct LibrarianPasswordResetView: View {
                 isLoading = false
                 if success {
                     dismiss()
-                    showMainApp = true
+                    showLibrarianInitialView = true
                 }
             } catch {
                 isLoading = false

@@ -21,7 +21,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		CECF3DFF2D8B2F89002CB6BA /* Exceptions for "LMS" folder in "LMS" target */ = {
+		CE29BFFA2D8BCD9C0033735D /* Exceptions for "LMS" folder in "LMS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -34,7 +34,7 @@
 		CE8AE2AC2D888E2C001A93FF /* LMS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				CECF3DFF2D8B2F89002CB6BA /* Exceptions for "LMS" folder in "LMS" target */,
+				CE29BFFA2D8BCD9C0033735D /* Exceptions for "LMS" folder in "LMS" target */,
 			);
 			path = LMS;
 			sourceTree = "<group>";

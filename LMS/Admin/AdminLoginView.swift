@@ -155,6 +155,7 @@ struct PasswordResetView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var showMainApp: Bool
     @Binding var showOnboarding: Bool
+    @State private var showProfileSetup = false
     let adminId: String
     
     private let dataController = SupabaseDataController()
@@ -278,6 +279,9 @@ struct PasswordResetView: View {
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("Reset Password")
             .navigationBarTitleDisplayMode(.large)
+            .fullScreenCover(isPresented: $showProfileSetup) {
+                AdminProfileSetupView()
+            }
         }
     }
     
@@ -288,8 +292,7 @@ struct PasswordResetView: View {
             try await dataController.updateAdminPassword(adminId: adminId, newPassword: newPassword)
             DispatchQueue.main.async {
                 isLoading = false
-                dismiss()
-                showOnboarding = true
+                showProfileSetup = true
             }
         } catch {
             DispatchQueue.main.async {

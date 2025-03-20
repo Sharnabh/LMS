@@ -165,6 +165,9 @@ struct AddBookView: View {
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var isSuccess = false
+    @State private var isLoading = false
+    
+    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
     
     private var isValid: Bool {
         !title.isEmpty && 
@@ -180,30 +183,212 @@ struct AddBookView: View {
     
     var body: some View {
         NavigationView {
-            Form {
-                Section(header: Text("Book Details")) {
-                    TextField("Title", text: $title)
-                    TextField("Author", text: $author)
-                    TextField("Genre", text: $genre)
-                    TextField("ISBN", text: $isbn)
-                        .keyboardType(.numberPad)
-                    TextField("Publication Year", text: $publicationYear)
-                        .keyboardType(.numberPad)
-                    TextField("Total Copies", text: $totalCopies)
-                        .keyboardType(.numberPad)
-                }
-                
-                Section {
-                    Button("Add Book") {
-                        addBook()
+            ScrollView {
+                VStack(spacing: 30) {
+                    // Header Image
+                    VStack(spacing: 16) {
+                        Image(systemName: "book.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.purple)
+                        
+                        Text("Add New Book")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("Fill in the details to add a new book to your library")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
                     }
-                    .disabled(!isValid)
+                    .padding(.top, 20)
+                    
+                    // Form Fields
+                    VStack(spacing: 25) {
+                        // Title Field
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "book.fill")
+                                    .foregroundColor(.purple)
+                                Text("Book Title")
+                                    .font(.headline)
+                            }
+                            .foregroundColor(.secondary)
+                            
+                            TextField("Enter book title", text: $title)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                                )
+                        }
+                        
+                        // Author Field
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "person.fill")
+                                    .foregroundColor(.purple)
+                                Text("Author")
+                                    .font(.headline)
+                            }
+                            .foregroundColor(.secondary)
+                            
+                            TextField("Enter author name", text: $author)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                                )
+                        }
+                        
+                        // Genre Field with Dropdown
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "textformat")
+                                    .foregroundColor(.purple)
+                                Text("Genre")
+                                    .font(.headline)
+                            }
+                            .foregroundColor(.secondary)
+                            
+                            Menu {
+                                ForEach(genres, id: \.self) { genre in
+                                    Button(action: {
+                                        self.genre = genre
+                                    }) {
+                                        Text(genre)
+                                    }
+                                }
+                            } label: {
+                                HStack {
+                                    Text(genre.isEmpty ? "Select Genre" : genre)
+                                        .foregroundColor(genre.isEmpty ? .secondary : .primary)
+                                    Spacer()
+                                    Image(systemName: "chevron.down")
+                                        .foregroundColor(.purple)
+                                }
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                                )
+                            }
+                        }
+                        
+                        // ISBN Field
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "number")
+                                    .foregroundColor(.purple)
+                                Text("ISBN")
+                                    .font(.headline)
+                            }
+                            .foregroundColor(.secondary)
+                            
+                            TextField("Enter ISBN number", text: $isbn)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                                .keyboardType(.numberPad)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                                )
+                        }
+                        
+                        // Publication Year Field
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "calendar")
+                                    .foregroundColor(.purple)
+                                Text("Publication Year")
+                                    .font(.headline)
+                            }
+                            .foregroundColor(.secondary)
+                            
+                            TextField("Enter publication year", text: $publicationYear)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                                .keyboardType(.numberPad)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                                )
+                        }
+                        
+                        // Total Copies Field
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "books.vertical.fill")
+                                    .foregroundColor(.purple)
+                                Text("Total Copies")
+                                    .font(.headline)
+                            }
+                            .foregroundColor(.secondary)
+                            
+                            TextField("Enter total copies", text: $totalCopies)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                                .keyboardType(.numberPad)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                                )
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    Spacer()
+                    
+                    // Add Book Button
+                    Button(action: {
+                        addBook()
+                    }) {
+                        HStack {
+                            if isLoading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            } else {
+                                Image(systemName: "checkmark.circle.fill")
+                                Text("Add Book")
+                            }
+                        }
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.purple, Color.purple.opacity(0.8)]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(12)
+                    }
+                    .disabled(!isValid || isLoading)
+                    .padding(.horizontal)
+                    .padding(.bottom, 30)
                 }
             }
-            .navigationTitle("Add New Book")
-            .navigationBarItems(trailing: Button("Cancel") {
-                dismiss()
-            })
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundColor(.purple)
+                }
+            }
             .alert(isPresented: $showAlert) {
                 Alert(
                     title: Text(isSuccess ? "Success" : "Error"),
@@ -219,6 +404,7 @@ struct AddBookView: View {
     }
     
     private func addBook() {
+        isLoading = true
         Task {
             do {
                 let result = try await BookService.shared.addBook(
@@ -242,6 +428,7 @@ struct AddBookView: View {
                 alertMessage = "Failed to add book: \(error.localizedDescription)"
                 showAlert = true
             }
+            isLoading = false
         }
     }
 }

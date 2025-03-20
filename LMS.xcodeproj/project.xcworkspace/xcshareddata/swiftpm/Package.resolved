@@ -1,5 +1,5 @@
 {
-  "originHash" : "6fcf4798a604bf5df5452280ee947126af4a2535121ff21288b886b5f428f56b",
+  "originHash" : "255bc481cfd63ec1b3650ddccd96a8a5e4a2ff471f6c5f81d0424bb5ecb1e92d",
   "pins" : [
     {
       "identity" : "bluecryptor",
@@ -103,7 +103,7 @@
     {
       "identity" : "swift-smtp",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Kitura/Swift-SMTP.git",
+      "location" : "https://github.com/Kitura/Swift-SMTP",
       "state" : {
         "revision" : "4b7666bb8cee33f0cb367786af17b9a2ebb63047",
         "version" : "6.0.0"

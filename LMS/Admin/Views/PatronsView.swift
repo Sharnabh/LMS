@@ -11,14 +11,11 @@ import Supabase
 
 struct PatronsView: View {
     @State private var selectedSegment = 0
-<<<<<<< HEAD:LMS/Admin/Views/PatronsView.swift
     @State private var librarians: [LibrarianModel] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
     @StateObject private var supabaseController = SupabaseDataController()
-=======
     @State private var showingAddLibrarian = false
->>>>>>> Development:LMS/PatronsView.swift
     
     var body: some View {
         NavigationView {
@@ -40,7 +37,21 @@ struct PatronsView: View {
             }
             .navigationTitle("Patrons")
             .navigationBarTitleDisplayMode(.large)
-<<<<<<< HEAD:LMS/Admin/Views/PatronsView.swift
+            .toolbar {
+                if selectedSegment == 0 {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            showingAddLibrarian = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 22))
+                        }
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAddLibrarian) {
+                AddLibrarianView()
+            }
             .task {
                 await fetchLibrarians()
             }
@@ -60,23 +71,6 @@ struct PatronsView: View {
             self.librarians = librarians
         } catch {
             errorMessage = "Failed to fetch librarians: \(error.localizedDescription)"
-=======
-            .toolbar {
-                if selectedSegment == 0 {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button {
-                            showingAddLibrarian = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 22))
-                        }
-                    }
-                }
-            }
-            .sheet(isPresented: $showingAddLibrarian) {
-                AddLibrarianView()
-            }
->>>>>>> Development:LMS/PatronsView.swift
         }
         
         isLoading = false

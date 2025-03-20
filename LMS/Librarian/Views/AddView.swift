@@ -141,7 +141,7 @@ struct AddView: View {
         
         Task {
             do {
-                let fetchedBook = try await BookService.fetchBookByISBN(isbn: searchText)
+                let fetchedBook = try await GoogleBooksService.fetchBookByISBN(isbn: searchText)
                 
                 // Update UI on main thread
                 DispatchQueue.main.async {

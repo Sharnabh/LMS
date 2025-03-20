@@ -89,6 +89,8 @@ struct HomeLibrarianView: View {
                             }
                             .padding(.horizontal, 16)
                         }
+                        .padding(.top, -60)
+                        .frame(height: 220)
                         .transition(.move(edge: .top).combined(with: .opacity))
                     } else {
                         // Book card with swipe functionality
@@ -131,7 +133,7 @@ struct HomeLibrarianView: View {
 
     // Computed property to get recent books
     private var recentBooks: [LibrarianBook] {
-        return bookStore.getRecentlyAddedBooks(limit: 5) // Show only 5 recent books
+        return bookStore.getRecentlyAddedBooks(limit: 5).reversed() // Show only 5 recent books
     }
 
     // Tinder-style card stack

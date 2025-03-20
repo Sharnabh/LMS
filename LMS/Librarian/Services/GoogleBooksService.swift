@@ -1,6 +1,6 @@
 import Foundation
 
-class BookService {
+class GoogleBooksService {
     static func fetchBookByISBN(isbn: String) async throws -> LibrarianBook {
         // Format the ISBN by removing any spaces or hyphens
         let formattedISBN = isbn.replacingOccurrences(of: "[- ]", with: "", options: .regularExpression)

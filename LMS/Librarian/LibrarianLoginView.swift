@@ -1,13 +1,15 @@
 import SwiftUI
 
 struct LibrarianLoginView: View {
-    @State private var librarianID = ""
+    @State private var email = ""
     @State private var password = ""
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var showPasswordReset = false
+    @State private var isLoading = false
     @Binding var showMainApp: Bool
     @Binding var selectedRole: UserRole?
+    @StateObject private var dataController = SupabaseDataController()
     
     var body: some View {
         VStack(spacing: 30) {
@@ -39,15 +41,17 @@ struct LibrarianLoginView: View {
             // Login Form
             VStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Librarian ID")
+                    Text("Email")
                         .font(.headline)
                         .foregroundColor(.secondary)
                     
-                    TextField("Enter your librarian ID", text: $librarianID)
+                    TextField("Enter your email", text: $email)
                         .padding()
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(10)
                         .autocapitalization(.none)
+                        .keyboardType(.emailAddress)
+                        .textContentType(.emailAddress)
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
@@ -59,6 +63,7 @@ struct LibrarianLoginView: View {
                         .padding()
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(10)
+                        .textContentType(.password)
                 }
             }
             .padding(.horizontal)
@@ -67,17 +72,25 @@ struct LibrarianLoginView: View {
             
             // Login button
             Button(action: {
-                showPasswordReset = true
+                Task {
+                    await loginLibrarian()
+                }
             }) {
-                Text("Login")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(minWidth: 120, maxWidth: 280)
-                    .padding(.vertical, 16)
-                    .padding(.horizontal, 24)
-                    .background(Color.blue)
-                    .cornerRadius(12)
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                } else {
+                    Text("Login")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                }
             }
+            .frame(minWidth: 120, maxWidth: 280)
+            .padding(.vertical, 16)
+            .padding(.horizontal, 24)
+            .background(Color.blue)
+            .cornerRadius(12)
+            .disabled(isLoading)
             .padding(.horizontal, 30)
             .padding(.bottom, 40)
         }
@@ -86,6 +99,54 @@ struct LibrarianLoginView: View {
         .sheet(isPresented: $showPasswordReset) {
             LibrarianPasswordResetView(showMainApp: $showMainApp)
         }
+        .alert(isPresented: $showAlert) {
+            Alert(
+                title: Text("Error"),
+                message: Text(alertMessage),
+                dismissButton: .default(Text("OK"))
+            )
+        }
+    }
+    
+    private func loginLibrarian() async {
+        if !validateInput() {
+            return
+        }
+        
+        isLoading = true
+        do {
+            let (success, isFirstLogin) = try await dataController.authenticateLibrarian(email: email, password: password)
+            isLoading = false
+            
+            if success {
+                if isFirstLogin {
+                    showPasswordReset = true
+                } else {
+                    showMainApp = true
+                }
+            }
+        } catch {
+            isLoading = false
+            alertMessage = "Invalid credentials. Please try again."
+            showAlert = true
+        }
+    }
+    
+    private func validateInput() -> Bool {
+        if email.isEmpty || password.isEmpty {
+            alertMessage = "Please fill in all fields"
+            showAlert = true
+            return false
+        }
+        
+        // Basic email validation
+        if !email.contains("@") || !email.contains(".") {
+            alertMessage = "Please enter a valid email address"
+            showAlert = true
+            return false
+        }
+        
+        return true
     }
 }
 
@@ -94,8 +155,10 @@ struct LibrarianPasswordResetView: View {
     @State private var confirmPassword = ""
     @State private var showAlert = false
     @State private var alertMessage = ""
+    @State private var isLoading = false
     @Environment(\.dismiss) private var dismiss
     @Binding var showMainApp: Bool
+    @StateObject private var dataController = SupabaseDataController()
     
     var body: some View {
         NavigationView {
@@ -150,21 +213,25 @@ struct LibrarianPasswordResetView: View {
                 
                 // Reset Password button
                 Button(action: {
-                    if validatePasswords() {
-                        // In a real app, you would update the password here
-                        dismiss()
-                        showMainApp = true
+                    Task {
+                        await resetPassword()
                     }
                 }) {
-                    Text("Reset Password")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(minWidth: 120, maxWidth: 280)
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 24)
-                        .background(Color.blue)
-                        .cornerRadius(12)
+                    if isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    } else {
+                        Text("Reset Password")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                    }
                 }
+                .frame(minWidth: 120, maxWidth: 280)
+                .padding(.vertical, 16)
+                .padding(.horizontal, 24)
+                .background(Color.blue)
+                .cornerRadius(12)
+                .disabled(isLoading)
                 .padding(.horizontal, 30)
                 .padding(.bottom, 40)
             }
@@ -192,7 +259,38 @@ struct LibrarianPasswordResetView: View {
             showAlert = true
             return false
         }
+        if newPassword.count < 6 {
+            alertMessage = "Password must be at least 6 characters long"
+            showAlert = true
+            return false
+        }
         return true
+    }
+    
+    private func resetPassword() async {
+        if !validatePasswords() {
+            return
+        }
+        
+        isLoading = true
+        if let librarianID = UserDefaults.standard.string(forKey: "currentLibrarianID") {
+            do {
+                let success = try await dataController.updateLibrarianPassword(librarianID: librarianID, newPassword: newPassword)
+                isLoading = false
+                if success {
+                    dismiss()
+                    showMainApp = true
+                }
+            } catch {
+                isLoading = false
+                alertMessage = "Failed to update password. Please try again."
+                showAlert = true
+            }
+        } else {
+            isLoading = false
+            alertMessage = "Error: Librarian ID not found"
+            showAlert = true
+        }
     }
 }
 

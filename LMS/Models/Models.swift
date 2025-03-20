@@ -7,6 +7,7 @@
 
 import Foundation
 
+// MARK: - Enums
 enum issueStatus: String, Codable {
     case issued = "Issue"
     case returned = "Returned"
@@ -14,12 +15,54 @@ enum issueStatus: String, Codable {
     case lost = "Lost"
 }
 
+// MARK: - Supabase Models
+struct AdminModel: Codable {
+    let id: String
+    let email: String
+    let password: String
+    let is_first_login: Bool
+    let created_at: String?
+}
+
+struct LibrarianModel: Codable {
+    let id: String?
+    let email: String
+    let username: String
+    let password: String
+    let created_at: String?
+    let isFirstLogin: Bool
+}
+
+struct LibrarianPasswordUpdate: Codable {
+    let password: String
+    let isFirstLogin: Bool
+}
+
+// MARK: - Email Models
+struct EmailData: Encodable {
+    let to: String
+    let subject: String
+    let name: String
+    let password: String
+}
+
+// MARK: - App Models
 struct Admin: Codable, Identifiable {
-    var id: UUID
-    var name: String
-    var email: String
-    var password: String
-    var createdAt: Date
+    let id: String
+    let name: String
+    let email: String
+    let password: String
+    let is_first_login: Bool
+    let created_at: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case email
+        case password
+        case is_first_login
+        case created_at
+    }
 }
 
 struct Librarian: Codable, Identifiable {
@@ -35,7 +78,6 @@ struct Member: Codable, Identifiable {
     var name: String
     var email: String
     var password: String
-//  var memberType: String // "Student" or "Faculty"
     var createdAt: Date
 }
 
@@ -63,5 +105,11 @@ struct BookIssue: Codable, Identifiable {
     var returnDate: Date?
     var fine: Double = 0.0
     var status: issueStatus
+}
+
+// MARK: - Validation Models
+struct PasswordValidationResult {
+    let isValid: Bool
+    let errorMessage: String?
 }
 

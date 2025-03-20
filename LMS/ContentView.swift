@@ -5,13 +5,6 @@
 //  Created by Sharnabh on 17/03/25.
 //
 
-//
-//  ContentView.swift
-//  LMS
-//
-//  Created by Sharnabh on 17/03/25.
-//
-
 import SwiftUI
 
 struct ContentView: View {
@@ -21,7 +14,7 @@ struct ContentView: View {
     
     var body: some View {
         if showMainApp {
-            MainAppView(userRole: selectedRole ?? .member)
+            MainAppView(userRole: selectedRole ?? .member, initialTab: 0)
         } else if showAdminLogin {
             AdminLoginView(showMainApp: $showMainApp)
         } else {
@@ -167,7 +160,12 @@ struct RoleCard: View {
 
 struct MainAppView: View {
     let userRole: UserRole
-    @State private var selectedTab = 0
+    @State private var selectedTab: Int
+    
+    init(userRole: UserRole, initialTab: Int = 0) {
+        self.userRole = userRole
+        _selectedTab = State(initialValue: initialTab)
+    }
     
     var body: some View {
         TabView(selection: $selectedTab) {

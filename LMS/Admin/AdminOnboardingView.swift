@@ -163,11 +163,15 @@ struct BookFormView: View {
     @State private var bookTitle = ""
     @State private var bookAuthor = ""
     @State private var bookISBN = ""
-    @State private var bookCategory = ""
+    @State private var bookGenre = ""
+    @State private var publicationYear = ""
+    @State private var totalCopies = ""
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var selectedImage: UIImage?
     @State private var showImagePicker = false
+    
+    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
     
     var body: some View {
         NavigationView {
@@ -288,20 +292,78 @@ struct BookFormView: View {
                                 )
                         }
                         
-                        // Category Field
+                        // Genre Field
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Image(systemName: "tag.fill")
+                                Image(systemName: "textformat")
                                     .foregroundColor(.purple)
-                                Text("Category")
+                                Text("Genre")
                                     .font(.headline)
                             }
                             .foregroundColor(.secondary)
                             
-                            TextField("Enter book category", text: $bookCategory)
+                            Menu {
+                                ForEach(genres, id: \.self) { genre in
+                                    Button(action: {
+                                        bookGenre = genre
+                                    }) {
+                                        Text(genre)
+                                    }
+                                }
+                            } label: {
+                                HStack {
+                                    Text(bookGenre.isEmpty ? "Select Genre" : bookGenre)
+                                        .foregroundColor(bookGenre.isEmpty ? .secondary : .primary)
+                                    Spacer()
+                                    Image(systemName: "chevron.down")
+                                        .foregroundColor(.purple)
+                                }
                                 .padding()
                                 .background(Color(.secondarySystemBackground))
                                 .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                                )
+                            }
+                        }
+                        
+                        // Publication Year Field
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "calendar")
+                                    .foregroundColor(.purple)
+                                Text("Publication Year")
+                                    .font(.headline)
+                            }
+                            .foregroundColor(.secondary)
+                            
+                            TextField("Enter publication year", text: $publicationYear)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                                .keyboardType(.numberPad)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                                )
+                        }
+                        
+                        // Total Copies Field
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "books.vertical.fill")
+                                    .foregroundColor(.purple)
+                                Text("Total Copies")
+                                    .font(.headline)
+                            }
+                            .foregroundColor(.secondary)
+                            
+                            TextField("Enter total copies", text: $totalCopies)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                                .keyboardType(.numberPad)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
                                         .stroke(Color.purple.opacity(0.2), lineWidth: 1)
@@ -314,7 +376,7 @@ struct BookFormView: View {
                     
                     // Add Book Button
                     Button(action: {
-                        if bookTitle.isEmpty || bookAuthor.isEmpty || bookISBN.isEmpty || bookCategory.isEmpty {
+                        if bookTitle.isEmpty || bookAuthor.isEmpty || bookISBN.isEmpty || bookGenre.isEmpty || publicationYear.isEmpty || totalCopies.isEmpty {
                             alertMessage = "Please fill in all book details."
                             showAlert = true
                         } else {
@@ -324,7 +386,9 @@ struct BookFormView: View {
                             bookTitle = ""
                             bookAuthor = ""
                             bookISBN = ""
-                            bookCategory = ""
+                            bookGenre = ""
+                            publicationYear = ""
+                            totalCopies = ""
                             selectedImage = nil
                             
                             // Dismiss the sheet
@@ -639,6 +703,7 @@ struct AdminOnboardingView: View {
     @State private var alertMessage = ""
     @State private var showLibrarianForm = false
     @State private var showBookForm = false
+    @State private var showMainApp = false
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -738,7 +803,9 @@ struct AdminOnboardingView: View {
                 
                 // Finish Button
                 Button(action: {
-                    dismiss()
+                    withAnimation {
+                        showMainApp = true
+                    }
                 }) {
                     Text("Finish Setup")
                         .font(.headline)
@@ -765,6 +832,9 @@ struct AdminOnboardingView: View {
         }
         .sheet(isPresented: $showBookForm) {
             AddBooksSelectionView()
+        }
+        .fullScreenCover(isPresented: $showMainApp) {
+            MainAppView(userRole: .admin, initialTab: 0)
         }
     }
 }

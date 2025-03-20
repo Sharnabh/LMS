@@ -10,6 +10,10 @@ struct LibrarianLoginView: View {
     @Binding var showMainApp: Bool
     @Binding var selectedRole: UserRole?
     @StateObject private var dataController = SupabaseDataController()
+    @State private var showLibrarianInitialView = false
+    @State private var showPassword = false
+    @State private var showNewPassword = false
+    @State private var showConfirmPassword = false
     
     var body: some View {
         VStack(spacing: 30) {
@@ -59,11 +63,39 @@ struct LibrarianLoginView: View {
                         .font(.headline)
                         .foregroundColor(.secondary)
                     
-                    SecureField("Enter your password", text: $password)
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(10)
-                        .textContentType(.password)
+                    if showPassword {
+                        TextField("Enter your password", text: $password)
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(10)
+                            .textContentType(.password)
+                            .overlay(
+                                Button(action: {
+                                    showPassword.toggle()
+                                }) {
+                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.trailing, 8),
+                                alignment: .trailing
+                            )
+                    } else {
+                        SecureField("Enter your password", text: $password)
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(10)
+                            .textContentType(.password)
+                            .overlay(
+                                Button(action: {
+                                    showPassword.toggle()
+                                }) {
+                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.trailing, 8),
+                                alignment: .trailing
+                            )
+                    }
                 }
             }
             .padding(.horizontal)
@@ -96,8 +128,8 @@ struct LibrarianLoginView: View {
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationBarBackButtonHidden(false)
-        .sheet(isPresented: $showPasswordReset) {
-            LibrarianPasswordResetView(showMainApp: $showMainApp)
+        .fullScreenCover(isPresented: $showPasswordReset) {
+            LibrarianPasswordResetView(showMainApp: $showMainApp, showLibrarianInitialView: $showLibrarianInitialView)
         }
         .alert(isPresented: $showAlert) {
             Alert(
@@ -105,6 +137,9 @@ struct LibrarianLoginView: View {
                 message: Text(alertMessage),
                 dismissButton: .default(Text("OK"))
             )
+        }
+        .fullScreenCover(isPresented: $showLibrarianInitialView) {
+            LibrarianInitialView()
         }
     }
     
@@ -122,7 +157,7 @@ struct LibrarianLoginView: View {
                 if isFirstLogin {
                     showPasswordReset = true
                 } else {
-                    showMainApp = true
+                    showLibrarianInitialView = true
                 }
             }
         } catch {
@@ -158,7 +193,40 @@ struct LibrarianPasswordResetView: View {
     @State private var isLoading = false
     @Environment(\.dismiss) private var dismiss
     @Binding var showMainApp: Bool
+    @Binding var showLibrarianInitialView: Bool
     @StateObject private var dataController = SupabaseDataController()
+    @State private var showPassword = false
+    @State private var showNewPassword = false
+    @State private var showConfirmPassword = false
+    
+    private var passwordRequirements: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Password Requirements:")
+                .font(.headline)
+                .foregroundColor(.secondary)
+            
+            Group {
+                requirementRow("At least 8 characters", isValid: newPassword.count >= 8)
+                requirementRow("One uppercase letter", isValid: newPassword.range(of: "[A-Z]", options: .regularExpression) != nil)
+                requirementRow("One lowercase letter", isValid: newPassword.range(of: "[a-z]", options: .regularExpression) != nil)
+                requirementRow("One number", isValid: newPassword.range(of: "[0-9]", options: .regularExpression) != nil)
+                requirementRow("One special character", isValid: newPassword.range(of: "[!@#$%^&*(),.?\":{}|<>]", options: .regularExpression) != nil)
+                requirementRow("Passwords match", isValid: !newPassword.isEmpty && newPassword == confirmPassword)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(10)
+    }
+    
+    private func requirementRow(_ text: String, isValid: Bool) -> some View {
+        HStack {
+            Image(systemName: isValid ? "checkmark.circle.fill" : "circle")
+                .foregroundColor(isValid ? .green : .gray)
+            Text(text)
+                .foregroundColor(.secondary)
+        }
+    }
     
     var body: some View {
         NavigationView {
@@ -190,10 +258,37 @@ struct LibrarianPasswordResetView: View {
                             .font(.headline)
                             .foregroundColor(.secondary)
                         
-                        SecureField("Enter new password", text: $newPassword)
-                            .padding()
-                            .background(Color(.secondarySystemBackground))
-                            .cornerRadius(10)
+                        if showNewPassword {
+                            TextField("Enter new password", text: $newPassword)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(10)
+                                .overlay(
+                                    Button(action: {
+                                        showNewPassword.toggle()
+                                    }) {
+                                        Image(systemName: showNewPassword ? "eye.slash.fill" : "eye.fill")
+                                            .foregroundColor(.gray)
+                                    }
+                                    .padding(.trailing, 8),
+                                    alignment: .trailing
+                                )
+                        } else {
+                            SecureField("Enter new password", text: $newPassword)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(10)
+                                .overlay(
+                                    Button(action: {
+                                        showNewPassword.toggle()
+                                    }) {
+                                        Image(systemName: showNewPassword ? "eye.slash.fill" : "eye.fill")
+                                            .foregroundColor(.gray)
+                                    }
+                                    .padding(.trailing, 8),
+                                    alignment: .trailing
+                                )
+                        }
                     }
                     
                     VStack(alignment: .leading, spacing: 8) {
@@ -201,15 +296,43 @@ struct LibrarianPasswordResetView: View {
                             .font(.headline)
                             .foregroundColor(.secondary)
                         
-                        SecureField("Confirm new password", text: $confirmPassword)
-                            .padding()
-                            .background(Color(.secondarySystemBackground))
-                            .cornerRadius(10)
+                        if showConfirmPassword {
+                            TextField("Confirm new password", text: $confirmPassword)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(10)
+                                .overlay(
+                                    Button(action: {
+                                        showConfirmPassword.toggle()
+                                    }) {
+                                        Image(systemName: showConfirmPassword ? "eye.slash.fill" : "eye.fill")
+                                            .foregroundColor(.gray)
+                                    }
+                                    .padding(.trailing, 8),
+                                    alignment: .trailing
+                                )
+                        } else {
+                            SecureField("Confirm new password", text: $confirmPassword)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(10)
+                                .overlay(
+                                    Button(action: {
+                                        showConfirmPassword.toggle()
+                                    }) {
+                                        Image(systemName: showConfirmPassword ? "eye.slash.fill" : "eye.fill")
+                                            .foregroundColor(.gray)
+                                    }
+                                    .padding(.trailing, 8),
+                                    alignment: .trailing
+                                )
+                        }
                     }
                 }
                 .padding(.horizontal)
                 
-                Spacer()
+                passwordRequirements
+                    .padding(.horizontal)
                 
                 // Reset Password button
                 Button(action: {
@@ -279,7 +402,7 @@ struct LibrarianPasswordResetView: View {
                 isLoading = false
                 if success {
                     dismiss()
-                    showMainApp = true
+                    showLibrarianInitialView = true
                 }
             } catch {
                 isLoading = false
@@ -296,4 +419,8 @@ struct LibrarianPasswordResetView: View {
 
 #Preview {
     LibrarianLoginView(showMainApp: .constant(false), selectedRole: .constant(nil))
+}
+
+#Preview {
+    LibrarianPasswordResetView(showMainApp: .constant(false), showLibrarianInitialView: .constant(false))
 }

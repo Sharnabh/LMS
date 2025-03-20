@@ -188,41 +188,37 @@ struct MainAppView: View {
     }
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            HomeView()
-                .tabItem {
-                    Image(systemName: "house.fill")
-                    Text("Home")
-                }
-                .tag(0)
-            
-            PatronsView()
-                .tabItem {
-                    Image(systemName: "person.2")
-                    Text("Patrons")
-                }
-                .tag(1)
-            
-           // AnalyticsView()
-                .tabItem {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                    Text("Analytics")
-                }
-                .tag(2)
-            
-            ResourcesView()
-                .tabItem {
-                    Image(systemName: "folder.fill")
-                    Text("Resources")
-                }
-                .tag(3)
-            
-            PoliciesView()
-                .tabItem {
-                    Image(systemName: "book.pages")
-                    Text("Policies")
-                }
-                .tag(4)
+        NavigationView {
+            TabView(selection: $selectedTab) {
+                HomeView()
+                    .tabItem {
+                        Image(systemName: "house.fill")
+                        Text("Home")
+                    }
+                    .tag(0)
+                
+                PatronsView()
+                    .tabItem {
+                        Image(systemName: "person.2")
+                        Text("Patrons")
+                    }
+                    .tag(1)
+                
+                ResourcesView()
+                    .tabItem {
+                        Image(systemName: "folder.fill")
+                        Text("Resources")
+                    }
+                    .tag(2)
+                
+                PoliciesView()
+                    .tabItem {
+                        Image(systemName: "book.pages")
+                        Text("Policies")
+                    }
+                    .tag(3)
+            }
+            .toolbar(selectedTab == 0 ? .visible : .hidden, for: .navigationBar)
         }
     }
 }

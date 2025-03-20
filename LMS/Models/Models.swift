@@ -85,8 +85,8 @@ struct Book: Codable, Identifiable {
     var id: UUID
     var title: String
     var author: String
-    var genre: String?
-    var isbn: [String]
+    var genre: String
+    var ISBN: String
     var publicationYear: Int
     var totalCopies: Int
     var availableCopies: Int

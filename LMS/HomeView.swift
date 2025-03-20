@@ -10,53 +10,62 @@ import SwiftUI
 
 struct HomeView: View {
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Header
-                    VStack(spacing: 16) {
-                        Image(systemName: "house.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(.purple)
-                        
-                        Text("Welcome to LMS")
-                            .font(.title)
-                            .fontWeight(.bold)
-                        
-                        Text("Your Library Management System")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.top, 20)
+        ScrollView {
+            VStack(spacing: 20) {
+                // Header
+                VStack(spacing: 16) {
+                    Image(systemName: "house.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.purple)
                     
-                    // Quick Stats
-                    HStack(spacing: 20) {
-                        StatCard(title: "Total Books", value: "1,234", icon: "book.fill", color: .blue)
-                        StatCard(title: "Active Members", value: "567", icon: "person.2.fill", color: .green)
-                        StatCard(title: "Borrowed", value: "89", icon: "arrow.right.circle.fill", color: .orange)
-                    }
-                    .padding(.horizontal)
+                    Text("Welcome to LMS")
+                        .font(.title)
+                        .fontWeight(.bold)
                     
-                    // Recent Activity
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("Recent Activity")
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        ForEach(0..<5) { index in
-                            ActivityRow(
-                                icon: "arrow.right.circle.fill",
-                                title: "Book Borrowed",
-                                subtitle: "Book Title \(index + 1)",
-                                time: "2 hours ago"
-                            )
-                        }
+                    Text("Your Library Management System")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.top, 20)
+                
+                // Quick Stats
+                HStack(spacing: 20) {
+                    StatCard(title: "Total Books", value: "1,234", icon: "book.fill", color: .blue)
+                    StatCard(title: "Active Members", value: "567", icon: "person.2.fill", color: .green)
+                    StatCard(title: "Borrowed", value: "89", icon: "arrow.right.circle.fill", color: .orange)
+                }
+                .padding(.horizontal)
+                
+                // Recent Activity
+                VStack(alignment: .leading, spacing: 15) {
+                    Text("Recent Activity")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    ForEach(0..<5) { index in
+                        ActivityRow(
+                            icon: "arrow.right.circle.fill",
+                            title: "Book Borrowed",
+                            subtitle: "Book Title \(index + 1)",
+                            time: "2 hours ago"
+                        )
                     }
-                    .padding(.top)
+                }
+                .padding(.top)
+            }
+        }
+        .navigationTitle("Home")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                NavigationLink {
+                    AdminHomeView()
+                } label: {
+                    Image(systemName: "person.crop.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(.purple)
                 }
             }
-            .navigationTitle("Home")
-            .navigationBarTitleDisplayMode(.large)
         }
     }
 }

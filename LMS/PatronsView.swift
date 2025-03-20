@@ -10,6 +10,7 @@ import SwiftUI
 
 struct PatronsView: View {
     @State private var selectedSegment = 0
+    @State private var showingAddLibrarian = false
     
     var body: some View {
         NavigationView {
@@ -31,6 +32,21 @@ struct PatronsView: View {
             }
             .navigationTitle("Patrons")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                if selectedSegment == 0 {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            showingAddLibrarian = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 22))
+                        }
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAddLibrarian) {
+                AddLibrarianView()
+            }
         }
     }
 }

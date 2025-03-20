@@ -705,7 +705,6 @@ struct AdminOnboardingView: View {
     @State private var showLibrarianForm = false
     @State private var showBookForm = false
     @State private var showMainApp = false
-    @Environment(\.dismiss) private var dismiss
     @State private var showManualForm = false
     @State private var showCSVImport = false
     @State private var showAlert = false
@@ -969,6 +968,9 @@ struct AdminOnboardingView: View {
         .sheet(isPresented: $showCSVImport) {
             CSVImportView()
         }
+        .fullScreenCover(isPresented: $showMainApp) {
+            MainAppView(userRole: .admin, initialTab: 0)
+        }
     }
     
     private func addLibrarian() async {
@@ -1042,9 +1044,6 @@ struct MailComposeView: UIViewControllerRepresentable {
         func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
             parent.isShowing = false
             parent.result(result)
-        }
-        .fullScreenCover(isPresented: $showMainApp) {
-            MainAppView(userRole: .admin, initialTab: 0)
         }
     }
 }

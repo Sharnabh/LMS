@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var selectedRole: UserRole?
     @State private var showMainApp = false
+    @State private var showAdminLogin = false
     
     var body: some View {
         if showMainApp {
@@ -25,105 +26,107 @@ struct ContentView: View {
 struct OnboardingView: View {
     @Binding var selectedRole: UserRole?
     @Binding var showMainApp: Bool
+    @Binding var showAdminLogin: Bool
     
     var body: some View {
-        VStack(spacing: 30) {
-            // Header
-            VStack(spacing: 16) {
-                Image(systemName: "books.vertical.fill")
-                    .font(.system(size: 80))
-                    .foregroundColor(.blue)
-                
-                Text("Welcome to SampleLMS")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                
-                Text("Please select your role to continue")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.top, 60)
-            
-            Spacer()
-            
-            // Role selection cards
-            VStack(spacing: 20) {
-                RoleCard(
-                    title: "Admin",
-                    description: "Manage the entire library system",
-                    iconName: "person.badge.shield.checkmark",
-                    color: .purple,
-                    isSelected: selectedRole == .admin
-                ) {
-                    selectedRole = .admin
+        NavigationView {
+            VStack(spacing: 30) {
+                // Header
+                VStack(spacing: 16) {
+                    Image(systemName: "books.vertical.fill")
+                        .font(.system(size: 80))
+                        .foregroundColor(.blue)
+                    
+                    Text("Welcome to SampleLMS")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    
+                    Text("Please select your role to continue")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
                 }
+                .padding(.top, 60)
                 
-                RoleCard(
-                    title: "Librarian",
-                    description: "Manage books and member borrowings",
-                    iconName: "person.text.rectangle",
-                    color: .blue,
-                    isSelected: selectedRole == .librarian
-                ) {
-                    selectedRole = .librarian
-                }
+                Spacer()
                 
-                RoleCard(
-                    title: "Member",
-                    description: "Borrow books and manage your account",
-                    iconName: "person.crop.circle",
-                    color: .green,
-                    isSelected: selectedRole == .member
-                ) {
-                    selectedRole = .member
-                }
-            }
-            .padding(.horizontal)
-            
-            Spacer()
-            
-            // Combined continue button
-            Group {
-                if selectedRole == .member {
-                    NavigationLink(destination: {
-                        MemberAuthView(showMainApp: $showMainApp)
-                    }) {
-                        Text("Continue")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(minWidth: 120, maxWidth: 280)
-                            .padding(.vertical, 16)
-                            .padding(.horizontal, 24)
-                            .background(selectedRole != nil ? Color.blue : Color.gray)
-                            .cornerRadius(12)
+                // Role selection cards
+                VStack(spacing: 20) {
+                    RoleCard(
+                        title: "Admin",
+                        description: "Manage the entire library system",
+                        iconName: "person.badge.shield.checkmark",
+                        color: .purple,
+                        isSelected: selectedRole == .admin
+                    ) {
+                        selectedRole = .admin
                     }
-                } else {
-                    NavigationLink(destination: {
-                        if selectedRole == .admin {
-                            AdminLoginView(showMainApp: $showMainApp)
-                        } else if selectedRole == .librarian {
-                            LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $selectedRole)
-                        } else {
-                            EmptyView()
+                    
+                    RoleCard(
+                        title: "Librarian",
+                        description: "Manage books and member borrowings",
+                        iconName: "person.text.rectangle",
+                        color: .blue,
+                        isSelected: selectedRole == .librarian
+                    ) {
+                        selectedRole = .librarian
+                    }
+                    
+                    RoleCard(
+                        title: "Member",
+                        description: "Borrow books and manage your account",
+                        iconName: "person.crop.circle",
+                        color: .green,
+                        isSelected: selectedRole == .member
+                    ) {
+                        selectedRole = .member
+                    }
+                }
+                .padding(.horizontal)
+                
+                Spacer()
+                
+                // Combined continue button
+                Group {
+                    if selectedRole == .member {
+                        NavigationLink(destination: {
+                            MemberAuthView(showMainApp: $showMainApp)
+                        }) {
+                            Text("Continue")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(minWidth: 120, maxWidth: 280)
+                                .padding(.vertical, 16)
+                                .padding(.horizontal, 24)
+                                .background(selectedRole != nil ? Color.blue : Color.gray)
+                                .cornerRadius(12)
                         }
-                    }) {
-                        Text("Continue")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(minWidth: 120, maxWidth: 280)
-                            .padding(.vertical, 16)
-                            .padding(.horizontal, 24)
-                            .background(selectedRole != nil ? Color.blue : Color.gray)
-                            .cornerRadius(12)
+                    } else {
+                        NavigationLink(destination: {
+                            if selectedRole == .admin {
+                                AdminLoginView(showMainApp: $showMainApp)
+                            } else if selectedRole == .librarian {
+                                LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $selectedRole)
+                            } else {
+                                EmptyView()
+                            }
+                        }) {
+                            Text("Continue")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(minWidth: 120, maxWidth: 280)
+                                .padding(.vertical, 16)
+                                .padding(.horizontal, 24)
+                                .background(selectedRole != nil ? Color.blue : Color.gray)
+                                .cornerRadius(12)
+                        }
                     }
                 }
+                .disabled(selectedRole == nil)
+                .padding(.horizontal, 30)
+                .padding(.bottom, 40)
             }
-            .disabled(selectedRole == nil)
-            .padding(.horizontal, 30)
-            .padding(.bottom, 40)
-            
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
 }
 

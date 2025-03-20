@@ -10,6 +10,7 @@ struct EditBookFormView: View {
     @State private var selectedGenre: String
     @State private var errorMessage: String? = nil
     @State private var showSuccessMessage = false
+    @State private var isLoading = false
     
     // List of common book genres
     private let genres = [
@@ -96,13 +97,19 @@ struct EditBookFormView: View {
                 }
                 
                 Button(action: saveChanges) {
-                    Text("Save Changes")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
+                    if isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    } else {
+                        Text("Save Changes")
+                    }
                 }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(isLoading ? Color.blue.opacity(0.7) : Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+                .disabled(isLoading)
                 .buttonStyle(PlainButtonStyle())
                 .listRowBackground(Color.appBackground)
                 .padding(.vertical)
@@ -157,6 +164,12 @@ struct EditBookFormView: View {
             return
         }
         
+        isLoading = true
+        
+        // Calculate new available copies based on the difference in total copies
+        let difference = quantityInt - book.totalCopies
+        let newAvailableCopies = max(0, book.availableCopies + difference)
+        
         // Create updated book
         var updatedBook = book
         updatedBook = LibrarianBook(
@@ -166,7 +179,7 @@ struct EditBookFormView: View {
             genre: selectedGenre,
             publicationDate: book.publicationDate,
             totalCopies: quantityInt,
-            availableCopies: book.availableCopies,
+            availableCopies: newAvailableCopies,
             ISBN: book.ISBN,
             Description: book.Description,
             shelfLocation: shelfLocation,
@@ -178,20 +191,25 @@ struct EditBookFormView: View {
         // Update the book in the store
         bookStore.updateBook(updatedBook)
         
-        // Show success message
-        withAnimation {
-            showSuccessMessage = true
-        }
-        
-        // Wait 1.5 seconds before dismissing
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        // Simulate a small delay to show loading state
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            isLoading = false
+            
+            // Show success message
             withAnimation {
-                showSuccessMessage = false
+                showSuccessMessage = true
             }
             
-            // Dismiss the sheet after a short delay to allow the animation to complete
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                dismiss()
+            // Wait 1.5 seconds before dismissing
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                withAnimation {
+                    showSuccessMessage = false
+                }
+                
+                // Dismiss the sheet after a short delay to allow the animation to complete
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    dismiss()
+                }
             }
         }
     }

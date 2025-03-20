@@ -115,7 +115,7 @@ struct HomeLibrarianView: View {
                 NavigationLink(destination:
                     Group {
                         if let book = selectedBook {
-                            BookDetailedView(book: book)
+                            BookDetailedView(bookId: book.id)
                         } else {
                             EmptyView()
                         }

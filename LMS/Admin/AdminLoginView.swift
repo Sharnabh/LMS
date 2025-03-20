@@ -17,6 +17,9 @@ struct AdminLoginView: View {
     @State private var showOnboarding = false
     @State private var isLoading = false
     @State private var currentAdminId: String?
+    @State private var showPassword = false
+    @State private var showNewPassword = false
+    @State private var showConfirmPassword = false
     
     private let dataController = SupabaseDataController()
     
@@ -63,10 +66,37 @@ struct AdminLoginView: View {
                         .font(.headline)
                         .foregroundColor(.secondary)
                     
-                    SecureField("Enter your password", text: $password)
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(10)
+                    if showPassword {
+                        TextField("Enter your password", text: $password)
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(10)
+                            .overlay(
+                                Button(action: {
+                                    showPassword.toggle()
+                                }) {
+                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.trailing, 8),
+                                alignment: .trailing
+                            )
+                    } else {
+                        SecureField("Enter your password", text: $password)
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(10)
+                            .overlay(
+                                Button(action: {
+                                    showPassword.toggle()
+                                }) {
+                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.trailing, 8),
+                                alignment: .trailing
+                            )
+                    }
                 }
             }
             .padding(.horizontal)
@@ -129,7 +159,7 @@ struct AdminLoginView: View {
                     if result.isFirstLogin {
                         showPasswordReset = true
                     } else {
-                        showOnboarding = true
+                        showMainApp = true
                     }
                 } else {
                     alertMessage = "Invalid email or password. Please try again."
@@ -157,6 +187,8 @@ struct PasswordResetView: View {
     @Binding var showOnboarding: Bool
     @State private var showProfileSetup = false
     let adminId: String
+    @State private var showNewPassword = false
+    @State private var showConfirmPassword = false
     
     private let dataController = SupabaseDataController()
     
@@ -212,10 +244,6 @@ struct PasswordResetView: View {
                     }
                     .padding(.top, 30)
                     
-                    // Password Requirements
-                    passwordRequirements
-                        .padding(.horizontal)
-                    
                     // Password Form
                     VStack(spacing: 20) {
                         VStack(alignment: .leading, spacing: 8) {
@@ -223,11 +251,39 @@ struct PasswordResetView: View {
                                 .font(.headline)
                                 .foregroundColor(.secondary)
                             
-                            SecureField("Enter new password", text: $newPassword)
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(10)
-                                .textContentType(.newPassword)
+                            if showNewPassword {
+                                TextField("Enter new password", text: $newPassword)
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(10)
+                                    .textContentType(.newPassword)
+                                    .overlay(
+                                        Button(action: {
+                                            showNewPassword.toggle()
+                                        }) {
+                                            Image(systemName: showNewPassword ? "eye.slash.fill" : "eye.fill")
+                                                .foregroundColor(.gray)
+                                        }
+                                        .padding(.trailing, 8),
+                                        alignment: .trailing
+                                    )
+                            } else {
+                                SecureField("Enter new password", text: $newPassword)
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(10)
+                                    .textContentType(.newPassword)
+                                    .overlay(
+                                        Button(action: {
+                                            showNewPassword.toggle()
+                                        }) {
+                                            Image(systemName: showNewPassword ? "eye.slash.fill" : "eye.fill")
+                                                .foregroundColor(.gray)
+                                        }
+                                        .padding(.trailing, 8),
+                                        alignment: .trailing
+                                    )
+                            }
                         }
                         
                         VStack(alignment: .leading, spacing: 8) {
@@ -235,14 +291,46 @@ struct PasswordResetView: View {
                                 .font(.headline)
                                 .foregroundColor(.secondary)
                             
-                            SecureField("Confirm new password", text: $confirmPassword)
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(10)
-                                .textContentType(.newPassword)
+                            if showConfirmPassword {
+                                TextField("Confirm new password", text: $confirmPassword)
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(10)
+                                    .textContentType(.newPassword)
+                                    .overlay(
+                                        Button(action: {
+                                            showConfirmPassword.toggle()
+                                        }) {
+                                            Image(systemName: showConfirmPassword ? "eye.slash.fill" : "eye.fill")
+                                                .foregroundColor(.gray)
+                                        }
+                                        .padding(.trailing, 8),
+                                        alignment: .trailing
+                                    )
+                            } else {
+                                SecureField("Confirm new password", text: $confirmPassword)
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(10)
+                                    .textContentType(.newPassword)
+                                    .overlay(
+                                        Button(action: {
+                                            showConfirmPassword.toggle()
+                                        }) {
+                                            Image(systemName: showConfirmPassword ? "eye.slash.fill" : "eye.fill")
+                                                .foregroundColor(.gray)
+                                        }
+                                        .padding(.trailing, 8),
+                                        alignment: .trailing
+                                    )
+                            }
                         }
                     }
                     .padding(.horizontal)
+                    
+                    // Password Requirements
+                    passwordRequirements
+                        .padding(.horizontal)
                     
                     // Submit button
                     Button(action: {
@@ -308,3 +396,6 @@ struct PasswordResetView: View {
     AdminLoginView(showMainApp: .constant(false))
 }
 
+#Preview {
+    PasswordResetView(showMainApp: .constant(false), showOnboarding: .constant(false), adminId: "1234")
+}

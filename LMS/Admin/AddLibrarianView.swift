@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AddLibrarianView: View {
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var dataController = SupabaseDataController()
     @State private var librarianName = ""
     @State private var librarianEmail = ""
     @State private var showAlert = false
@@ -80,23 +81,18 @@ struct AddLibrarianView: View {
                     
                     // Add Librarian Button
                     Button(action: {
-                        if librarianName.isEmpty || librarianEmail.isEmpty {
-                            alertMessage = "Please fill in all librarian details."
-                            showAlert = true
-                        } else {
-                            alertMessage = "Librarian added successfully!"
-                            showAlert = true
-                            // Clear fields after successful addition
-                            librarianName = ""
-                            librarianEmail = ""
-                            
-                            // Dismiss the sheet
-                            dismiss()
+                        Task {
+                            await addLibrarian()
                         }
                     }) {
                         HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                            Text("Add Librarian")
+                            if isLoading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            } else {
+                                Image(systemName: "checkmark.circle.fill")
+                                Text("Add Librarian")
+                            }
                         }
                         .font(.headline)
                         .foregroundColor(.white)
@@ -111,6 +107,7 @@ struct AddLibrarianView: View {
                         )
                         .cornerRadius(12)
                     }
+                    .disabled(isLoading)
                     .padding(.horizontal)
                     .padding(.bottom, 30)
                 }
@@ -131,6 +128,42 @@ struct AddLibrarianView: View {
                     message: Text(alertMessage),
                     dismissButton: .default(Text("OK"))
                 )
+            }
+        }
+    }
+    
+    private func addLibrarian() async {
+        if librarianName.isEmpty || librarianEmail.isEmpty {
+            alertMessage = "Please fill in all librarian details."
+            showAlert = true
+            return
+        }
+        
+        isLoading = true
+        
+        do {
+            _ = try await dataController.createLibrarian(
+                name: librarianName,
+                email: librarianEmail
+            )
+            
+            DispatchQueue.main.async {
+                isLoading = false
+                alertMessage = "Librarian added successfully! A welcome email has been sent with login credentials."
+                showAlert = true
+                
+                // Clear fields after successful addition
+                librarianName = ""
+                librarianEmail = ""
+                
+                // Dismiss the sheet
+                dismiss()
+            }
+        } catch {
+            DispatchQueue.main.async {
+                isLoading = false
+                alertMessage = "Error adding librarian: \(error.localizedDescription)"
+                showAlert = true
             }
         }
     }

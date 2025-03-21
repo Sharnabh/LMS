@@ -1,118 +1,164 @@
 import SwiftUI
+import Supabase
 
 struct AdminProfile: Codable {
-    var firstName: String
-    var lastName: String
+    var fullName: String
     var dateOfBirth: String
-    var gender: String
-    var bloodGroup: String
+    var email: String
 }
 
 struct AdminHomeView: View {
     @State private var profile = AdminProfile(
-        firstName: "John",
-        lastName: "Doe",
+        fullName: "John Doe",
         dateOfBirth: "20 Mar 2025",
-        gender: "Male",
-        bloodGroup: "AB+"
+        email: "john.doe@example.com"
     )
     @Environment(\.dismiss) private var dismiss
-    @State private var showingLogoutAlert = false
     @State private var isEditing = false
+    @State private var showingImagePicker = false
+    @AppStorage("isLoggedIn") private var isLoggedIn = true
+    @State private var showingLogoutAlert = false
     
     var body: some View {
         NavigationView {
             List {
+                // Profile Photo Section
                 Section {
                     HStack {
                         Spacer()
-                        VStack {
+                        VStack(spacing: 8) {
                             Image(systemName: "person.crop.circle.fill")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(width: 80, height: 80)
+                                .frame(width: 100, height: 100)
                                 .foregroundColor(.accentColor)
+                                .accessibilityLabel("Profile photo")
                             
                             if isEditing {
-                                Text("Change Photo")
-                                    .font(.footnote)
-                                    .foregroundColor(.accentColor)
+                                Button(action: { showingImagePicker = true }) {
+                                    Text("Change Photo")
+                                        .font(.subheadline)
+                                        .foregroundColor(.accentColor)
+                                }
+                                .accessibilityLabel("Change profile photo")
                             }
                         }
+                        .padding(.vertical, 8)
                         Spacer()
                     }
-                    .padding(.vertical, 10)
                 }
                 
+                // Personal Information Section
                 Section {
                     if isEditing {
-                        TextField("First Name", text: .init(
-                            get: { profile.firstName },
-                            set: { profile.firstName = $0 }
-                        ))
-                        TextField("Last Name", text: .init(
-                            get: { profile.lastName },
-                            set: { profile.lastName = $0 }
-                        ))
-                        TextField("Date of Birth", text: .init(
-                            get: { profile.dateOfBirth },
-                            set: { profile.dateOfBirth = $0 }
-                        ))
-                        Picker("Gender", selection: .init(
-                            get: { profile.gender },
-                            set: { profile.gender = $0 }
-                        )) {
-                            Text("Male").tag("Male")
-                            Text("Female").tag("Female")
-                            Text("Other").tag("Other")
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Full Name")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            TextField("Enter your full name", text: .init(
+                                get: { profile.fullName },
+                                set: { profile.fullName = $0 }
+                            ))
+                            .textContentType(.name)
                         }
-                        TextField("Blood Group", text: .init(
-                            get: { profile.bloodGroup },
-                            set: { profile.bloodGroup = $0 }
-                        ))
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Date of Birth")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            TextField("Enter date of birth", text: .init(
+                                get: { profile.dateOfBirth },
+                                set: { profile.dateOfBirth = $0 }
+                            ))
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Email")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            TextField("Enter your email", text: .init(
+                                get: { profile.email },
+                                set: { profile.email = $0 }
+                            ))
+                            .textContentType(.emailAddress)
+                            .keyboardType(.emailAddress)
+                            .autocapitalization(.none)
+                        }
                     } else {
-                        ProfileInfoRow(title: "First Name", value: profile.firstName)
-                        ProfileInfoRow(title: "Last Name", value: profile.lastName)
+                        ProfileInfoRow(title: "Full Name", value: profile.fullName)
                         ProfileInfoRow(title: "Date of Birth", value: profile.dateOfBirth)
-                        ProfileInfoRow(title: "Gender", value: profile.gender)
-                        ProfileInfoRow(title: "Blood Group", value: profile.bloodGroup)
+                        ProfileInfoRow(title: "Email", value: profile.email)
                     }
                 } header: {
                     Text("Personal Information")
+                        .textCase(.none)
+                } footer: {
+                    if isEditing {
+                        Text("Your information will be used to personalize your experience")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
+                // Preferences Section
                 Section {
                     NavigationLink(destination: NotificationsView()) {
-                        HStack {
-                            Label("Notifications", systemImage: "bell.fill")
-                            Spacer()
+                        Label {
+                            Text("Notifications")
+                        } icon: {
+                            Image(systemName: "bell.fill")
+                                .foregroundColor(.accentColor)
                         }
                     }
                 } header: {
                     Text("Preferences")
+                        .textCase(.none)
                 }
                 
+                // Help & Support Section
                 Section {
                     NavigationLink(destination: SupportView()) {
-                        Label("Contact Support", systemImage: "questionmark.circle.fill")
+                        Label {
+                            Text("Contact Support")
+                        } icon: {
+                            Image(systemName: "questionmark.circle.fill")
+                                .foregroundColor(.accentColor)
+                        }
                     }
                     
                     Link(destination: URL(string: "https://www.samplelms.com/help")!) {
-                        Label("Help Center", systemImage: "book.fill")
+                        Label {
+                            Text("Help Center")
+                        } icon: {
+                            Image(systemName: "book.fill")
+                                .foregroundColor(.accentColor)
+                        }
                     }
                     
                     Link(destination: URL(string: "https://www.samplelms.com/privacy")!) {
-                        Label("Privacy Policy", systemImage: "hand.raised.fill")
+                        Label {
+                            Text("Privacy Policy")
+                        } icon: {
+                            Image(systemName: "hand.raised.fill")
+                                .foregroundColor(.accentColor)
+                        }
                     }
                 } header: {
                     Text("Help & Support")
+                        .textCase(.none)
                 }
                 
+                // Logout Section
                 Section {
-                    Button(role: .destructive) {
+                    Button(action: {
                         showingLogoutAlert = true
-                    } label: {
-                        Label("Log Out", systemImage: "rectangle.portrait.and.arrow.right")
+                    }) {
+                        HStack {
+                            Spacer()
+                            Text("Log Out")
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
                     }
                 }
             }
@@ -125,15 +171,21 @@ struct AdminHomeView: View {
                             isEditing.toggle()
                         }
                     }
+                    .accessibilityLabel(isEditing ? "Done editing profile" : "Edit profile")
                 }
             }
-            .alert("Log Out", isPresented: $showingLogoutAlert) {
+            .sheet(isPresented: $showingImagePicker) {
+                // Image picker implementation would go here
+                Text("Image Picker")
+            }
+            .alert("Logout", isPresented: $showingLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
-                Button("Log Out", role: .destructive) {
-                    // Handle logout
+                Button("Logout", role: .destructive) {
+                    isLoggedIn = false
+                    dismiss()
                 }
             } message: {
-                Text("Are you sure you want to log out?")
+                Text("Are you sure you want to logout?")
             }
         }
     }
@@ -149,7 +201,10 @@ struct ProfileInfoRow: View {
                 .foregroundColor(.secondary)
             Spacer()
             Text(value)
+                .foregroundColor(.primary)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 

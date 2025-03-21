@@ -27,105 +27,141 @@ struct OnboardingView: View {
     @Binding var selectedRole: UserRole?
     @Binding var showMainApp: Bool
     @Binding var showAdminLogin: Bool
+    @State private var animateHeader = false
+    @State private var animateCards = false
+    @State private var animateButton = false
+    @State private var animateGradient = false
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 30) {
-                // Header
-                VStack(spacing: 16) {
-                    Image(systemName: "books.vertical.fill")
-                        .font(.system(size: 80))
-                        .foregroundColor(.blue)
-                    
-                    Text("Welcome to SampleLMS")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
-                    Text("Please select your role to continue")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.top, 60)
-                
-                Spacer()
-                
-                // Role selection cards
-                VStack(spacing: 20) {
-                    RoleCard(
-                        title: "Admin",
-                        description: "Manage the entire library system",
-                        iconName: "person.badge.shield.checkmark",
-                        color: .purple,
-                        isSelected: selectedRole == .admin
-                    ) {
-                        selectedRole = .admin
-                    }
-                    
-                    RoleCard(
-                        title: "Librarian",
-                        description: "Manage books and member borrowings",
-                        iconName: "person.text.rectangle",
-                        color: .blue,
-                        isSelected: selectedRole == .librarian
-                    ) {
-                        selectedRole = .librarian
-                    }
-                    
-                    RoleCard(
-                        title: "Member",
-                        description: "Borrow books and manage your account",
-                        iconName: "person.crop.circle",
-                        color: .green,
-                        isSelected: selectedRole == .member
-                    ) {
-                        selectedRole = .member
+            ZStack {
+                // Updated gradient background with slower animation
+                LinearGradient(
+                    colors: [
+                        Color.blue.opacity(0.15),
+                        Color.purple.opacity(0.15),
+                        Color.blue.opacity(0.15)
+                    ],
+                    startPoint: animateGradient ? .topLeading : .bottomLeading,
+                    endPoint: animateGradient ? .bottomTrailing : .topTrailing
+                )
+                .ignoresSafeArea()
+                .onAppear {
+                    withAnimation(.linear(duration: 8.0).repeatForever(autoreverses: true)) {
+                        animateGradient.toggle()
                     }
                 }
-                .padding(.horizontal)
                 
-                Spacer()
+                // Add subtle pattern overlay
+                Color.white.opacity(0.1)
+                    .blendMode(.overlay)
+                    .ignoresSafeArea()
                 
-                // Combined continue button
-                Group {
-                    if selectedRole == .member {
-                        NavigationLink(destination: {
-                            MemberAuthView(showMainApp: $showMainApp)
-                        }) {
-                            Text("Continue")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(minWidth: 120, maxWidth: 280)
-                                .padding(.vertical, 16)
-                                .padding(.horizontal, 24)
-                                .background(selectedRole != nil ? Color.blue : Color.gray)
-                                .cornerRadius(12)
+                VStack(spacing: 30) {
+                    // Header with subtle animation
+                    VStack(spacing: 16) {
+                        Image(systemName: "books.vertical.fill")
+                            .font(.system(size: 80))
+                            .foregroundColor(.blue)
+                            .scaleEffect(animateHeader ? 1.05 : 1.0)
+                            .rotationEffect(.degrees(animateHeader ? 2 : -2))
+                        
+                        Text("Welcome to SampleLMS")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .opacity(animateHeader ? 1 : 0)
+                            .offset(y: animateHeader ? 0 : 10)
+                        
+                        Text("Please select your role to continue")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                            .opacity(animateHeader ? 1 : 0)
+                            .offset(y: animateHeader ? 0 : 10)
+                    }
+                    .padding(.top, 60)
+                    .onAppear {
+                        withAnimation(.easeOut(duration: 0.5)) {
+                            animateHeader = true
                         }
-                    } else {
-                        NavigationLink(destination: {
-                            if selectedRole == .admin {
-                                AdminLoginView(showMainApp: $showMainApp)
-                            } else if selectedRole == .librarian {
-                                LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $selectedRole)
-                            } else {
-                                EmptyView()
+                    }
+                    
+                    Spacer()
+                    
+                    // Role selection cards with subtle animation
+                    VStack(spacing: 20) {
+                        RoleCard(
+                            title: "Admin",
+                            description: "Manage the entire library system",
+                            iconName: "person.badge.shield.checkmark",
+                            color: .purple,
+                            isSelected: selectedRole == .admin,
+                            delay: 0.2
+                        ) {
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                selectedRole = .admin
                             }
-                        }) {
-                            Text("Continue")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(minWidth: 120, maxWidth: 280)
-                                .padding(.vertical, 16)
-                                .padding(.horizontal, 24)
-                                .background(selectedRole != nil ? Color.blue : Color.gray)
-                                .cornerRadius(12)
+                        }
+                        
+                        RoleCard(
+                            title: "Librarian",
+                            description: "Manage books and member borrowings",
+                            iconName: "person.text.rectangle",
+                            color: .blue,
+                            isSelected: selectedRole == .librarian,
+                            delay: 0.3
+                        ) {
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                selectedRole = .librarian
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .opacity(animateCards ? 1 : 0)
+                    .offset(y: animateCards ? 0 : 20)
+                    .onAppear {
+                        withAnimation(.easeOut(duration: 0.5).delay(0.2)) {
+                            animateCards = true
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    // Continue button with subtle animation
+                    NavigationLink(destination: {
+                        if selectedRole == .admin {
+                            AdminLoginView(showMainApp: $showMainApp)
+                        } else if selectedRole == .librarian {
+                            LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $selectedRole)
+                        } else {
+                            EmptyView()
+                        }
+                    }) {
+                        Text("Continue")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(minWidth: 120, maxWidth: 280)
+                            .padding(.vertical, 16)
+                            .padding(.horizontal, 24)
+                            .background(
+                                selectedRole != nil ?
+                                LinearGradient(colors: [.blue, .blue.opacity(0.8)], startPoint: .leading, endPoint: .trailing) :
+                                LinearGradient(colors: [.gray, .gray.opacity(0.8)], startPoint: .leading, endPoint: .trailing)
+                            )
+                            .cornerRadius(12)
+                            .shadow(color: selectedRole != nil ? .blue.opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
+                    }
+                    .disabled(selectedRole == nil)
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, 40)
+                    .opacity(animateButton ? 1 : 0)
+                    .offset(y: animateButton ? 0 : 10)
+                    .onAppear {
+                        withAnimation(.easeOut(duration: 0.5).delay(0.4)) {
+                            animateButton = true
                         }
                     }
                 }
-                .disabled(selectedRole == nil)
-                .padding(.horizontal, 30)
-                .padding(.bottom, 40)
             }
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
         }
     }
 }
@@ -136,7 +172,9 @@ struct RoleCard: View {
     let iconName: String
     let color: Color
     let isSelected: Bool
+    let delay: Double
     let action: () -> Void
+    @State private var animateCard = false
     
     var body: some View {
         Button(action: action) {
@@ -145,12 +183,17 @@ struct RoleCard: View {
                     .font(.system(size: 30))
                     .foregroundColor(color)
                     .frame(width: 60, height: 60)
-                    .background(color.opacity(0.1))
-                    .cornerRadius(12)
+                    .background(
+                        Circle()
+                            .fill(color.opacity(0.2))
+                            .blur(radius: 2)
+                    )
+                    .rotationEffect(.degrees(animateCard ? 0 : -180))
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.headline)
+                        .foregroundColor(.primary)
                     
                     Text(description)
                         .font(.subheadline)
@@ -164,17 +207,60 @@ struct RoleCard: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.blue)
                         .font(.title2)
+                        .transition(.scale.combined(with: .opacity))
                 }
             }
             .padding()
-            .background(Color(.secondarySystemGroupedBackground))
+            .background(
+                ZStack {
+                    // Glassmorphism background
+                    Color.white.opacity(0.2)
+                    Color.white.opacity(0.1)
+                        .blur(radius: 8)
+                    
+                    // Subtle gradient overlay
+                    LinearGradient(
+                        colors: [
+                            color.opacity(0.1),
+                            color.opacity(0.05)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                }
+            )
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.ultraThinMaterial)
+            )
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                color.opacity(0.5),
+                                color.opacity(0.2)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: isSelected ? 2 : 1
+                    )
+            )
+            .shadow(
+                color: isSelected ? color.opacity(0.3) : .black.opacity(0.1),
+                radius: isSelected ? 10 : 8,
+                x: 0,
+                y: isSelected ? 5 : 3
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.4).delay(delay)) {
+                animateCard = true
+            }
+        }
     }
 }
 
@@ -222,128 +308,6 @@ struct MainAppView: View {
         }
     }
 }
-
-//struct HomeView: View {
-//    var body: some View {
-//        NavigationView {
-//            ScrollView {
-//                VStack(spacing: 20) {
-//                    // Header
-//                    VStack(spacing: 16) {
-//                        Image(systemName: "house.fill")
-//                            .font(.system(size: 60))
-//                            .foregroundColor(.purple)
-//
-//                        Text("Welcome to LMS")
-//                            .font(.title)
-//                            .fontWeight(.bold)
-//
-//                        Text("Your Library Management System")
-//                            .font(.subheadline)
-//                            .foregroundColor(.secondary)
-//                    }
-//                    .padding(.top, 20)
-//
-//                    // Quick Stats
-//                    HStack(spacing: 20) {
-//                        StatCard(title: "Total Books", value: "1,234", icon: "book.fill", color: .blue)
-//                        StatCard(title: "Active Members", value: "567", icon: "person.2.fill", color: .green)
-//                        StatCard(title: "Borrowed", value: "89", icon: "arrow.right.circle.fill", color: .orange)
-//                    }
-//                    .padding(.horizontal)
-//
-//                    // Recent Activity
-//                    VStack(alignment: .leading, spacing: 15) {
-//                        Text("Recent Activity")
-//                            .font(.headline)
-//                            .padding(.horizontal)
-//
-//                        ForEach(0..<5) { index in
-//                            ActivityRow(
-//                                icon: "arrow.right.circle.fill",
-//                                title: "Book Borrowed",
-//                                subtitle: "Book Title \(index + 1)",
-//                                time: "2 hours ago"
-//                            )
-//                        }
-//                    }
-//                    .padding(.top)
-//                }
-//            }
-//            .navigationTitle("Home")
-//            .navigationBarTitleDisplayMode(.large)
-//        }
-//    }
-//}
-
-//struct StatCard: View {
-//    let title: String
-//    let value: String
-//    let icon: String
-//    let color: Color
-//
-//    var body: some View {
-//        VStack(spacing: 8) {
-//            Image(systemName: icon)
-//                .font(.system(size: 30))
-//                .foregroundColor(color)
-//
-//            Text(value)
-//                .font(.title2)
-//                .fontWeight(.bold)
-//
-//            Text(title)
-//                .font(.caption)
-//                .foregroundColor(.secondary)
-//        }
-//        .frame(maxWidth: .infinity)
-//        .padding()
-//        .background(Color(.secondarySystemBackground))
-//        .cornerRadius(12)
-//    }
-//}
-
-//struct ActivityRow: View {
-//    let icon: String
-//    let title: String
-//    let subtitle: String
-//    let time: String
-//
-//    var body: some View {
-//        HStack(spacing: 15) {
-//            Image(systemName: icon)
-//                .font(.system(size: 24))
-//                .foregroundColor(.purple)
-//
-//            VStack(alignment: .leading, spacing: 4) {
-//                Text(title)
-//                    .font(.subheadline)
-//                    .fontWeight(.medium)
-//
-//                Text(subtitle)
-//                    .font(.caption)
-//                    .foregroundColor(.secondary)
-//            }
-//
-//            Spacer()
-//
-//            Text(time)
-//                .font(.caption2)
-//                .foregroundColor(.secondary)
-//        }
-//        .padding(.horizontal)
-//        .padding(.vertical, 8)
-//    }
-//}
-//
-//struct AnalyticsView: View {
-//    var body: some View {
-//        NavigationView {
-//            Text("Analytics View")
-//                .navigationTitle("Analytics")
-//        }
-//    }
-//}
 
 enum UserRole: String {
     case admin = "Admin"

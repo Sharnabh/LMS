@@ -22,7 +22,7 @@ struct AddView: View {
                         TextField("ISBN, Title, Author", text: $searchText)
                             .padding(10)
                             .background(Color.white)
-                            .border(Color.gray, width: 1)
+                           // .border(Color.gray, width: 1)
                             .padding(.vertical, 10)
                             .padding(.leading, 16)
                         

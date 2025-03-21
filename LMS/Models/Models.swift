@@ -84,10 +84,10 @@ struct Member: Codable, Identifiable {
 struct Book: Codable, Identifiable {
     var id: UUID
     var title: String
-    var author: String
+    var author: [String]
     var genre: String
     var ISBN: String
-    var publicationYear: Int
+    var publicationDate: String
     var totalCopies: Int
     var availableCopies: Int
 }

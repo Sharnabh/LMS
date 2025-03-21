@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 struct AddView: View {
     @EnvironmentObject private var bookStore: BookStore
@@ -9,6 +10,7 @@ struct AddView: View {
     @State private var showScanner = false
     @State private var showAddBookSheet = false
     @State private var showCSVUploadSheet = false
+    @State private var scannedCode: String = ""
     
     var body: some View {
         NavigationView {
@@ -20,10 +22,11 @@ struct AddView: View {
                     // Search bar section
                     HStack(spacing: 0) {
                         // Search field
-                        TextField("ISBN, Title, Autor", text: $searchText)
+                        TextField("ISBN, Title, Author", text: $searchText)
                             .padding(10)
                             .background(Color.white)
-                            .cornerRadius(20)
+                           // .border(Color.gray, width: 1)
+                            .cornerRadius(16)
                             .padding(.vertical, 10)
                             .padding(.leading, 16)
                         
@@ -91,15 +94,15 @@ struct AddView: View {
                     Spacer()
                     HStack {
                         Spacer()
-                        ZStack {
-                            Circle()
-                                .fill(Color.blue)
-                                .frame(width: 60, height: 60)
-                                .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
-                            
-                            Button(action: {
-                                showScanner = true
-                            }) {
+                        Button(action: {
+                            showScanner = true
+                        }) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue)
+                                    .frame(width: 60, height: 60)
+                                    .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
+                                
                                 Image(systemName: "barcode.viewfinder")
                                     .resizable()
                                     .scaledToFit()
@@ -132,15 +135,16 @@ struct AddView: View {
                         Image(systemName: "plus")
                     }
                 }
+            )
+            .sheet(isPresented: $showScanner) {
+                BarcodeScannerView(scannedCode: $scannedCode)
+                    .ignoresSafeArea()
             }
-            .onChange(of: showScanner) { newValue in
-                if newValue == true {
-                    // In a real app, this would be the result from a barcode scanner
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        searchText = "9781788294669"  // Example ISBN
-                        showScanner = false
-                        searchBook()
-                    }
+            .onChange(of: scannedCode) { oldCode, newCode in
+                if !newCode.isEmpty {
+                    searchText = newCode
+                    searchBook()
+                    scannedCode = "" // Reset for next scan
                 }
             }
         }

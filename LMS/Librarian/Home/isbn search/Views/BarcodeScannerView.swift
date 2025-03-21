@@ -48,7 +48,6 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
     private var previewLayer: AVCaptureVideoPreviewLayer!
     private let overlayView = UIView()
     private let scannerOverlay = UIImageView()
-    private let cancelButton = UIButton(type: .system)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -57,45 +56,115 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
     }
     
     private func setupUI() {
-        // Setup overlay view
-        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        // Setup overlay view with transparent square in the middle
+        overlayView.backgroundColor = UIColor.clear
         view.addSubview(overlayView)
         overlayView.frame = view.bounds
         
-        // Setup scanner overlay (the barcode viewfinder)
-        scannerOverlay.image = UIImage(systemName: "viewfinder")
-        scannerOverlay.tintColor = .white
-        scannerOverlay.contentMode = .scaleAspectFit
-        view.addSubview(scannerOverlay)
+        // Create the scanning square size
+        let scanningAreaSize: CGFloat = 250
+        let scanningAreaX = (view.bounds.width - scanningAreaSize) / 2
+        let scanningAreaY = (view.bounds.height - scanningAreaSize) / 2 - 100  // Moved up by 100 points
+        let cornerRadius: CGFloat = 15 // Add corner radius
         
-        // Center the scanner overlay with appropriate size
-        let size: CGFloat = 200
-        scannerOverlay.frame = CGRect(
-            x: (view.bounds.width - size) / 2,
-            y: (view.bounds.height - size) / 2,
-            width: size,
-            height: size
+        // Add text label above the scanning area
+        let label = UILabel()
+        label.text = "Add books using\nBarcode"
+        label.numberOfLines = 2
+        label.textAlignment = .left
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+        
+        // Calculate label size and position
+        let labelSize = label.sizeThatFits(CGSize(width: view.bounds.width - 40, height: 200))
+        label.frame = CGRect(
+            x: (view.bounds.width - labelSize.width) / 3.5,
+            y: scanningAreaY - labelSize.height - 15, // 20 points padding
+            width: labelSize.width,
+            height: labelSize.height
+        )
+        view.addSubview(label)
+        
+        // Create path for the overlay
+        let path = UIBezierPath(rect: view.bounds)
+        
+        // Create the transparent rectangle in the middle with rounded corners
+        let transparentPath = UIBezierPath(
+            roundedRect: CGRect(
+                x: scanningAreaX,
+                y: scanningAreaY,
+                width: scanningAreaSize,
+                height: scanningAreaSize
+            ),
+            cornerRadius: cornerRadius
         )
         
-        // Setup cancel button
-        cancelButton.setTitle("Cancel", for: .normal)
-        cancelButton.backgroundColor = .white
-        cancelButton.setTitleColor(.blue, for: .normal)
-        cancelButton.layer.cornerRadius = 8
-        cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
-        view.addSubview(cancelButton)
+        path.append(transparentPath.reversing())
         
-        // Position cancel button at bottom
-        cancelButton.frame = CGRect(
-            x: 20,
-            y: view.bounds.height - 100,
-            width: view.bounds.width - 40,
-            height: 44
-        )
+        // Create shape layer for the overlay
+        let shapeLayer = CAShapeLayer()
+        shapeLayer.path = path.cgPath
+        shapeLayer.fillColor = UIColor.black.withAlphaComponent(0.5).cgColor
+        overlayView.layer.addSublayer(shapeLayer)
+        
+        // Add corner guides to the scanning area
+        let cornerLength: CGFloat = 30
+        let cornerWidth: CGFloat = 3
+        let cornerColor = UIColor.white
+        
+        // Top left corner
+        addCornerGuide(at: CGPoint(x: scanningAreaX + cornerRadius/2, y: scanningAreaY + cornerRadius/2),
+                      horizontal: cornerLength, vertical: cornerLength,
+                      width: cornerWidth, color: cornerColor, orientation: 0)
+        
+        // Top right corner
+        addCornerGuide(at: CGPoint(x: scanningAreaX + scanningAreaSize - cornerRadius/2, y: scanningAreaY + cornerRadius/2),
+                      horizontal: cornerLength, vertical: cornerLength,
+                      width: cornerWidth, color: cornerColor, orientation: 1)
+        
+        // Bottom left corner
+        addCornerGuide(at: CGPoint(x: scanningAreaX + cornerRadius/2, y: scanningAreaY + scanningAreaSize - cornerRadius/2),
+                      horizontal: cornerLength, vertical: cornerLength,
+                      width: cornerWidth, color: cornerColor, orientation: 2)
+        
+        // Bottom right corner
+        addCornerGuide(at: CGPoint(x: scanningAreaX + scanningAreaSize - cornerRadius/2, y: scanningAreaY + scanningAreaSize - cornerRadius/2),
+                      horizontal: cornerLength, vertical: cornerLength,
+                      width: cornerWidth, color: cornerColor, orientation: 3)
         
         // Bring UI elements to front
-        view.bringSubviewToFront(scannerOverlay)
-        view.bringSubviewToFront(cancelButton)
+        view.bringSubviewToFront(overlayView)
+        view.bringSubviewToFront(label)
+    }
+    
+    private func addCornerGuide(at point: CGPoint, horizontal: CGFloat, vertical: CGFloat, width: CGFloat, color: UIColor, orientation: Int = 0) {
+        // Horizontal line
+        let horizontalLine = UIView()
+        horizontalLine.backgroundColor = color
+        
+        // Vertical line
+        let verticalLine = UIView()
+        verticalLine.backgroundColor = color
+        
+        switch orientation {
+        case 0: // Top left (default)
+            horizontalLine.frame = CGRect(x: point.x, y: point.y, width: horizontal, height: width)
+            verticalLine.frame = CGRect(x: point.x, y: point.y, width: width, height: vertical)
+        case 1: // Top right
+            horizontalLine.frame = CGRect(x: point.x - horizontal + width, y: point.y, width: horizontal, height: width)
+            verticalLine.frame = CGRect(x: point.x, y: point.y, width: width, height: vertical)
+        case 2: // Bottom left
+            horizontalLine.frame = CGRect(x: point.x, y: point.y, width: horizontal, height: width)
+            verticalLine.frame = CGRect(x: point.x, y: point.y - vertical + width, width: width, height: vertical)
+        case 3: // Bottom right
+            horizontalLine.frame = CGRect(x: point.x - horizontal + width, y: point.y, width: horizontal, height: width)
+            verticalLine.frame = CGRect(x: point.x, y: point.y - vertical + width, width: width, height: vertical)
+        default:
+            break
+        }
+        
+        view.addSubview(horizontalLine)
+        view.addSubview(verticalLine)
     }
     
     private func setupCaptureSession() {
@@ -154,10 +223,6 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
         ac.addAction(UIAlertAction(title: "OK", style: .default))
         present(ac, animated: true)
         captureSession = nil
-    }
-    
-    @objc private func cancelTapped() {
-        delegate?.didCancel()
     }
     
     func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {

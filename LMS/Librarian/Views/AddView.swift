@@ -23,6 +23,7 @@ struct AddView: View {
                             .padding(10)
                             .background(Color.white)
                            // .border(Color.gray, width: 1)
+                            .cornerRadius(16)
                             .padding(.vertical, 10)
                             .padding(.leading, 16)
                         

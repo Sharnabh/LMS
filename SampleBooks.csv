@@ -1,0 +1,11 @@
+Title,Author,Genre,ISBN,PublicationDate,TotalCopies
+The Art of Computer Programming,Donald Knuth,Technology,9780201896831,1968,3
+Introduction to Algorithms,Thomas H. Cormen; Charles E. Leiserson; Ronald L. Rivest; Clifford Stein,Technology,9780262033848,2009,5
+Clean Code,Robert C. Martin,Technology,9780132350884,2008,2
+Design Patterns,Erich Gamma; Richard Helm; Ralph Johnson; John Vlissides,Technology,9780201633610,1994,3
+Fundamentals of Database Systems,Ramez Elmasri; Shamkant B. Navathe,Technology,9780133970777,2015,4
+Gray's Anatomy,Henry Gray,Medicine,9780702052309,1858,2
+The Laws of Medicine,Siddhartha Mukherjee,Medicine,9781476784847,2015,3
+The Elements of Law,Thomas Hobbes,Law,9780192835420,1640,1
+The Wealth of Nations,Adam Smith,Business,9780553585971,1776,3
+Mathematical Principles,Isaac Newton,Mathematics,9780520290730,1687,2 

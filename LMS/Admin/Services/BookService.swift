@@ -30,8 +30,21 @@ class BookService {
         return books.first
     }
     
-    // Update existing book's copies
-    private func updateBookCopies(id: UUID, totalCopies: Int, availableCopies: Int) async throws {
+    // Find books by ISBN
+    func findBooksByISBN(_ isbn: String) async throws -> [Book] {
+        let response = try await supabase
+            .from("Books")
+            .select()
+            .eq("ISBN", value: isbn)
+            .execute()
+        
+        let decoder = JSONDecoder()
+        let books = try decoder.decode([Book].self, from: response.data)
+        return books
+    }
+    
+    // Update existing book's copies - made public
+    func updateBookCopies(id: UUID, totalCopies: Int, availableCopies: Int) async throws {
         try await supabase
             .from("Books")
             .update([

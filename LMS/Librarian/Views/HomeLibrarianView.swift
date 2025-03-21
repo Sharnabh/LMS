@@ -10,7 +10,8 @@ struct HomeLibrarianView: View {
     @State private var previousBookIndex: Int? = nil // Track the previous book
     @State private var isTransitioning = false // Track if we're in transition between cards
     @State private var isAnimating = false // Track if cards are currently animating
-    @State private var showingCardView = false // (Tinder Swift / Horizontal Scroll)
+    @State private var showingCardView = false // Track which view mode to show
+    @State private var isRefreshing = false // Track refresh state
     
     private let cardBackgrounds = ["BlueCard", "GreenCard", "PurpleCard", "BlackCard"]
     
@@ -38,7 +39,7 @@ struct HomeLibrarianView: View {
                 Color.appBackground.ignoresSafeArea()
 
                 // Content area
-                VStack(alignment: .leading, spacing: 50) {
+                VStack(alignment: .leading, spacing: 0) {
                     HStack {
                         Text("Recently Added")
                             .font(.title2)
@@ -67,23 +68,23 @@ struct HomeLibrarianView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
-                    .padding(.top)
+                    .padding(.top, 16)
+                    .padding(.bottom, 8)
 
                     if showingCardView {
                         // Horizontal scrolling BookCardView list
                         ScrollView(.horizontal, showsIndicators: false) {
                             LazyHStack(spacing: 16) {
                                 ForEach(recentBooks) { book in
-                                    BookCardView(book: book)
-                                        .onTapGesture {
-                                            selectedBook = book
-                                            showBookDetails = true
-                                        }
+                                    NavigationLink(destination: BookDetailedView(bookId: book.id)) {
+                                        BookCardView(book: book)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
                             .padding(.horizontal, 16)
                         }
-                        .padding(.top, -40)
+                        .padding(.top, 16)
                         .frame(height: 210)
                         .transition(.move(edge: .top).combined(with: .opacity))
                     } else {
@@ -91,6 +92,8 @@ struct HomeLibrarianView: View {
                         if !recentBooks.isEmpty {
                             tinderCardStack()
                                 .padding(.horizontal, 20)
+                                .padding(.top, 16)
+                                .frame(height: 250)
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         } else {
                             // Empty state when no books are available
@@ -98,22 +101,20 @@ struct HomeLibrarianView: View {
                                 .foregroundColor(.secondary)
                                 .italic()
                                 .frame(maxWidth: .infinity, alignment: .center)
+                                .frame(height: 250)
                                 .padding(.horizontal, 20)
+                                .padding(.top, 20)
                         }
                     }
 
                    Spacer()
                 }
-
-                // Use navigationDestination instead of NavigationLink
-                .navigationDestination(isPresented: $showBookDetails) {
-                    if let book = selectedBook {
-                        BookDetailedView(bookId: book.id)
-                    }
-                }
             }
-            .navigationTitle("Home")
-            .navigationBarTitleDisplayMode(.large)
+        }
+        .navigationTitle("Home")
+        .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            refreshBooks()
         }
     }
 
@@ -138,7 +139,7 @@ struct HomeLibrarianView: View {
                 // We have a next book to show
                 grayCardView(book: nextBook, backgroundName: nextCardBackground)
                     .padding(.horizontal, 2)
-                    .offset(y: -40) // Position it further back initially
+                    .offset(y: 10) // Adjusted offset
                     .scaleEffect(0.9) // Make it slightly smaller
                     .opacity(0.7) // Slightly dimmed
                     .zIndex(0) // Always at the back
@@ -146,7 +147,7 @@ struct HomeLibrarianView: View {
                 // Last book - we'll still show an empty background card to maintain consistent appearance
                 grayCardView(backgroundName: nextCardBackground)
                     .padding(.horizontal, 2)
-                    .offset(y: -40)
+                    .offset(y: 10) // Adjusted offset
                     .scaleEffect(0.9)
                     .opacity(0.7)
                     .zIndex(0)
@@ -154,7 +155,7 @@ struct HomeLibrarianView: View {
                 // Empty gray card if no next book
                 grayCardView(backgroundName: nextCardBackground)
                     .padding(.horizontal, 25)
-                    .offset(y: -40)
+                    .offset(y: 10) // Adjusted offset
                     .scaleEffect(0.9)
                     .opacity(0.5)
                     .zIndex(0)
@@ -168,193 +169,204 @@ struct HomeLibrarianView: View {
                 // Show either gray card or blue card based on transition state
                 if isTransitioning {
                     // Show gray card with current book details when transitioned
-                    grayCardView(book: currentBook, backgroundName: currentBackground)
-                        .padding(.horizontal, isTransitioning ? 0 : 25)
-                        .offset(y: isTransitioning ? 0 : -30)
-                        .offset(x: dragOffset) // Add x offset for swiping
-                        .rotationEffect(.degrees(cardRotation), anchor: .bottom) // Add rotation for swiping
-                        .scaleEffect(isTransitioning ? 1.0 : 0.95)
-                        .zIndex(1)
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    // Only update if not currently animating
-                                    if !isAnimating {
-                                        // Update drag offset and rotation based on drag distance
-                                        self.dragOffset = value.translation.width
-                                        
-                                        // Add slight rotation effect based on drag direction
-                                        self.cardRotation = Double(value.translation.width / 20)
+                    ZStack {
+                        // This handles the gestures
+                        grayCardView(book: currentBook, backgroundName: currentBackground)
+                            .padding(.horizontal, isTransitioning ? 0 : 25)
+                            .offset(y: isTransitioning ? 20 : 0) // Adjusted offset
+                            .offset(x: dragOffset) // Add x offset for swiping
+                            .rotationEffect(.degrees(cardRotation), anchor: .bottom) // Add rotation for swiping
+                            .scaleEffect(isTransitioning ? 1.0 : 0.95)
+                            .zIndex(1)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        // Only update if not currently animating
+                                        if !isAnimating {
+                                            // Update drag offset and rotation based on drag distance
+                                            self.dragOffset = value.translation.width
+                                            
+                                            // Add slight rotation effect based on drag direction
+                                            self.cardRotation = Double(value.translation.width / 20)
+                                        }
                                     }
-                                }
-                                .onEnded { value in
-                                    // Only handle if not already animating
-                                    if !isAnimating {
-                                        // Calculate if we should swipe the card
-                                        let threshold: CGFloat = 100
-                                        let swipeDistance = value.translation.width
-                                        
-                                        if abs(swipeDistance) > threshold {
-                                            // User swiped far enough to change card
-                                            let direction = swipeDistance > 0 ? 1 : -1
-                                            let targetDouble: Double = Double(direction)
-                                            let targetX = targetDouble * 1000.0 // Swipe card off screen
+                                    .onEnded { value in
+                                        // Only handle if not already animating
+                                        if !isAnimating {
+                                            // Calculate if we should swipe the card
+                                            let threshold: CGFloat = 100
+                                            let swipeDistance = value.translation.width
                                             
-                                            // Set animating flag
-                                            isAnimating = true
-                                            
-                                            // Animate the card off screen
-                                            withAnimation(.easeOut(duration: 0.3)) {
-                                                self.dragOffset = targetX
-                                                let directionDouble: Double = Double(direction)
-                                                self.cardRotation = directionDouble * 15.0
-                                            }
-                                            
-                                            // Update card indices after animation
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                // Set transitioning state to true to show gray card
-                                                self.isTransitioning = true
+                                            if abs(swipeDistance) > threshold {
+                                                // User swiped far enough to change card
+                                                let direction = swipeDistance > 0 ? 1 : -1
+                                                let targetDouble: Double = Double(direction)
+                                                let targetX = targetDouble * 1000.0 // Swipe card off screen
                                                 
-                                                // Reset position for next animation
-                                                self.dragOffset = 0
-                                                self.cardRotation = 0
+                                                // Set animating flag
+                                                isAnimating = true
                                                 
-                                                // Swiping right (older books)
-                                                if direction > 0 && currentBookIndex < recentBooks.count - 1 {
-                                                    // Update the card map with the new position
-                                                    cardBackgroundMap[currentBookIndex + 1] = nextCardBackground
-                                                    currentBookIndex += 1
-                                                    // Generate a new background for the next card
-                                                    nextCardBackground = randomCardBackground()
+                                                // Animate the card off screen
+                                                withAnimation(.easeOut(duration: 0.3)) {
+                                                    self.dragOffset = targetX
+                                                    let directionDouble: Double = Double(direction)
+                                                    self.cardRotation = directionDouble * 15.0
                                                 }
-                                                // Swiping left (newer books)
-                                                else if direction < 0 && currentBookIndex > 0 {
-                                                    // Update the card map with the new position 
-                                                    cardBackgroundMap[currentBookIndex - 1] = cardBackgroundMap[currentBookIndex - 1] ?? nextCardBackground
-                                                    currentBookIndex -= 1
-                                                    // Generate a new background for the next card
-                                                    nextCardBackground = randomCardBackground()
-                                                } else {
-                                                    // We hit either the first or last book - bounce back
-                                                    withAnimation(.spring()) {
-                                                        self.dragOffset = 0
-                                                        self.cardRotation = 0
-                                                        self.isTransitioning = false
+                                                
+                                                // Update card indices after animation
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                    // Set transitioning state to true to show gray card
+                                                    self.isTransitioning = true
+                                                    
+                                                    // Reset position for next animation
+                                                    self.dragOffset = 0
+                                                    self.cardRotation = 0
+                                                    
+                                                    // Swiping right (older books)
+                                                    if direction > 0 && currentBookIndex < recentBooks.count - 1 {
+                                                        // Update the card map with the new position
+                                                        cardBackgroundMap[currentBookIndex + 1] = nextCardBackground
+                                                        currentBookIndex += 1
+                                                        // Generate a new background for the next card
+                                                        nextCardBackground = randomCardBackground()
+                                                    }
+                                                    // Swiping left (newer books)
+                                                    else if direction < 0 && currentBookIndex > 0 {
+                                                        // Update the card map with the new position 
+                                                        cardBackgroundMap[currentBookIndex - 1] = cardBackgroundMap[currentBookIndex - 1] ?? nextCardBackground
+                                                        currentBookIndex -= 1
+                                                        // Generate a new background for the next card
+                                                        nextCardBackground = randomCardBackground()
+                                                    } else {
+                                                        // We hit either the first or last book - bounce back
+                                                        withAnimation(.spring()) {
+                                                            self.dragOffset = 0
+                                                            self.cardRotation = 0
+                                                            self.isTransitioning = false
+                                                        }
+                                                    }
+                                                    
+                                                    // Reset animating flag
+                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                        isAnimating = false
                                                     }
                                                 }
-                                                
-                                                // Reset animating flag
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                                    isAnimating = false
+                                            } else {
+                                                // Not swiped far enough, reset position with animation
+                                                withAnimation(.spring()) {
+                                                    self.dragOffset = 0
+                                                    self.cardRotation = 0
                                                 }
-                                            }
-                                        } else {
-                                            // Not swiped far enough, reset position with animation
-                                            withAnimation(.spring()) {
-                                                self.dragOffset = 0
-                                                self.cardRotation = 0
                                             }
                                         }
                                     }
-                                }
-                        )
-                        .onTapGesture {
-                            selectedBook = currentBook
-                            showBookDetails = true
+                            )
+                        
+                        // This is for navigation - transparent overlay that only triggers on tap
+                        NavigationLink(destination: BookDetailedView(bookId: currentBook.id)) {
+                            Color.clear
                         }
+                        .buttonStyle(PlainButtonStyle())
+                    }
                 } else {
                     // Show blue card with current book details when not in transition
-                    foregroundCardView(book: currentBook, backgroundName: currentBackground)
-                        .offset(x: dragOffset)
-                        .rotationEffect(.degrees(cardRotation), anchor: .bottom)
-                        .zIndex(1)
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    // Only update if not currently animating
-                                    if !isAnimating {
-                                        // Update drag offset and rotation based on drag distance
-                                        self.dragOffset = value.translation.width
-                                        
-                                        // Add slight rotation effect based on drag direction
-                                        self.cardRotation = Double(value.translation.width / 20)
+                    ZStack {
+                        // This handles the gestures
+                        foregroundCardView(book: currentBook, backgroundName: currentBackground)
+                            .offset(y: 20) // Add vertical positioning
+                            .offset(x: dragOffset)
+                            .rotationEffect(.degrees(cardRotation), anchor: .bottom)
+                            .zIndex(1)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        // Only update if not currently animating
+                                        if !isAnimating {
+                                            // Update drag offset and rotation based on drag distance
+                                            self.dragOffset = value.translation.width
+                                            
+                                            // Add slight rotation effect based on drag direction
+                                            self.cardRotation = Double(value.translation.width / 20)
+                                        }
                                     }
-                                }
-                                .onEnded { value in
-                                    // Only handle if not already animating
-                                    if !isAnimating {
-                                        // Calculate if we should swipe the card
-                                        let threshold: CGFloat = 100
-                                        let swipeDistance = value.translation.width
-                                        
-                                        if abs(swipeDistance) > threshold {
-                                            // User swiped far enough to change card
-                                            let direction = swipeDistance > 0 ? 1 : -1
-                                            let targetDouble: Double = Double(direction)
-                                            let targetX = targetDouble * 1000.0 // Swipe card off screen
+                                    .onEnded { value in
+                                        // Only handle if not already animating
+                                        if !isAnimating {
+                                            // Calculate if we should swipe the card
+                                            let threshold: CGFloat = 100
+                                            let swipeDistance = value.translation.width
                                             
-                                            // Set animating flag
-                                            isAnimating = true
-                                            
-                                            // Animate the card off screen
-                                            withAnimation(.easeOut(duration: 0.3)) {
-                                                self.dragOffset = targetX
-                                                let directionDouble: Double = Double(direction)
-                                                self.cardRotation = directionDouble * 15.0
-                                            }
-                                            
-                                            // Update card indices after animation
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                // Set transitioning state to true to show gray card
-                                                self.isTransitioning = true
+                                            if abs(swipeDistance) > threshold {
+                                                // User swiped far enough to change card
+                                                let direction = swipeDistance > 0 ? 1 : -1
+                                                let targetDouble: Double = Double(direction)
+                                                let targetX = targetDouble * 1000.0 // Swipe card off screen
                                                 
-                                                // Reset position for next animation
-                                                self.dragOffset = 0
-                                                self.cardRotation = 0
+                                                // Set animating flag
+                                                isAnimating = true
                                                 
-                                                // Swiping right (older books)
-                                                if direction > 0 && currentBookIndex < recentBooks.count - 1 {
-                                                    // Update the card map with the new position
-                                                    cardBackgroundMap[currentBookIndex + 1] = nextCardBackground
-                                                    currentBookIndex += 1
-                                                    // Generate a new background for the next card
-                                                    nextCardBackground = randomCardBackground()
+                                                // Animate the card off screen
+                                                withAnimation(.easeOut(duration: 0.3)) {
+                                                    self.dragOffset = targetX
+                                                    let directionDouble: Double = Double(direction)
+                                                    self.cardRotation = directionDouble * 15.0
                                                 }
-                                                // Swiping left (newer books)
-                                                else if direction < 0 && currentBookIndex > 0 {
-                                                    // Update the card map with the new position 
-                                                    cardBackgroundMap[currentBookIndex - 1] = cardBackgroundMap[currentBookIndex - 1] ?? nextCardBackground
-                                                    currentBookIndex -= 1
-                                                    // Generate a new background for the next card
-                                                    nextCardBackground = randomCardBackground()
-                                                } else {
-                                                    // We hit either the first or last book - bounce back
-                                                    withAnimation(.spring()) {
-                                                        self.dragOffset = 0
-                                                        self.cardRotation = 0
-                                                        self.isTransitioning = false
+                                                
+                                                // Update card indices after animation
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                    // Set transitioning state to true to show gray card
+                                                    self.isTransitioning = true
+                                                    
+                                                    // Reset position for next animation
+                                                    self.dragOffset = 0
+                                                    self.cardRotation = 0
+                                                    
+                                                    // Swiping right (older books)
+                                                    if direction > 0 && currentBookIndex < recentBooks.count - 1 {
+                                                        // Update the card map with the new position
+                                                        cardBackgroundMap[currentBookIndex + 1] = nextCardBackground
+                                                        currentBookIndex += 1
+                                                        // Generate a new background for the next card
+                                                        nextCardBackground = randomCardBackground()
+                                                    }
+                                                    // Swiping left (newer books)
+                                                    else if direction < 0 && currentBookIndex > 0 {
+                                                        // Update the card map with the new position 
+                                                        cardBackgroundMap[currentBookIndex - 1] = cardBackgroundMap[currentBookIndex - 1] ?? nextCardBackground
+                                                        currentBookIndex -= 1
+                                                        // Generate a new background for the next card
+                                                        nextCardBackground = randomCardBackground()
+                                                    } else {
+                                                        // We hit either the first or last book - bounce back
+                                                        withAnimation(.spring()) {
+                                                            self.dragOffset = 0
+                                                            self.cardRotation = 0
+                                                            self.isTransitioning = false
+                                                        }
+                                                    }
+                                                    
+                                                    // Reset animating flag
+                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                        isAnimating = false
                                                     }
                                                 }
-                                                
-                                                // Reset animating flag
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                                    isAnimating = false
+                                            } else {
+                                                // Not swiped far enough, reset position with animation
+                                                withAnimation(.spring()) {
+                                                    self.dragOffset = 0
+                                                    self.cardRotation = 0
                                                 }
-                                            }
-                                        } else {
-                                            // Not swiped far enough, reset position with animation
-                                            withAnimation(.spring()) {
-                                                self.dragOffset = 0
-                                                self.cardRotation = 0
                                             }
                                         }
                                     }
-                                }
-                        )
-                        .onTapGesture {
-                            selectedBook = currentBook
-                            showBookDetails = true
+                            )
+                        
+                        // This is for navigation - transparent overlay that only triggers on tap
+                        NavigationLink(destination: BookDetailedView(bookId: currentBook.id)) {
+                            Color.clear
                         }
+                        .buttonStyle(PlainButtonStyle())
+                    }
                 }
             }
         }
@@ -377,7 +389,7 @@ struct HomeLibrarianView: View {
                 Image(backgroundName)
                     .resizable()
                     .scaledToFill()
-                    .frame(height: 220)
+                    .frame(height: 200) // Adjusted height
                     .clipShape(
                         RoundedCorners(
                             topLeft: 16,
@@ -392,7 +404,7 @@ struct HomeLibrarianView: View {
                 Image(backgroundName)
                     .resizable()
                     .scaledToFill()
-                    .frame(height: 220)
+                    .frame(height: 200) // Adjusted height
                     .clipShape(
                         RoundedCorners(
                             topLeft: 16,
@@ -410,7 +422,7 @@ struct HomeLibrarianView: View {
                 ZStack(alignment: .leading) {
                     Rectangle()
                         .fill(Color.black.opacity(0.6)) // Transparent dark overlay for info
-                        .frame(width: 165, height: 170)
+                        .frame(width: 165, height: 160) // Adjusted height
                         .clipShape(
                             RoundedCorners(
                                 topLeft: 0,
@@ -482,18 +494,20 @@ struct HomeLibrarianView: View {
                         image
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 140, height: 180)
+                            .frame(width: 140, height: 170) // Adjusted height
                             .clipped()
                             .offset(x: -85) // Position from center to left
                             .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
                             .zIndex(2)
                     case .failure, .empty:
                         defaultBookCover()
+                            .frame(width: 140, height: 170) // Adjusted height
                             .offset(x: -85)
                             .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
                             .zIndex(2)
                     @unknown default:
                         defaultBookCover()
+                            .frame(width: 140, height: 170) // Adjusted height
                             .offset(x: -85)
                             .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
                             .zIndex(2)
@@ -512,7 +526,7 @@ struct HomeLibrarianView: View {
             Image(backgroundName)
                 .resizable()
                 .scaledToFill()
-                .frame(height: 220)
+                .frame(height: 200) // Adjusted height
                 .clipShape(
                     RoundedCorners(
                         topLeft: 16,
@@ -527,7 +541,7 @@ struct HomeLibrarianView: View {
             ZStack(alignment: .leading) {
                 Rectangle()
                     .fill(Color.black.opacity(0.6)) // Transparent dark overlay for info
-                    .frame(width: 165, height: 170)
+                    .frame(width: 165, height: 160) // Adjusted height
                     .clipShape(
                         RoundedCorners(
                             topLeft: 0,
@@ -599,18 +613,20 @@ struct HomeLibrarianView: View {
                     image
                         .resizable()
                         .scaledToFill()
-                        .frame(width: 140, height: 180)
+                        .frame(width: 140, height: 170) // Adjusted height
                         .clipped()
                         .offset(x: -85) // Position from center to left
                         .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
                         .zIndex(2)
                 case .failure, .empty:
                     defaultBookCover()
+                        .frame(width: 140, height: 170) // Adjusted height
                         .offset(x: -85)
                         .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
                         .zIndex(2)
                 @unknown default:
                     defaultBookCover()
+                        .frame(width: 140, height: 170) // Adjusted height
                         .offset(x: -85)
                         .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
                         .zIndex(2)
@@ -634,8 +650,18 @@ struct HomeLibrarianView: View {
         Image(systemName: "book.fill")
             .resizable()
             .scaledToFit()
-            .frame(width: 140, height: 180)
             .background(Color.yellow)
+    }
+
+    // Add refresh function
+    private func refreshBooks() {
+        isRefreshing = true
+        Task {
+            await bookStore.loadBooks()
+            await MainActor.run {
+                isRefreshing = false
+            }
+        }
     }
 }
 

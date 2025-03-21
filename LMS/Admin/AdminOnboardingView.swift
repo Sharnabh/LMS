@@ -924,12 +924,9 @@ struct AdminOnboardingView: View {
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .alert(isPresented: $showAlert) {
                 Alert(
-                    title: Text("Confirm"),
+                    title: Text("Notification"),
                     message: Text(alertMessage),
-                    primaryButton: .default(Text("Continue")) {
-                        showMainApp = true
-                    },
-                    secondaryButton: .cancel()
+                    dismissButton: .default(Text("OK"))
                 )
             }
             .sheet(isPresented: $showMailComposer) {

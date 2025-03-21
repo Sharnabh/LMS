@@ -13,8 +13,9 @@ class GoogleBooksService {
         // Fetch the data from the API
         let (data, _) = try await URLSession.shared.data(from: url)
         
-        // Decode the response
-        let response = try JSONDecoder().decode(GoogleBooksResponse.self, from: data)
+        // Decode the response using the GoogleBooksAPIResponse format needed for this specific endpoint
+        let decoder = JSONDecoder()
+        let response = try decoder.decode(GoogleBooksAPIResponse.self, from: data)
         
         // Check if we got any results
         guard let bookItem = response.items?.first else {
@@ -44,4 +45,27 @@ class GoogleBooksService {
             imageLink: imageLink
         )
     }
+}
+
+// Response models specifically for the Google Books API volumes endpoint
+// This is different from the GoogleBooksResponse in Models.swift
+struct GoogleBooksAPIResponse: Decodable {
+    let items: [BookItem]?
+}
+
+struct BookItem: Decodable {
+    let volumeInfo: VolumeInfo
+}
+
+struct VolumeInfo: Decodable {
+    let title: String
+    let authors: [String]?
+    let publisher: String?
+    let publishedDate: String?
+    let description: String?
+    let imageLinks: ImageLinks?
+}
+
+struct ImageLinks: Decodable {
+    let thumbnail: String?
 } 

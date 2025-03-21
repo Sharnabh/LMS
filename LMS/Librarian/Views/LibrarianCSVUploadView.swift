@@ -1,12 +1,13 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-struct CSVUploadView: View {
+struct LibrarianCSVUploadView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject private var bookStore: BookStore
     @State private var showFilePicker = false
     @State private var showAlert = false
     @State private var alertMessage = ""
+    @State private var isSuccess = false
     @State private var isLoading = false
     @State private var showPreview = false
     @State private var parsedBooks: [LibrarianBook] = []
@@ -24,7 +25,7 @@ struct CSVUploadView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("• title")
                         Text("• author (use ; for multiple authors)")
-                        Text("• genre")
+                        Text("• genre (Science, Humanities, Business, Medicine, Law, Education, Arts, Religion, Mathematics, Technology, Reference)")
                         Text("• ISBN")
                         Text("• publicationDate")
                         Text("• totalCopies")
@@ -37,8 +38,8 @@ struct CSVUploadView: View {
                 GroupBox(label: Text("Example CSV Content").font(.headline)) {
                     Text("""
                     Title,Author,Genre,ISBN,PublicationDate,TotalCopies
-                    To Kill a Mockingbird,Harper Lee,Fiction,978-0446310789,1960,5
-                    Good Omens,Neil Gaiman; Terry Pratchett,Fiction,978-0060853976,1990,3
+                    To Kill a Mockingbird,Harper Lee,Arts,978-0446310789,1960,5
+                    Good Omens,Neil Gaiman; Terry Pratchett,Arts,978-0060853976,1990,3
                     """)
                     .font(.system(.caption, design: .monospaced))
                     .foregroundColor(.secondary)
@@ -76,6 +77,7 @@ struct CSVUploadView: View {
             .navigationBarItems(leading: Button("Cancel") {
                 dismiss()
             })
+            .background(Color.appBackground.ignoresSafeArea())
         }
         .fileImporter(
             isPresented: $showFilePicker,
@@ -92,7 +94,7 @@ struct CSVUploadView: View {
             )
         }
         .sheet(isPresented: $showPreview) {
-            AdminCSVPreviewView(books: parsedBooks)
+            CSVPreviewView(books: parsedBooks)
                 .environmentObject(bookStore)
         }
     }
@@ -125,6 +127,7 @@ struct CSVUploadView: View {
                 }
             } catch {
                 await MainActor.run {
+                    isSuccess = false
                     alertMessage = error.localizedDescription
                     showAlert = true
                     isLoading = false
@@ -141,18 +144,28 @@ struct CSVUploadView: View {
         let dataRows = rows.dropFirst().filter { !$0.isEmpty }
         
         if dataRows.isEmpty {
-            throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "The CSV file appears to be empty"])
+            throw CSVError.emptyFile
         }
         
         var parsedBooks: [LibrarianBook] = []
-        let requiredColumns = 6
+        let requiredColumns = 6  // Reduced from 7 since we removed shelfLocation
+        
+        // List of allowed genres - must match the controller
+        let allowedGenres = ["Science", "Humanities", "Business", "Medicine", "Law", 
+                            "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
         
         for (index, row) in dataRows.enumerated() {
             let columns = row.components(separatedBy: ",")
             
             // Check column count for this specific row
             if columns.count < requiredColumns {
-                throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "Row \(index + 2) has \(columns.count) columns, but \(requiredColumns) columns are required"])
+                throw CSVError.invalidColumn(row: index + 2, expected: requiredColumns, found: columns.count)
+            }
+            
+            // Get genre and validate it
+            let genre = columns[2].trimmingCharacters(in: .whitespaces)
+            if !allowedGenres.contains(genre) {
+                throw CSVError.invalidGenre(row: index + 2, genre: genre)
             }
             
             // Get author string and split into array by semicolons
@@ -175,7 +188,7 @@ struct CSVUploadView: View {
                 id: UUID(),
                 title: columns[0].trimmingCharacters(in: .whitespaces),
                 author: authorArray,
-                genre: columns[2].trimmingCharacters(in: .whitespaces),
+                genre: genre,
                 publicationDate: columns[4].trimmingCharacters(in: .whitespaces),
                 totalCopies: Int(columns[5]) ?? 1,
                 availableCopies: Int(columns[5]) ?? 1,
@@ -192,4 +205,29 @@ struct CSVUploadView: View {
         
         return parsedBooks
     }
+}
+
+enum CSVError: Error, LocalizedError {
+    case invalidFormat
+    case emptyFile
+    case invalidColumn(row: Int, expected: Int, found: Int)
+    case invalidGenre(row: Int, genre: String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidFormat:
+            return "The CSV file format is invalid. Please check that it matches the required format."
+        case .emptyFile:
+            return "The CSV file appears to be empty."
+        case .invalidColumn(let row, let expected, let found):
+            return "Row \(row) has \(found) columns, but \(expected) columns are required."
+        case .invalidGenre(let row, let genre):
+            return "Row \(row) contains invalid genre '\(genre)'. Allowed genres are: Science, Humanities, Business, Medicine, Law, Education, Arts, Religion, Mathematics, Technology, Reference."
+        }
+    }
+}
+
+#Preview {
+    LibrarianCSVUploadView()
+        .environmentObject(BookStore())
 } 

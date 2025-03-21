@@ -11,6 +11,7 @@ struct HomeLibrarianView: View {
     @State private var isTransitioning = false // Track if we're in transition between cards
     @State private var isAnimating = false // Track if cards are currently animating
     @State private var showingCardView = false // Track which view mode to show
+    @State private var isRefreshing = false // Track refresh state
     
     // Card background images
     private let cardBackgrounds = ["BlueCard", "GreenCard", "PurpleCard", "BlackCard"]
@@ -128,6 +129,9 @@ struct HomeLibrarianView: View {
             }
             .navigationTitle("Home")
             .navigationBarTitleDisplayMode(.large)
+            .onAppear {
+                refreshBooks()
+            }
         }
     }
 
@@ -650,6 +654,17 @@ struct HomeLibrarianView: View {
             .scaledToFit()
             .frame(width: 140, height: 180)
             .background(Color.yellow)
+    }
+
+    // Add refresh function
+    private func refreshBooks() {
+        isRefreshing = true
+        Task {
+            await bookStore.loadBooks()
+            await MainActor.run {
+                isRefreshing = false
+            }
+        }
     }
 }
 

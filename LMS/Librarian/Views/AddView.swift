@@ -1,11 +1,14 @@
 import SwiftUI
 
 struct AddView: View {
+    @EnvironmentObject private var bookStore: BookStore
     @State private var searchText: String = ""
     @State private var book: LibrarianBook? = nil
     @State private var isSearching = false
     @State private var errorMessage: String? = nil
     @State private var showScanner = false
+    @State private var showAddBookSheet = false
+    @State private var showCSVUploadSheet = false
     
     var body: some View {
         NavigationView {
@@ -111,15 +114,25 @@ struct AddView: View {
             }
             .navigationTitle("Add Books")
             .navigationBarTitleDisplayMode(.large)
-            .navigationBarItems(trailing: 
-                Button(action: {
-                    // Add new book action (plus button)
-                }) {
-                    Image(systemName: "plus")
-                        .font(.title2)
-                        .foregroundColor(.blue)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button(action: {
+                            showAddBookSheet = true
+                        }) {
+                            Label("Add Book", systemImage: "plus.circle")
+                        }
+                        
+                        Button(action: {
+                            showCSVUploadSheet = true
+                        }) {
+                            Label("Upload CSV", systemImage: "doc.badge.plus")
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                    }
                 }
-            )
+            }
             .onChange(of: showScanner) { newValue in
                 if newValue == true {
                     // In a real app, this would be the result from a barcode scanner
@@ -130,6 +143,14 @@ struct AddView: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $showAddBookSheet) {
+            LibrarianAddBookView()
+                .environmentObject(bookStore)
+        }
+        .sheet(isPresented: $showCSVUploadSheet) {
+            LibrarianCSVUploadView()
+                .environmentObject(bookStore)
         }
     }
     

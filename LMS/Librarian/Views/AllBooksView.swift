@@ -5,6 +5,7 @@ struct AllBooksView: View {
     @State private var searchText = ""
     @State private var selectedBook: LibrarianBook? = nil
     @State private var showBookDetails = false
+    @State private var isRefreshing = false
     
     var body: some View {
         ZStack {
@@ -23,13 +24,25 @@ struct AllBooksView: View {
                 
                 // Books list
                 ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(filteredBooks) { book in
-                            BookListItemView(book: book)
-                                .onTapGesture {
-                                    selectedBook = book
-                                    showBookDetails = true
-                                }
+                    if isRefreshing {
+                        ProgressView("Refreshing...")
+                            .padding()
+                    }
+                    
+                    if filteredBooks.isEmpty {
+                        Text("No books found")
+                            .foregroundColor(.secondary)
+                            .italic()
+                            .padding(.top, 50)
+                    } else {
+                        LazyVStack(spacing: 0) {
+                            ForEach(filteredBooks) { book in
+                                BookListItemView(book: book)
+                                    .onTapGesture {
+                                        selectedBook = book
+                                        showBookDetails = true
+                                    }
+                            }
                         }
                     }
                 }
@@ -54,6 +67,20 @@ struct AllBooksView: View {
         }
         .navigationTitle("Added Books")
         .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            refreshBooks()
+        }
+    }
+    
+    // Refresh books from database
+    private func refreshBooks() {
+        isRefreshing = true
+        Task {
+            await bookStore.loadBooks()
+            await MainActor.run {
+                isRefreshing = false
+            }
+        }
     }
     
     // Filtered books based on search text

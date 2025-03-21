@@ -5,28 +5,22 @@ struct HomeLibrarianView: View {
     @State private var selectedBook: LibrarianBook? = nil
     @State private var showBookDetails = false
     @State private var currentBookIndex = 0 // Track which book is currently displayed
-    @State private var dragOffset: CGFloat = 0 // For tracking the drag gesture
+    @State private var dragOffset: CGFloat = 0
     @State private var cardRotation: Double = 0 // For rotating the card during swipe
     @State private var previousBookIndex: Int? = nil // Track the previous book
     @State private var isTransitioning = false // Track if we're in transition between cards
     @State private var isAnimating = false // Track if cards are currently animating
-    @State private var showingCardView = false // Track which view mode to show
+    @State private var showingCardView = false // (Tinder Swift / Horizontal Scroll)
     
-    // Card background images
     private let cardBackgrounds = ["BlueCard", "GreenCard", "PurpleCard", "BlackCard"]
     
-    // Function to get a random card background
+    // random card background
     private func randomCardBackground() -> String {
         return cardBackgrounds.randomElement() ?? "BlueCard"
     }
-    
-    // Store background for each book position rather than by book ID
-    @State private var cardBackgroundMap: [Int: String] = [0: "BlueCard"] // Start with blue card for first position
-    
-    // Store the next random card background to be used after swiping
+        @State private var cardBackgroundMap: [Int: String] = [0: "BlueCard"]
+
     @State private var nextCardBackground: String = ""
-    
-    // Get background for a specific book index (creates and caches if needed)
     private func backgroundForBook(at index: Int) -> String {
         if let cached = cardBackgroundMap[index] {
             return cached
@@ -111,20 +105,12 @@ struct HomeLibrarianView: View {
                    Spacer()
                 }
 
-                // Navigation link to book details
-                NavigationLink(destination:
-                    Group {
-                        if let book = selectedBook {
-                            BookDetailedView(bookId: book.id)
-                        } else {
-                            EmptyView()
-                        }
-                    },
-                    isActive: $showBookDetails
-                ) {
-                    EmptyView()
+                // Use navigationDestination instead of NavigationLink
+                .navigationDestination(isPresented: $showBookDetails) {
+                    if let book = selectedBook {
+                        BookDetailedView(bookId: book.id)
+                    }
                 }
-                .hidden()
             }
             .navigationTitle("Home")
             .navigationBarTitleDisplayMode(.large)

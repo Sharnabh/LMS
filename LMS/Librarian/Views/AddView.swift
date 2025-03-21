@@ -127,7 +127,7 @@ struct AddView: View {
                 BarcodeScannerView(scannedCode: $scannedCode)
                     .ignoresSafeArea()
             }
-            .onChange(of: scannedCode) { newCode in
+            .onChange(of: scannedCode) { oldCode, newCode in
                 if !newCode.isEmpty {
                     searchText = newCode
                     searchBook()

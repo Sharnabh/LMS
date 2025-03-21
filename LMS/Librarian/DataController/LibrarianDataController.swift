@@ -11,8 +11,7 @@ import Supabase
 extension SupabaseDataController {
     
     func authenticateLibrarian(email: String, password: String) async throws -> (Bool, Bool) {
-        let query = client.database
-            .from("Librarian")
+        let query = client.from("Librarian")
             .select()
             .eq("email", value: email)
             .eq("password", value: password)
@@ -39,8 +38,7 @@ extension SupabaseDataController {
         let updateData = LibrarianPasswordUpdate(password: newPassword, isFirstLogin: false)
         
         do {
-            try await client.database
-                .from("Librarian")
+            try await client.from("Librarian")
                 .update(updateData)
                 .eq("id", value: librarianID)
                 .execute()
@@ -53,8 +51,7 @@ extension SupabaseDataController {
     // MARK: - Book Operations
     
     func fetchBooks() async throws -> [LibrarianBook] {
-        let query = client.database
-            .from("Books")
+        let query = client.from("Books")
             .select()
         
         do {
@@ -120,8 +117,7 @@ extension SupabaseDataController {
         )
         
         do {
-            try await client.database
-                .from("Books")
+            try await client.from("Books")
                 .insert(bookData)
                 .execute()
             return true
@@ -132,8 +128,7 @@ extension SupabaseDataController {
     
     func updateBook(_ book: LibrarianBook) async throws -> Bool {
         do {
-            try await client.database
-                .from("Books")
+            try await client.from("Books")
                 .update(book)
                 .eq("id", value: book.id)
                 .execute()
@@ -145,8 +140,7 @@ extension SupabaseDataController {
     
     func deleteBook(_ book: LibrarianBook) async throws -> Bool {
         do {
-            try await client.database
-                .from("Books")
+            try await client.from("Books")
                 .delete()
                 .eq("id", value: book.id)
                 .execute()
@@ -160,12 +154,11 @@ extension SupabaseDataController {
     
     func testConnection() async throws -> Bool {
         do {
-            let query = client.database
-                .from("Books")
+            let query = client.from("Books")
                 .select("*")
                 .limit(1)
             
-            let books: [LibrarianBook] = try await query.execute().value
+            _ = try await query.execute().value
             return true
         } catch {
             throw error

@@ -6,7 +6,7 @@ class BookStore: ObservableObject {
     let dataController = SupabaseDataController()
     
     init() {
-        Task {
+        Task(priority: .userInitiated) {
             do {
                 let isConnected = try await dataController.testConnection()
                 if isConnected {
@@ -141,5 +141,26 @@ class BookStore: ObservableObject {
         Task {
             await loadBooks()
         }
+    }
+    
+    // Update a book's shelf location
+    func updateBookShelfLocation(bookId: UUID, shelfLocation: String) async -> Bool {
+        if let bookIndex = books.firstIndex(where: { $0.id == bookId }) {
+            var updatedBook = books[bookIndex]
+            updatedBook.shelfLocation = shelfLocation
+            
+            do {
+                let success = try await dataController.updateBook(updatedBook)
+                if success {
+                    await loadBooks()
+                    return true
+                }
+                return false
+            } catch {
+                print("Error updating book shelf location: \(error)")
+                return false
+            }
+        }
+        return false
     }
 } 

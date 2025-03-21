@@ -7,6 +7,7 @@ struct BookDetailedView: View {
     
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
+    @State private var showingAssignShelfSheet = false
     
     // Computed property to get the latest book data
     private var book: LibrarianBook? {
@@ -87,8 +88,18 @@ struct BookDetailedView: View {
                                 StatBox(title: "Available", value: "\(book.availableCopies)", icon: "book.closed.fill", color: .green)
                             }
                             
-                            if let shelfLocation = book.shelfLocation {
-                                StatBox(title: "Shelf Location", value: shelfLocation, icon: "mappin.and.ellipse", color: .orange)
+                            if let shelfLocation = book.shelfLocation, !shelfLocation.isEmpty {
+                                Button(action: {
+                                    showingAssignShelfSheet = true
+                                }) {
+                                    StatBox(title: "Shelf Location", value: shelfLocation, icon: "mappin.and.ellipse", color: .orange)
+                                }
+                            } else {
+                                Button(action: {
+                                    showingAssignShelfSheet = true
+                                }) {
+                                    StatBox(title: "Shelf Location", value: "Not Assigned", icon: "mappin.slash", color: .red)
+                                }
                             }
                         }
                         
@@ -115,6 +126,10 @@ struct BookDetailedView: View {
                                 Label("Edit", systemImage: "pencil")
                             }
                             
+                            Button(action: { showingAssignShelfSheet = true }) {
+                                Label("Assign Shelf", systemImage: "mappin.and.ellipse")
+                            }
+                            
                             Button(role: .destructive, action: { showingDeleteAlert = true }) {
                                 Label("Delete", systemImage: "trash")
                             }
@@ -125,6 +140,9 @@ struct BookDetailedView: View {
                 }
                 .sheet(isPresented: $showingEditSheet) {
                     EditBookFormView(book: book)
+                }
+                .sheet(isPresented: $showingAssignShelfSheet) {
+                    AssignShelfLocationView(book: book)
                 }
                 .alert("Delete Book", isPresented: $showingDeleteAlert) {
                     Button("Cancel", role: .cancel) { }

@@ -88,8 +88,7 @@ class SupabaseDataController: ObservableObject {
         let updateData = UpdateData(password: newPassword, is_first_login: false)
         
         do {
-            try await client.database
-                .from("Admin")
+            try await client.from("Admin")
                 .update(updateData)
                 .eq("id", value: adminId)
                 .execute()
@@ -98,10 +97,13 @@ class SupabaseDataController: ObservableObject {
         }
     }
     
+    func resetAdminPassword(adminId: String, newPassword: String) async throws {
+        try await updateAdminPassword(adminId: adminId, newPassword: newPassword)
+    }
+    
     func authenticateAdmin(email: String, password: String) async throws -> (isAuthenticated: Bool, isFirstLogin: Bool, adminId: String?) {
         do {
-            let response: [AdminModel] = try await client.database
-                .from("Admin")
+            let response: [AdminModel] = try await client.from("Admin")
                 .select("*")
                 .eq("email", value: email)
                 .eq("password", value: password)
@@ -139,8 +141,7 @@ class SupabaseDataController: ObservableObject {
         
         do {
             // Insert the librarian into the database
-            try await client.database
-                .from("Librarian")
+            try await client.from("Librarian")
                 .insert(librarian)
                 .execute()
             
@@ -175,6 +176,24 @@ class SupabaseDataController: ObservableObject {
             return password
         } catch {
             throw error
+        }
+    }
+    
+    // MARK: - Test Connection
+    
+    func testConnection() async throws -> Bool {
+        do {
+            // Simple query to test the connection
+            let _: [LibrarianBook] = try await client.from("Books")
+                .select("id")
+                .limit(1)
+                .execute()
+                .value
+            
+            return true
+        } catch {
+            print("Error testing connection: \(error)")
+            return false
         }
     }
 }

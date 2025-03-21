@@ -150,17 +150,55 @@ extension SupabaseDataController {
         }
     }
     
-    // MARK: - Database Connection Test
+    // MARK: - Shelf Location Methods
     
-    func testConnection() async throws -> Bool {
+    func fetchShelfLocations() async throws -> [BookShelfLocation] {
+        let query = client.from("BookShelfLocation")
+            .select()
+        
         do {
-            let query = client.from("Books")
-                .select("*")
-                .limit(1)
-            
-            _ = try await query.execute().value
+            let locations: [BookShelfLocation] = try await query.execute().value
+            return locations
+        } catch let error {
+            print("Error fetching shelf locations: \(error)")
+            throw error
+        }
+    }
+    
+    func addShelfLocation(_ shelfLocation: BookShelfLocation) async throws -> Bool {
+        do {
+            try await client.from("BookShelfLocation")
+                .insert(shelfLocation)
+                .execute()
             return true
-        } catch {
+        } catch let error {
+            print("Error adding shelf location: \(error)")
+            throw error
+        }
+    }
+    
+    func updateShelfLocation(_ shelfLocation: BookShelfLocation) async throws -> Bool {
+        do {
+            try await client.from("BookShelfLocation")
+                .update(shelfLocation)
+                .eq("id", value: shelfLocation.id)
+                .execute()
+            return true
+        } catch let error {
+            print("Error updating shelf location: \(error)")
+            throw error
+        }
+    }
+    
+    func deleteShelfLocation(_ shelfLocation: BookShelfLocation) async throws -> Bool {
+        do {
+            try await client.from("BookShelfLocation")
+                .delete()
+                .eq("id", value: shelfLocation.id)
+                .execute()
+            return true
+        } catch let error {
+            print("Error deleting shelf location: \(error)")
             throw error
         }
     }

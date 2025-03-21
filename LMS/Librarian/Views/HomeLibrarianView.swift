@@ -89,8 +89,8 @@ struct HomeLibrarianView: View {
                             }
                             .padding(.horizontal, 16)
                         }
-                        .padding(.top, -60)
-                        .frame(height: 220)
+                        .padding(.top, -40)
+                        .frame(height: 210)
                         .transition(.move(edge: .top).combined(with: .opacity))
                     } else {
                         // Book card with swipe functionality

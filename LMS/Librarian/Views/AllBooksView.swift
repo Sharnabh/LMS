@@ -37,22 +37,16 @@ struct AllBooksView: View {
                     } else {
                         LazyVStack(spacing: 0) {
                             ForEach(filteredBooks) { book in
-                                BookListItemView(book: book)
-                                    .onTapGesture {
-                                        selectedBook = book
-                                        showBookDetails = true
-                                    }
+                                NavigationLink(destination: BookDetailedView(bookId: book.id)) {
+                                    BookListItemView(book: book)
+                                }
+                                .buttonStyle(PlainButtonStyle())
                             }
                         }
                     }
                 }
                 
                 Spacer()
-            }
-            .navigationDestination(isPresented: $showBookDetails) {
-                if let book = selectedBook {
-                    BookDetailedView(bookId: book.id)
-                }
             }
         }
         .navigationTitle("Added Books")

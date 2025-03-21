@@ -3,24 +3,26 @@ import SwiftUI
 struct AdminProfileSetupView: View {
     @State private var fullName = ""
     @State private var email = ""
-    @State private var phoneNumber = ""
-    @State private var department = ""
-    @State private var position = ""
-    @State private var bio = ""
+    @State private var dateOfBirth = Date()
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var isLoading = false
     @State private var showAdminOnboarding = false
+    @State private var showDatePicker = false
     @Environment(\.dismiss) private var dismiss
+    
+    private var dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }()
     
     private var isValid: Bool {
         !fullName.isEmpty &&
         !email.isEmpty &&
         email.contains("@") &&
-        email.contains(".") &&
-        !phoneNumber.isEmpty &&
-        !department.isEmpty &&
-        !position.isEmpty
+        email.contains(".")
     }
     
     var body: some View {
@@ -89,38 +91,26 @@ struct AdminProfileSetupView: View {
                                 )
                         }
                         
-                        // Phone Number Field
+                        // Date of Birth Field
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Image(systemName: "phone.fill")
+                                Image(systemName: "calendar")
                                     .foregroundColor(.purple)
-                                Text("Phone Number")
+                                Text("Date of Birth")
                                     .font(.headline)
                             }
                             .foregroundColor(.secondary)
                             
-                            TextField("Enter your phone number", text: $phoneNumber)
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(12)
-                                .keyboardType(.phonePad)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
-                                )
-                        }
-                        
-                        // Department Field
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "building.2.fill")
-                                    .foregroundColor(.purple)
-                                Text("Department")
-                                    .font(.headline)
-                            }
-                            .foregroundColor(.secondary)
-                            
-                            TextField("Enter your department", text: $department)
+                            Button(action: {
+                                showDatePicker = true
+                            }) {
+                                HStack {
+                                    Text(dateFormatter.string(from: dateOfBirth))
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.secondary)
+                                }
                                 .padding()
                                 .background(Color(.secondarySystemBackground))
                                 .cornerRadius(12)
@@ -128,47 +118,7 @@ struct AdminProfileSetupView: View {
                                     RoundedRectangle(cornerRadius: 12)
                                         .stroke(Color.purple.opacity(0.2), lineWidth: 1)
                                 )
-                        }
-                        
-                        // Position Field
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "briefcase.fill")
-                                    .foregroundColor(.purple)
-                                Text("Position")
-                                    .font(.headline)
                             }
-                            .foregroundColor(.secondary)
-                            
-                            TextField("Enter your position", text: $position)
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
-                                )
-                        }
-                        
-                        // Bio Field
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "text.quote")
-                                    .foregroundColor(.purple)
-                                Text("Bio")
-                                    .font(.headline)
-                            }
-                            .foregroundColor(.secondary)
-                            
-                            TextEditor(text: $bio)
-                                .frame(height: 100)
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
-                                )
                         }
                     }
                     .padding(.horizontal)
@@ -214,6 +164,30 @@ struct AdminProfileSetupView: View {
                     message: Text(alertMessage),
                     dismissButton: .default(Text("OK"))
                 )
+            }
+            .sheet(isPresented: $showDatePicker) {
+                NavigationView {
+                    VStack {
+                        DatePicker(
+                            "Select your date of birth",
+                            selection: $dateOfBirth,
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.graphical)
+                        .padding()
+                        
+                        Spacer()
+                    }
+                    .navigationTitle("Date of Birth")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") {
+                                showDatePicker = false
+                            }
+                        }
+                    }
+                }
             }
             .fullScreenCover(isPresented: $showAdminOnboarding) {
                 AdminOnboardingView()

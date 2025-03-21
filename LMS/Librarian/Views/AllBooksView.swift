@@ -36,21 +36,11 @@ struct AllBooksView: View {
                 
                 Spacer()
             }
-            
-            // Navigation link to book details
-            NavigationLink(destination:
-                Group {
-                    if let book = selectedBook {
-                        BookDetailedView(bookId: book.id)
-                    } else {
-                        EmptyView()
-                    }
-                },
-                isActive: $showBookDetails
-            ) {
-                EmptyView()
+            .navigationDestination(isPresented: $showBookDetails) {
+                if let book = selectedBook {
+                    BookDetailedView(bookId: book.id)
+                }
             }
-            .hidden()
         }
         .navigationTitle("Added Books")
         .navigationBarTitleDisplayMode(.large)

@@ -3,7 +3,7 @@ import SwiftUI
 
 class BookStore: ObservableObject {
     @Published var books: [LibrarianBook] = []
-    private let dataController = SupabaseDataController()
+    let dataController = SupabaseDataController()
     
     init() {
         Task {
@@ -64,7 +64,7 @@ class BookStore: ObservableObject {
     }
     
     @MainActor
-    private func loadBooks() async {
+    func loadBooks() async {
         do {
             books = try await dataController.fetchBooks()
         } catch {

@@ -714,6 +714,7 @@ struct AdminOnboardingView: View {
     @State private var mailData: (recipient: String, subject: String, body: String)?
     @State private var librarianName = ""
     @State private var librarianEmail = ""
+    @State private var hasAddedBooks = false
     
     var body: some View {
         NavigationView {
@@ -770,30 +771,17 @@ struct AdminOnboardingView: View {
                         }
                         
                         if showLibrarianForm {
-                            VStack(spacing: 15) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Full Name")
-                                        .font(.headline)
-                                        .foregroundColor(.secondary)
-                                    
-                                    TextField("Enter librarian's full name", text: $librarianName)
-                                        .padding()
-                                        .background(Color(.secondarySystemBackground))
-                                        .cornerRadius(10)
-                                }
+                            VStack(spacing: 16) {
+                                // Librarian form fields
+                                TextField("Librarian Name", text: $librarianName)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .padding(.horizontal)
                                 
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Email")
-                                        .font(.headline)
-                                        .foregroundColor(.secondary)
-                                    
-                                    TextField("Enter librarian's email", text: $librarianEmail)
-                                        .padding()
-                                        .background(Color(.secondarySystemBackground))
-                                        .cornerRadius(10)
-                                        .keyboardType(.emailAddress)
-                                        .autocapitalization(.none)
-                                }
+                                TextField("Librarian Email", text: $librarianEmail)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .keyboardType(.emailAddress)
+                                    .autocapitalization(.none)
+                                    .padding(.horizontal)
                                 
                                 Button(action: {
                                     Task {
@@ -814,9 +802,9 @@ struct AdminOnboardingView: View {
                                     }
                                 }
                                 .disabled(isLoading)
+                                .padding(.horizontal)
+                                .padding(.bottom, 20)
                             }
-                            .padding(.horizontal)
-                            .padding(.bottom, 20)
                         }
                     }
                     .background(Color.white)
@@ -832,7 +820,7 @@ struct AdminOnboardingView: View {
                             }
                         }) {
                             HStack {
-                                Image(systemName: "book.fill")
+                                Image(systemName: "books.vertical")
                                     .font(.system(size: 40))
                                     .foregroundColor(.purple)
                                 
@@ -840,9 +828,8 @@ struct AdminOnboardingView: View {
                                     Text("Add Books")
                                         .font(.title2)
                                         .fontWeight(.bold)
-                                        .foregroundColor(.primary)
                                     
-                                    Text("Add books to your library collection")
+                                    Text("Start building your library collection")
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
                                 }
@@ -858,7 +845,7 @@ struct AdminOnboardingView: View {
                         }
                         
                         if showBookForm {
-                            VStack(spacing: 20) {
+                            VStack(spacing: 16) {
                                 Button(action: {
                                     showManualForm = true
                                 }) {
@@ -880,6 +867,7 @@ struct AdminOnboardingView: View {
                                     .background(Color(.secondarySystemBackground))
                                     .cornerRadius(12)
                                 }
+                                .padding(.horizontal)
                                 
                                 Button(action: {
                                     showCSVImport = true
@@ -902,9 +890,9 @@ struct AdminOnboardingView: View {
                                     .background(Color(.secondarySystemBackground))
                                     .cornerRadius(12)
                                 }
+                                .padding(.horizontal)
+                                .padding(.bottom, 20)
                             }
-                            .padding(.horizontal)
-                            .padding(.bottom, 20)
                         }
                     }
                     .background(Color.white)
@@ -914,7 +902,10 @@ struct AdminOnboardingView: View {
                     
                     // Finish Button
                     Button(action: {
-                        withAnimation {
+                        if !hasAddedBooks {
+                            alertMessage = "Are you sure you want to continue without adding any books? You can add them later from the Resources tab."
+                            showAlert = true
+                        } else {
                             showMainApp = true
                         }
                     }) {
@@ -933,9 +924,12 @@ struct AdminOnboardingView: View {
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .alert(isPresented: $showAlert) {
                 Alert(
-                    title: Text("Notification"),
+                    title: Text("Confirm"),
                     message: Text(alertMessage),
-                    dismissButton: .default(Text("OK"))
+                    primaryButton: .default(Text("Continue")) {
+                        showMainApp = true
+                    },
+                    secondaryButton: .cancel()
                 )
             }
             .sheet(isPresented: $showMailComposer) {
@@ -964,10 +958,16 @@ struct AdminOnboardingView: View {
                 }
             }
             .sheet(isPresented: $showManualForm) {
-                BookFormView()
+                AddBookView()
+                    .onDisappear {
+                        hasAddedBooks = true
+                    }
             }
             .sheet(isPresented: $showCSVImport) {
-                CSVImportView()
+                CSVUploadView()
+                    .onDisappear {
+                        hasAddedBooks = true
+                    }
             }
             .fullScreenCover(isPresented: $showMainApp) {
                 MainAppView(userRole: .admin, initialTab: 0)

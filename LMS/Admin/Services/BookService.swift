@@ -11,15 +11,18 @@ class BookService {
     }
     
     // Check if a book already exists
-    private func findExistingBook(title: String, author: String, genre: String, ISBN: String, publicationYear: Int) async throws -> Book? {
+    private func findExistingBook(title: String, author: String, genre: String, ISBN: String, publicationDate: String) async throws -> Book? {
+        // Convert author string to Postgres array format
+        let authorArray = "{" + author.split(separator: ";").map { "\"\($0.trimmingCharacters(in: .whitespaces))\"" }.joined(separator: ",") + "}"
+        
         let response = try await supabase
             .from("Books")
             .select()
             .eq("title", value: title)
-            .eq("author", value: author)
+            .eq("author", value: authorArray)  // Use formatted array
             .eq("genre", value: genre)
             .eq("ISBN", value: ISBN)
-            .eq("publicationYear", value: publicationYear)
+            .eq("publicationDate", value: publicationDate)
             .execute()
         
         let decoder = JSONDecoder()
@@ -40,14 +43,17 @@ class BookService {
     }
     
     // Add a single book with duplicate check
-    func addBook(title: String, author: String, genre: String, ISBN: String, publicationYear: Int, totalCopies: Int) async throws -> (isNewBook: Bool, book: Book) {
+    func addBook(title: String, author: String, genre: String, ISBN: String, publicationDate: String, totalCopies: Int) async throws -> (isNewBook: Bool, book: Book) {
+        // Convert author string to array, splitting by semicolons
+        let authorArray = author.split(separator: ";").map { String($0.trimmingCharacters(in: .whitespaces)) }
+        
         // Check for existing book
         if let existingBook = try await findExistingBook(
             title: title,
             author: author,
             genre: genre,
             ISBN: ISBN,
-            publicationYear: publicationYear
+            publicationDate: publicationDate
         ) {
             // Update copies of existing book
             let newTotalCopies = existingBook.totalCopies + totalCopies
@@ -66,7 +72,7 @@ class BookService {
                 author: existingBook.author,
                 genre: existingBook.genre,
                 ISBN: existingBook.ISBN,
-                publicationYear: existingBook.publicationYear,
+                publicationDate: existingBook.publicationDate,
                 totalCopies: newTotalCopies,
                 availableCopies: newAvailableCopies
             )
@@ -77,17 +83,40 @@ class BookService {
         let newBook = Book(
             id: UUID(),
             title: title,
-            author: author,
+            author: authorArray,
             genre: genre,
             ISBN: ISBN,
-            publicationYear: publicationYear,
+            publicationDate: publicationDate,
+            totalCopies: totalCopies,
+            availableCopies: totalCopies
+        )
+        
+        // Create an encodable book data structure
+        struct BookData: Encodable {
+            let id: String
+            let title: String
+            let author: [String]
+            let genre: String
+            let ISBN: String
+            let publicationDate: String
+            let totalCopies: Int
+            let availableCopies: Int
+        }
+        
+        let bookData = BookData(
+            id: newBook.id.uuidString,
+            title: title,
+            author: authorArray,
+            genre: genre,
+            ISBN: ISBN,
+            publicationDate: publicationDate,
             totalCopies: totalCopies,
             availableCopies: totalCopies
         )
         
         try await supabase
             .from("Books")
-            .insert(newBook)
+            .insert(bookData)
             .execute()
         
         return (true, newBook)
@@ -99,12 +128,13 @@ class BookService {
         var updatedBooksCount = 0
         
         for book in books {
+            let authorString = book.author.joined(separator: "; ")
             let result = try await addBook(
                 title: book.title,
-                author: book.author,
+                author: authorString,
                 genre: book.genre,
                 ISBN: book.ISBN,
-                publicationYear: book.publicationYear,
+                publicationDate: book.publicationDate,
                 totalCopies: book.totalCopies
             )
             
@@ -132,20 +162,19 @@ class BookService {
                 throw BookError.invalidCSVFormat
             }
             
-            guard let publicationYear = Int(columns[4]),
-                  let totalCopies = Int(columns[5]) else {
-                throw BookError.invalidData
-            }
+            // Get author string and split into array by semicolons
+            let authorString = columns[1].trimmingCharacters(in: .whitespaces)
+            let authorArray = authorString.split(separator: ";").map { String($0.trimmingCharacters(in: .whitespaces)) }
             
             return Book(
                 id: UUID(),
                 title: columns[0].trimmingCharacters(in: .whitespaces),
-                author: columns[1].trimmingCharacters(in: .whitespaces),
+                author: authorArray,
                 genre: columns[2].trimmingCharacters(in: .whitespaces),
                 ISBN: columns[3].trimmingCharacters(in: .whitespaces),
-                publicationYear: publicationYear,
-                totalCopies: totalCopies,
-                availableCopies: totalCopies
+                publicationDate: columns[4].trimmingCharacters(in: .whitespaces),
+                totalCopies: Int(columns[5]) ?? 1,
+                availableCopies: Int(columns[5]) ?? 1
             )
         }
     }

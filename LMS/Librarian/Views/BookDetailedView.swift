@@ -8,15 +8,20 @@ struct BookDetailedView: View {
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
     @State private var showingAssignShelfSheet = false
-    
-    // Computed property to get the latest book data
-    private var book: LibrarianBook? {
-        bookStore.books.first { $0.id == bookId }
-    }
+    @State private var bookData: LibrarianBook? = nil
+    @State private var isLoading = true
     
     var body: some View {
         Group {
-            if let book = book {
+            if isLoading {
+                VStack {
+                    ProgressView("Loading book details...")
+                    Text("Book ID: \(bookId?.uuidString ?? "nil")")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .padding()
+                }
+            } else if let book = bookData {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
                         // Book cover and basic info
@@ -118,7 +123,7 @@ struct BookDetailedView: View {
                 }
                 .background(Color.appBackground.ignoresSafeArea())
                 .navigationTitle("Book Details")
-                .navigationBarTitleDisplayMode(.large)
+                .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Menu {
@@ -154,8 +159,48 @@ struct BookDetailedView: View {
                     Text("Are you sure you want to delete this book? This action cannot be undone.")
                 }
             } else {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack(spacing: 20) {
+                    Image(systemName: "book.slash")
+                        .font(.system(size: 60))
+                        .foregroundColor(.red)
+                    
+                    Text("Book not found")
+                        .font(.title)
+                        .fontWeight(.bold)
+                    
+                    Text("The book you're looking for could not be found.")
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.secondary)
+                    
+                    Text("Book ID: \(bookId?.uuidString ?? "nil")")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+                .padding()
+            }
+        }
+        .background(Color.appBackground.ignoresSafeArea())
+        .onAppear {
+            loadBookData()
+        }
+    }
+    
+    private func loadBookData() {
+        isLoading = true
+        print("Loading book data for ID: \(bookId?.uuidString ?? "nil")")
+        
+        // Remove the delay and simplify the async loading logic
+        Task {
+            // Make sure the book store has loaded books
+            if bookStore.books.isEmpty {
+                await bookStore.loadBooks()
+            }
+            
+            // Find the book by ID and update on main thread
+            await MainActor.run {
+                bookData = bookStore.books.first { $0.id == bookId }
+                print("Book data loaded: \(bookData?.title ?? "Not found")")
+                isLoading = false
             }
         }
     }

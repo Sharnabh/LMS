@@ -702,6 +702,7 @@ struct CSVImportView: View {
 struct AdminOnboardingView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var dataController = SupabaseDataController()
+    @StateObject private var bookStore = AdminBookStore()
     @State private var showLibrarianForm = false
     @State private var showBookForm = false
     @State private var showMainApp = false
@@ -956,12 +957,14 @@ struct AdminOnboardingView: View {
             }
             .sheet(isPresented: $showManualForm) {
                 AddBookView()
+                    .environmentObject(bookStore)
                     .onDisappear {
                         hasAddedBooks = true
                     }
             }
             .sheet(isPresented: $showCSVImport) {
                 CSVUploadView()
+                    .environmentObject(bookStore)
                     .onDisappear {
                         hasAddedBooks = true
                     }

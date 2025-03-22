@@ -63,8 +63,7 @@ struct PatronsView: View {
         errorMessage = nil
         
         do {
-            let query = supabaseController.client.database
-                .from("Librarian")
+            let query = supabaseController.client.from("Librarian")
                 .select()
             
             let librarians: [LibrarianModel] = try await query.execute().value

@@ -17,6 +17,7 @@ struct AdminLoginView: View {
     @Binding var showMainApp: Bool
     @State private var animateContent = false
     @State private var showOnboarding = false
+    @State private var showPasswordReset = false
     @State private var currentAdminId: String?
     
     private let dataController = SupabaseDataController()
@@ -148,6 +149,11 @@ struct AdminLoginView: View {
                 dismissButton: .default(Text("OK"))
             )
         }
+        .fullScreenCover(isPresented: $showPasswordReset) {
+            AdminPasswordResetView(adminId: currentAdminId ?? "", onComplete: {
+                showMainApp = true
+            })
+        }
         .fullScreenCover(isPresented: $showOnboarding) {
             AdminOnboardingView()
         }
@@ -170,7 +176,7 @@ struct AdminLoginView: View {
                 if result.isAuthenticated {
                     currentAdminId = result.adminId
                     if result.isFirstLogin {
-                        showOnboarding = true
+                        showPasswordReset = true
                     } else {
                         showMainApp = true
                     }

@@ -24,10 +24,24 @@ class GoogleBooksService {
         
         let bookInfo = bookItem.volumeInfo
         
-        // Convert HTTP URLs to HTTPS for App Transport Security
+        // Process the image URL: convert HTTP to HTTPS and ensure proper encoding
         var imageLink: String? = nil
         if let thumbnail = bookInfo.imageLinks?.thumbnail {
-            imageLink = thumbnail.replacingOccurrences(of: "http://", with: "https://")
+            // Convert HTTP URLs to HTTPS for App Transport Security
+            var processedURL = thumbnail.replacingOccurrences(of: "http://", with: "https://")
+            
+            // Handle common URL encoding issues
+            if let urlComponents = URLComponents(string: processedURL) {
+                // Properly encode URL components
+                imageLink = urlComponents.url?.absoluteString
+            } else {
+                // If URLComponents fails, try percent-encoding the URL
+                imageLink = processedURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+            }
+            
+            // Print the processed URL for debugging (can be removed later)
+            print("Original thumbnail URL: \(thumbnail)")
+            print("Processed image URL: \(imageLink ?? "nil")")
         }
         
         return LibrarianBook(

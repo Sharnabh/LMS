@@ -531,7 +531,7 @@ struct HomeLibrarianView: View {
         // Foreground card with book cover in the same layout as blue card
         ZStack {
             // Card background with image
-            if let book = book {
+            if book != nil {
                 Image(backgroundName)
                     .resizable()
                     .scaledToFill()
@@ -634,30 +634,43 @@ struct HomeLibrarianView: View {
                 .zIndex(1)
                 
                 // Book cover image with shadow
-                AsyncImage(url: URL(string: book.imageLink ?? "")) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 140, height: 170) // Adjusted height
-                            .clipped()
-                            .offset(x: -85) // Position from center to left
-                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                            .zIndex(2)
-                    case .failure, .empty:
-                        defaultBookCover()
-                            .frame(width: 140, height: 170) // Adjusted height
-                            .offset(x: -85)
-                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                            .zIndex(2)
-                    @unknown default:
-                        defaultBookCover()
-                            .frame(width: 140, height: 170) // Adjusted height
-                            .offset(x: -85)
-                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                            .zIndex(2)
+                if let imageURL = book.imageLink, let url = URL(string: imageURL) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 140, height: 170) // Adjusted height
+                                .clipped()
+                                .offset(x: -85) // Position from center to left
+                                .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                                .zIndex(2)
+                        case .failure:
+                            defaultBookCover()
+                                .frame(width: 140, height: 170) // Adjusted height
+                                .offset(x: -85)
+                                .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                                .zIndex(2)
+                        case .empty:
+                            ProgressView()
+                                .frame(width: 140, height: 170) // Adjusted height
+                                .offset(x: -85)
+                                .zIndex(2)
+                        @unknown default:
+                            defaultBookCover()
+                                .frame(width: 140, height: 170) // Adjusted height
+                                .offset(x: -85)
+                                .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                                .zIndex(2)
+                        }
                     }
+                } else {
+                    defaultBookCover()
+                        .frame(width: 140, height: 170) // Adjusted height
+                        .offset(x: -85)
+                        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                        .zIndex(2)
                 }
             }
         }
@@ -753,30 +766,43 @@ struct HomeLibrarianView: View {
             .zIndex(1)
 
             // Book cover image with shadow
-            AsyncImage(url: URL(string: book.imageLink ?? "")) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 140, height: 170) // Adjusted height
-                        .clipped()
-                        .offset(x: -85) // Position from center to left
-                        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                        .zIndex(2)
-                case .failure, .empty:
-                    defaultBookCover()
-                        .frame(width: 140, height: 170) // Adjusted height
-                        .offset(x: -85)
-                        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                        .zIndex(2)
-                @unknown default:
-                    defaultBookCover()
-                        .frame(width: 140, height: 170) // Adjusted height
-                        .offset(x: -85)
-                        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                        .zIndex(2)
+            if let imageURL = book.imageLink, let url = URL(string: imageURL) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 140, height: 170) // Adjusted height
+                            .clipped()
+                            .offset(x: -85) // Position from center to left
+                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                            .zIndex(2)
+                    case .failure:
+                        defaultBookCover()
+                            .frame(width: 140, height: 170) // Adjusted height
+                            .offset(x: -85)
+                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                            .zIndex(2)
+                    case .empty:
+                        ProgressView()
+                            .frame(width: 140, height: 170) // Adjusted height
+                            .offset(x: -85)
+                            .zIndex(2)
+                    @unknown default:
+                        defaultBookCover()
+                            .frame(width: 140, height: 170) // Adjusted height
+                            .offset(x: -85)
+                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                            .zIndex(2)
+                    }
                 }
+            } else {
+                defaultBookCover()
+                    .frame(width: 140, height: 170) // Adjusted height
+                    .offset(x: -85)
+                    .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                    .zIndex(2)
             }
         }
         .contentShape(Rectangle()) // Make the entire card tappable

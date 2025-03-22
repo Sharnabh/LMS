@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AdminCSVPreviewView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var bookStore: BookStore
+    @EnvironmentObject private var bookStore: AdminBookStore
     
     // Use a @State array of books so we can modify shelf locations
     @State private var booksToImport: [LibrarianBook]
@@ -159,7 +159,7 @@ struct AdminCSVPreviewView: View {
                         updatedCount += 1
                     } else {
                         // Add as new book
-                        let result = try await BookService.shared.addBook(
+                        let _ = try await BookService.shared.addBook(
                             title: book.title,
                             author: authorString,
                             genre: book.genre,
@@ -384,5 +384,5 @@ struct AdminCSVBookItemView: View {
             imageLink: "https://books.google.com/books/content?id=6oHuKQe3TjQC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
         )
     ])
-    .environmentObject(BookStore())
+    .environmentObject(AdminBookStore())
 } 

@@ -10,6 +10,7 @@ struct AssignShelfLocationView: View {
     @State private var isUpdating = false
     @State private var alertMessage = ""
     @State private var showAlert = false
+    @State private var isLoading = true
     
     var body: some View {
         NavigationView {
@@ -48,7 +49,13 @@ struct AssignShelfLocationView: View {
                 }
                 
                 Section(header: Text("Existing Shelf Locations")) {
-                    if shelfLocationStore.shelfLocations.isEmpty {
+                    if isLoading {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
+                        }
+                    } else if shelfLocationStore.shelfLocations.isEmpty {
                         Text("No shelf locations found")
                             .foregroundColor(.gray)
                     } else {
@@ -96,6 +103,28 @@ struct AssignShelfLocationView: View {
                     }
                 }
             )
+            .onAppear {
+                // Debug prints
+                print("AssignShelfLocationView appeared")
+                print("Book: \(book.title), ID: \(book.id?.uuidString ?? "nil")")
+                
+                // Manually load shelf locations when view appears
+                Task {
+                    isLoading = true
+                    await shelfLocationStore.loadShelfLocations()
+                    
+                    await MainActor.run {
+                        isLoading = false
+                        print("Loaded \(shelfLocationStore.shelfLocations.count) shelf locations")
+                        
+                        // Pre-fill with existing location if available
+                        if let existingLocation = book.shelfLocation, !existingLocation.isEmpty {
+                            shelfLocation = existingLocation
+                            print("Pre-filled with existing location: \(existingLocation)")
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -103,10 +132,12 @@ struct AssignShelfLocationView: View {
         guard !shelfLocation.isEmpty else { return }
         
         isUpdating = true
+        print("Attempting to assign shelf location: \(shelfLocation)")
         
         Task {
             // 1. Update the book in BookStore
             if let bookId = book.id {
+                print("Updating book with ID: \(bookId)")
                 let bookUpdateSuccess = await bookStore.updateBookShelfLocation(
                     bookId: bookId,
                     shelfLocation: shelfLocation
@@ -120,6 +151,7 @@ struct AssignShelfLocationView: View {
                 
                 await MainActor.run {
                     isUpdating = false
+                    print("Book update success: \(bookUpdateSuccess), Shelf update success: \(shelfUpdateSuccess)")
                     
                     if bookUpdateSuccess && shelfUpdateSuccess {
                         alertMessage = "Location assigned successfully!"
@@ -134,6 +166,7 @@ struct AssignShelfLocationView: View {
                     isUpdating = false
                     alertMessage = "Invalid book ID. Please try again."
                     showAlert = true
+                    print("Invalid book ID")
                 }
             }
         }

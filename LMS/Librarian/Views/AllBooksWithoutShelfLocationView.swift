@@ -5,7 +5,6 @@ struct AllBooksWithoutShelfLocationView: View {
     @State private var isRefreshing = false
     @State private var searchText = ""
     @State private var selectedBook: LibrarianBook? = nil
-    @State private var showingAssignSheet = false
     
     private var filteredBooks: [LibrarianBook] {
         let booksWithoutLocation = bookStore.books.filter { $0.shelfLocation == nil || $0.shelfLocation?.isEmpty == true }
@@ -74,8 +73,8 @@ struct AllBooksWithoutShelfLocationView: View {
                         LazyVGrid(columns: columns, spacing: 20) {
                             ForEach(filteredBooks) { book in
                                 BookCardWithAssignButton(book: book) {
+                                    print("Selected book: \(book.title), ID: \(book.id?.uuidString ?? "nil")")
                                     selectedBook = book
-                                    showingAssignSheet = true
                                 }
                             }
                         }
@@ -90,11 +89,16 @@ struct AllBooksWithoutShelfLocationView: View {
             }
             .navigationTitle("Needs Shelf Location")
             .navigationBarTitleDisplayMode(.large)
-            .sheet(isPresented: $showingAssignSheet) {
-                if let book = selectedBook {
-                    AssignShelfLocationView(book: book)
-                }
+            .sheet(item: $selectedBook, onDismiss: {
+                print("Sheet dismissed")
+            }) { book in
+                AssignShelfLocationView(book: book)
+                    .environmentObject(bookStore)
             }
+        }
+        .onAppear {
+            print("AllBooksWithoutShelfLocationView appeared")
+            print("Books without location: \(filteredBooks.count)")
         }
     }
 }
@@ -103,21 +107,139 @@ struct AllBooksWithoutShelfLocationView: View {
 struct BookCardWithAssignButton: View {
     let book: LibrarianBook
     let onAssignTap: () -> Void
+    @State private var navigateToDetail = false
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            BookCardView(book: book)
+            // Custom card that doesn't include a NavigationLink
+            CustomBookCard(book: book)
+                .onTapGesture {
+                    // Set the flag to navigate to detail view
+                    navigateToDetail = true
+                }
             
-            Button(action: onAssignTap) {
-                Image(systemName: "mappin.and.ellipse")
-                    .foregroundColor(.white)
-                    .padding(8)
-                    .background(Color.blue)
-                    .clipShape(Circle())
-                    .shadow(radius: 2)
+            // The location button with clear background to prevent NavigationLink activation
+            ZStack {
+                Circle()
+                    .fill(Color.clear)
+                    .frame(width: 50, height: 50)
+                
+                Button(action: {
+                    // Only perform the assign action, don't navigate
+                    onAssignTap()
+                }) {
+                    Image(systemName: "mappin.and.ellipse")
+                        .foregroundColor(.white)
+                        .padding(8)
+                        .background(Color.blue)
+                        .clipShape(Circle())
+                        .shadow(radius: 2)
+                }
             }
             .padding(8)
         }
+        .background(
+            // Hidden navigation link that's only activated when tapping the card, not the button
+            NavigationLink(
+                destination: 
+                    BookDetailedView(bookId: book.id)
+                        .environmentObject(BookStore()),
+                isActive: $navigateToDetail
+            ) {
+                EmptyView()
+            }
+            .opacity(0)
+        )
+    }
+}
+
+// Custom book card without navigation link
+struct CustomBookCard: View {
+    let book: LibrarianBook
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Book cover
+            if let imageURL = book.imageLink {
+                AsyncImage(url: URL(string: imageURL)) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 150)
+                            .clipped()
+                    case .failure, .empty:
+                        Image(systemName: "book.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .padding(20)
+                            .frame(height: 150)
+                            .foregroundColor(.gray)
+                    @unknown default:
+                        Image(systemName: "book.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .padding(20)
+                            .frame(height: 150)
+                            .foregroundColor(.gray)
+                    }
+                }
+                .frame(height: 160)
+                .frame(maxWidth: .infinity)
+            } else {
+                Image(systemName: "book.fill")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .padding(20)
+                    .frame(height: 150)
+                    .foregroundColor(.gray)
+                    .frame(height: 160)
+                    .frame(maxWidth: .infinity)
+            }
+            
+            // Book title and author
+            VStack(alignment: .leading, spacing: 4) {
+                Text(book.title)
+                    .font(.headline)
+                    .lineLimit(1)
+                    .foregroundColor(.primary)
+                
+                if !book.author.isEmpty {
+                    Text(book.author.first ?? "")
+                        .font(.subheadline)
+                        .lineLimit(1)
+                        .foregroundColor(.secondary)
+                }
+                
+                HStack {
+                    Label("Qty: \(book.totalCopies)", systemImage: "number")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                    
+                    Spacer()
+                    
+                    if let location = book.shelfLocation {
+                        Label(location, systemImage: "mappin.and.ellipse")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                    }
+                }
+                .padding(.top, 2)
+            }
+            .padding(.horizontal, 6)
+            .padding(.top, 4)
+            
+            Spacer()
+        }
+        .frame(width: 170, height: 240)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+        )
     }
 }
 

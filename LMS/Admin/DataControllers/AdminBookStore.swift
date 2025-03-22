@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-class BookStore: ObservableObject {
+class AdminBookStore: ObservableObject {
     @Published var books: [LibrarianBook] = []
     let dataController = SupabaseDataController()
     
@@ -25,21 +25,9 @@ class BookStore: ObservableObject {
         Task {
             do {
                 print("Adding book: \(book.title)")
-                let success = try await dataController.addBook(book)
-                if success {
-                    print("Book added successfully: \(book.title)")
-                    await loadBooks()
-                    
-                    // Verify the book was actually added
-                    let addedBook = books.first { $0.ISBN == book.ISBN }
-                    if addedBook != nil {
-                        print("Book verified in database: \(book.title)")
-                    } else {
-                        print("WARNING: Book not found in database after addition: \(book.title)")
-                    }
-                } else {
-                    print("Failed to add book: \(book.title)")
-                }
+                let _ = try await dataController.addBook(book)
+                print("Book added successfully: \(book.title)")
+                await loadBooks()
             } catch {
                 print("Error adding book: \(error)")
             }
@@ -68,7 +56,7 @@ class BookStore: ObservableObject {
             )
             
             do {
-                let success = try await dataController.updateBook(updatedBook)
+                let _ = try await dataController.updateBook(updatedBook)
                 return (false, existingBook.id)
             } catch {
                 print("Error updating existing book: \(error)")
@@ -77,7 +65,7 @@ class BookStore: ObservableObject {
         } else {
             // Book doesn't exist, add it as new
             do {
-                let success = try await dataController.addBook(book)
+                let _ = try await dataController.addBook(book)
                 return (true, book.id)
             } catch {
                 print("Error adding new book: \(error)")
@@ -131,10 +119,8 @@ class BookStore: ObservableObject {
             if !fetchedBooks.isEmpty {
                 let sampleBooks = fetchedBooks.prefix(min(3, fetchedBooks.count))
                 for book in sampleBooks {
-                    print("  - \(book.title) (ID: \(book.id?.uuidString ?? "nil"), Shelf: \(book.shelfLocation ?? "None"))")
+                    print("  - \(book.title) (ID: \(book.id?.uuidString ?? "nil"))")
                 }
-            } else {
-                print("Warning: No books were fetched from the database")
             }
         } catch {
             print("Error loading books: \(error)")
@@ -156,12 +142,9 @@ class BookStore: ObservableObject {
             updatedBook.shelfLocation = shelfLocation
             
             do {
-                let success = try await dataController.updateBook(updatedBook)
-                if success {
-                    await loadBooks()
-                    return true
-                }
-                return false
+                let _ = try await dataController.updateBook(updatedBook)
+                await loadBooks()
+                return true
             } catch {
                 print("Error updating book shelf location: \(error)")
                 return false

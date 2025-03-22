@@ -3,6 +3,8 @@ import SwiftUI
 struct LibrarianAddBookView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var bookStore: BookStore
+    @StateObject private var shelfLocationStore = ShelfLocationStore()
+    
     @State private var title = ""
     @State private var author = ""
     @State private var genre = "Science"
@@ -14,6 +16,9 @@ struct LibrarianAddBookView: View {
     @State private var alertMessage = ""
     @State private var isSuccess = false
     @State private var isLoading = false
+    @State private var isLoadingShelves = true
+    @State private var showAddNewShelfSheet = false
+    @State private var newShelfName = ""
     
     let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
     
@@ -57,8 +62,38 @@ struct LibrarianAddBookView: View {
                     
                     TextField("Total Copies", text: $totalCopies)
                         .keyboardType(.numberPad)
-                        
-                    TextField("Shelf Location", text: $shelfLocation)
+                    
+                    if isLoadingShelves {
+                        HStack {
+                            Text("Loading shelf locations...")
+                            Spacer()
+                            ProgressView()
+                        }
+                    } else {
+                        if shelfLocationStore.shelfLocations.isEmpty {
+                            HStack {
+                                Text("No shelves available")
+                                Spacer()
+                                Button("Add New") {
+                                    showAddNewShelfSheet = true
+                                }
+                            }
+                        } else {
+                            Picker("Shelf Location", selection: $shelfLocation) {
+                                Text("Select a shelf").tag("")
+                                ForEach(shelfLocationStore.shelfLocations, id: \.id) { shelf in
+                                    Text(shelf.shelfNo).tag(shelf.shelfNo)
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                            
+                            Button("Add New Shelf") {
+                                showAddNewShelfSheet = true
+                            }
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        }
+                    }
                 }
                 
                 if !isValid {
@@ -88,6 +123,12 @@ struct LibrarianAddBookView: View {
                     }
                 }
             )
+            .onAppear {
+                loadShelfLocations()
+            }
+            .sheet(isPresented: $showAddNewShelfSheet) {
+                addNewShelfView
+            }
         }
         .alert(isPresented: $showAlert) {
             Alert(
@@ -99,6 +140,75 @@ struct LibrarianAddBookView: View {
                     }
                 }
             )
+        }
+    }
+    
+    private var addNewShelfView: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Add New Shelf Location")) {
+                    TextField("Shelf Name", text: $newShelfName)
+                }
+                
+                Button("Add Shelf") {
+                    addNewShelf()
+                }
+                .disabled(newShelfName.isEmpty)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(newShelfName.isEmpty ? Color.gray : Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+                .padding()
+            }
+            .navigationTitle("New Shelf")
+            .navigationBarItems(trailing: Button("Cancel") {
+                showAddNewShelfSheet = false
+                newShelfName = ""
+            })
+        }
+    }
+    
+    private func loadShelfLocations() {
+        isLoadingShelves = true
+        Task {
+            await shelfLocationStore.loadShelfLocations()
+            
+            await MainActor.run {
+                isLoadingShelves = false
+                if shelfLocationStore.shelfLocations.count == 1 {
+                    shelfLocation = shelfLocationStore.shelfLocations[0].shelfNo
+                }
+            }
+        }
+    }
+    
+    private func addNewShelf() {
+        guard !newShelfName.isEmpty else { return }
+        
+        if !shelfLocationStore.shelfLocations.contains(where: { $0.shelfNo == newShelfName }) {
+            let newShelf = BookShelfLocation(
+                id: UUID(),
+                shelfNo: newShelfName,
+                bookID: []
+            )
+            
+            shelfLocationStore.addShelfLocation(newShelf)
+            
+            Task {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                await shelfLocationStore.loadShelfLocations()
+                
+                await MainActor.run {
+                    shelfLocation = newShelfName
+                    showAddNewShelfSheet = false
+                    newShelfName = ""
+                }
+            }
+        } else {
+            shelfLocation = newShelfName
+            showAddNewShelfSheet = false
+            newShelfName = ""
         }
     }
     
@@ -124,20 +234,40 @@ struct LibrarianAddBookView: View {
         )
         
         Task {
-            // Adding book asynchronously
-            bookStore.addBook(newBook)
-            
-            // Explicitly reload the books to ensure they're updated across all views
-            await bookStore.loadBooks()
-            
-            // Giving time for the database operation
-            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
-            
-            await MainActor.run {
-                isSuccess = true
-                alertMessage = "Book added successfully"
-                showAlert = true
-                isLoading = false
+            do {
+                let success = try await bookStore.dataController.addBook(newBook)
+                
+                if success {
+                    await bookStore.loadBooks()
+                    
+                    let bookWasAdded = bookStore.books.contains { $0.ISBN == isbn }
+                    
+                    await MainActor.run {
+                        if bookWasAdded {
+                            isSuccess = true
+                            alertMessage = "Book added successfully and verified in database"
+                        } else {
+                            isSuccess = false
+                            alertMessage = "Book appears to be added but not found in database. Please check and try again."
+                        }
+                        showAlert = true
+                        isLoading = false
+                    }
+                } else {
+                    await MainActor.run {
+                        isSuccess = false
+                        alertMessage = "Failed to add book to database"
+                        showAlert = true
+                        isLoading = false
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isSuccess = false
+                    alertMessage = "Error: \(error.localizedDescription)"
+                    showAlert = true
+                    isLoading = false
+                }
             }
         }
     }

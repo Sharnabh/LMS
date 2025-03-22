@@ -87,6 +87,7 @@ extension SupabaseDataController {
         
         // Create an encodable structure for the book data
         struct BookInsert: Codable {
+            let id: String  // Add ID field to ensure it's properly sent to database
             let title: String
             let author: [String]
             let genre: String
@@ -102,6 +103,7 @@ extension SupabaseDataController {
         }
         
         let bookData = BookInsert(
+            id: book.id?.uuidString ?? UUID().uuidString,  // Convert UUID to string for database
             title: book.title,
             author: book.author,
             genre: book.genre,
@@ -117,9 +119,12 @@ extension SupabaseDataController {
         )
         
         do {
-            try await client.from("Books")
+            print("Inserting book with ID: \(book.id?.uuidString ?? "new UUID")")
+            let response = try await client.from("Books")
                 .insert(bookData)
                 .execute()
+                
+            print("Book insert response status: \(response.status)")
             return true
         } catch {
             throw error

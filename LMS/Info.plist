@@ -9,5 +9,12 @@
 	</dict>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to scan barcodes for adding books to your library.</string>
 </dict>
 </plist>

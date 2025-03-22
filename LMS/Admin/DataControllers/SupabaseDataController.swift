@@ -183,9 +183,9 @@ class SupabaseDataController: ObservableObject {
     
     func testConnection() async throws -> Bool {
         do {
-            // Simple query to test the connection
+            // Simple query to test the connection - select all fields instead of just id
             let _: [LibrarianBook] = try await client.from("Books")
-                .select("id")
+                .select("*")  // Select all fields instead of just "id"
                 .limit(1)
                 .execute()
                 .value

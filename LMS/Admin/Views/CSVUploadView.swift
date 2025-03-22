@@ -3,7 +3,7 @@ import UniformTypeIdentifiers
 
 struct CSVUploadView: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject private var bookStore: BookStore
+    @EnvironmentObject private var bookStore: AdminBookStore
     @State private var showFilePicker = false
     @State private var showAlert = false
     @State private var alertMessage = ""

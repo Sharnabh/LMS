@@ -276,12 +276,12 @@ struct MainAppView: View {
     var body: some View {
         NavigationView {
             TabView(selection: $selectedTab) {
-                HomeView()
-                    .tabItem {
-                        Image(systemName: "house.fill")
-                        Text("Home")
-                    }
-                    .tag(0)
+//                HomeView()
+//                    .tabItem {
+//                        Image(systemName: "house.fill")
+//                        Text("Home")
+//                    }
+//                    .tag(0)
                 
                 PatronsView()
                     .tabItem {

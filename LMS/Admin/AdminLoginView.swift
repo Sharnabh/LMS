@@ -6,6 +6,23 @@
 //
 
 import SwiftUI
+import Supabase
+
+struct CustomTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+    }
+}
 
 struct AdminLoginView: View {
     @State private var email = ""
@@ -26,8 +43,9 @@ struct AdminLoginView: View {
             // Background gradient
             LinearGradient(
                 colors: [
-                    Color.blue.opacity(0.1),
-                    Color.purple.opacity(0.1)
+                    Color.blue.opacity(0.12),
+                    Color.purple.opacity(0.12),
+                    Color.indigo.opacity(0.12)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -40,13 +58,26 @@ struct AdminLoginView: View {
                     VStack(spacing: 16) {
                         Image(systemName: "person.circle.fill")
                             .font(.system(size: 60))
-                            .foregroundColor(.blue)
+                            .foregroundStyle(
+                                .linearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
                             .scaleEffect(animateContent ? 1 : 0.8)
                             .opacity(animateContent ? 1 : 0)
                         
                         Text("Admin Login")
                             .font(.title)
                             .fontWeight(.semibold)
+                            .foregroundStyle(
+                                .linearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
                             .opacity(animateContent ? 1 : 0)
                             .offset(y: animateContent ? 0 : 20)
                         
@@ -128,9 +159,25 @@ struct AdminLoginView: View {
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(Color.blue)
-                        .cornerRadius(12)
+                        .frame(height: 56)
+                        .background(
+                            LinearGradient(
+                                colors: [.blue, .purple.opacity(0.8)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(16)
+                        .shadow(
+                            color: .blue.opacity(0.3),
+                            radius: 15,
+                            x: 0,
+                            y: 8
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(.white.opacity(0.1), lineWidth: 1)
+                        )
                     }
                     .disabled(isLoading)
                     .padding(.horizontal, 24)
@@ -186,19 +233,6 @@ struct AdminLoginView: View {
                 showAlert = true
             }
         }
-    }
-}
-
-struct CustomTextFieldStyle: TextFieldStyle {
-    func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .padding()
-            .background(Color(.systemBackground))
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-            )
     }
 }
 

@@ -15,21 +15,21 @@ struct HomeView: View {
                 // Empty list for now
             }
             .navigationTitle("Home")
-            .navigationBarTitleDisplayMode(.large)
+            //.navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                //ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink {
                         AdminHomeView()
                     } label: {
                         Image(systemName: "person.crop.circle.fill")
                             .font(.system(size: 22))
-                            .foregroundColor(.blue)
+                            .foregroundColor(.purple)
                     }
                 }
             }
         }
     }
-}
+
 
 #Preview {
     HomeView()

@@ -1,4 +1,5 @@
 import SwiftUI
+//@_implementationOnly import CustomStyles
 
 struct LibrarianLoginView: View {
     @State private var email = ""
@@ -14,119 +15,158 @@ struct LibrarianLoginView: View {
     @State private var showPassword = false
     @State private var showNewPassword = false
     @State private var showConfirmPassword = false
+    @State private var animateContent = false
     
     var body: some View {
-        VStack(spacing: 30) {
-            // Header with back button
-            HStack {
-                Spacer()
-            }
+        ZStack {
+            // Background gradient
+            LinearGradient(
+                colors: [
+                    Color.blue.opacity(0.12),
+                    Color.purple.opacity(0.12),
+                    Color.indigo.opacity(0.12)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
             
-            // Header
-            VStack(spacing: 16) {
-                Image(systemName: "person.text.rectangle")
-                    .font(.system(size: 80))
-                    .foregroundColor(.blue)
-                
-                Text("Librarian Login")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                
-                Text("Enter your credentials to access the librarian dashboard")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-            .padding(.top, 20)
-            
-            Spacer()
-            
-            // Login Form
-            VStack(spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Email")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    TextField("Enter your email", text: $email)
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(10)
-                        .autocapitalization(.none)
-                        .keyboardType(.emailAddress)
-                        .textContentType(.emailAddress)
-                }
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Password")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    if showPassword {
-                        TextField("Enter your password", text: $password)
-                            .padding()
-                            .background(Color(.secondarySystemBackground))
-                            .cornerRadius(10)
-                            .textContentType(.password)
-                            .overlay(
-                                Button(action: {
-                                    showPassword.toggle()
-                                }) {
-                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                                        .foregroundColor(.gray)
-                                }
-                                .padding(.trailing, 8),
-                                alignment: .trailing
+            ScrollView {
+                VStack(spacing: 32) {
+                    // Header
+                    VStack(spacing: 16) {
+                        Image(systemName: "person.text.rectangle")
+                            .font(.system(size: 60))
+                            .foregroundStyle(
+                                .linearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                    } else {
-                        SecureField("Enter your password", text: $password)
-                            .padding()
-                            .background(Color(.secondarySystemBackground))
-                            .cornerRadius(10)
-                            .textContentType(.password)
-                            .overlay(
-                                Button(action: {
-                                    showPassword.toggle()
-                                }) {
-                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                                        .foregroundColor(.gray)
-                                }
-                                .padding(.trailing, 8),
-                                alignment: .trailing
+                            .scaleEffect(animateContent ? 1 : 0.8)
+                            .opacity(animateContent ? 1 : 0)
+                        
+                        Text("Librarian Login")
+                            .font(.title)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(
+                                .linearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
                             )
+                            .opacity(animateContent ? 1 : 0)
+                            .offset(y: animateContent ? 0 : 20)
+                        
+                        Text("Enter your credentials to access the librarian dashboard")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                            .opacity(animateContent ? 1 : 0)
+                            .offset(y: animateContent ? 0 : 20)
                     }
-                }
-            }
-            .padding(.horizontal)
-            
-            Spacer()
-            
-            // Login button
-            Button(action: {
-                Task {
-                    await loginLibrarian()
-                }
-            }) {
-                if isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                } else {
-                    Text("Login")
-                        .font(.headline)
+                    .padding(.top, 40)
+                    
+                    // Login Form
+                    VStack(spacing: 20) {
+                        // Email Field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Email")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            
+                            TextField("Enter your email", text: $email)
+                                .textContentType(.emailAddress)
+                                .keyboardType(.emailAddress)
+                                .autocapitalization(.none)
+                                .textFieldStyle(CustomTextFieldStyle())
+                        }
+                        .opacity(animateContent ? 1 : 0)
+                        .offset(y: animateContent ? 0 : 20)
+                        
+                        // Password Field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Password")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            
+                            ZStack(alignment: .trailing) {
+                                if showPassword {
+                                    TextField("Enter your password", text: $password)
+                                        .textContentType(.password)
+                                        .textFieldStyle(CustomTextFieldStyle())
+                                } else {
+                                    SecureField("Enter your password", text: $password)
+                                        .textContentType(.password)
+                                        .textFieldStyle(CustomTextFieldStyle())
+                                }
+                                
+                                Button(action: {
+                                    withAnimation {
+                                        showPassword.toggle()
+                                    }
+                                }) {
+                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                        .foregroundColor(.gray)
+                                        .padding(.trailing, 12)
+                                }
+                            }
+                        }
+                        .opacity(animateContent ? 1 : 0)
+                        .offset(y: animateContent ? 0 : 20)
+                    }
+                    .padding(.horizontal, 24)
+                    
+                    // Login Button
+                    Button(action: {
+                        Task {
+                            await loginLibrarian()
+                        }
+                    }) {
+                        HStack {
+                            if isLoading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .padding(.trailing, 8)
+                            }
+                            
+                            Text("Sign In")
+                                .font(.headline)
+                        }
                         .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(
+                            LinearGradient(
+                                colors: [.blue, .purple.opacity(0.8)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(16)
+                        .shadow(
+                            color: .blue.opacity(0.3),
+                            radius: 15,
+                            x: 0,
+                            y: 8
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(.white.opacity(0.1), lineWidth: 1)
+                        )
+                    }
+                    .disabled(isLoading)
+                    .padding(.horizontal, 24)
+                    .opacity(animateContent ? 1 : 0)
+                    .offset(y: animateContent ? 0 : 20)
+                    
+                    Spacer()
                 }
             }
-            .frame(minWidth: 120, maxWidth: 280)
-            .padding(.vertical, 16)
-            .padding(.horizontal, 24)
-            .background(Color.blue)
-            .cornerRadius(12)
-            .disabled(isLoading)
-            .padding(.horizontal, 30)
-            .padding(.bottom, 40)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationBarBackButtonHidden(false)
         .fullScreenCover(isPresented: $showPasswordReset) {
             LibrarianPasswordResetView(showMainApp: $showMainApp, showLibrarianInitialView: $showLibrarianInitialView)
@@ -140,6 +180,11 @@ struct LibrarianLoginView: View {
         }
         .fullScreenCover(isPresented: $showLibrarianInitialView) {
             LibrarianInitialView()
+        }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.6)) {
+                animateContent = true
+            }
         }
     }
     

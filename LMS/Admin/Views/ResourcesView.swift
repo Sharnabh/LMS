@@ -29,48 +29,79 @@ struct ResourcesView: View {
     
     var body: some View {
         NavigationView {
-            VStack {
+            VStack(spacing: 0) {
                 if isConnected {
                     if bookStore.books.isEmpty {
-                        VStack(spacing: 20) {
+                        VStack(spacing: 24) {
+                            Image(systemName: "books.vertical.fill")
+                                .font(.system(size: 60))
+                                .foregroundColor(.secondary.opacity(0.7))
+                                .padding(.bottom, 8)
+                            
                             Text("No books added yet")
                                 .font(.title2)
                                 .foregroundColor(.secondary)
                             
-                            HStack(spacing: 20) {
+                            HStack(spacing: 24) {
                                 Button(action: {
                                     showAddBookSheet = true
                                 }) {
-                                    VStack {
+                                    VStack(spacing: 12) {
                                         Image(systemName: "plus.circle.fill")
-                                            .font(.system(size: 40))
+                                            .font(.system(size: 44))
                                         Text("Add Book")
+                                            .font(.headline)
                                     }
+                                    .frame(width: 120)
+                                    .padding()
+                                    .background(Color.purple.opacity(0.1))
+                                    .cornerRadius(12)
                                 }
                                 
                                 Button(action: {
                                     showCSVUploadSheet = true
                                 }) {
-                                    VStack {
+                                    VStack(spacing: 12) {
                                         Image(systemName: "doc.badge.plus")
-                                            .font(.system(size: 40))
+                                            .font(.system(size: 44))
                                         Text("Upload CSV")
+                                            .font(.headline)
                                     }
+                                    .frame(width: 120)
+                                    .padding()
+                                    .background(Color.purple.opacity(0.1))
+                                    .cornerRadius(12)
                                 }
                             }
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.purple)
                         }
+                        .frame(maxHeight: .infinity)
                     } else {
                         // Search bar
-                        TextField("Search books...", text: $searchText)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .padding()
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.gray)
+                            TextField("Search books...", text: $searchText)
+                                .textFieldStyle(.plain)
+                            if !searchText.isEmpty {
+                                Button(action: {
+                                    searchText = ""
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                        }
+                        .padding(8)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(10)
+                        .padding()
                         
                         // Books grid
                         ScrollView {
                             LazyVGrid(columns: [
-                                GridItem(.adaptive(minimum: 160), spacing: 16)
-                            ], spacing: 16) {
+                                GridItem(.adaptive(minimum: 160), spacing: 20)
+                            ], spacing: 20) {
                                 ForEach(filteredBooks) { book in
                                     BookCard(book: book)
                                         .onTapGesture {
@@ -81,30 +112,14 @@ struct ResourcesView: View {
                             }
                             .padding()
                         }
-                        
-                        // Toolbar with add buttons
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarTrailing) {
-                                Menu {
-                                    Button(action: {
-                                        showAddBookSheet = true
-                                    }) {
-                                        Label("Add Book", systemImage: "plus.circle")
-                                    }
-                                    
-                                    Button(action: {
-                                        showCSVUploadSheet = true
-                                    }) {
-                                        Label("Upload CSV", systemImage: "doc.badge.plus")
-                                    }
-                                } label: {
-                                    Image(systemName: "plus")
-                                }
-                            }
-                        }
                     }
                 } else {
-                    VStack(spacing: 20) {
+                    VStack(spacing: 24) {
+                        Image(systemName: "wifi.slash")
+                            .font(.system(size: 60))
+                            .foregroundColor(.secondary)
+                            .padding(.bottom, 8)
+                        
                         Text("Unable to connect to database")
                             .font(.title2)
                             .foregroundColor(.secondary)
@@ -113,15 +128,42 @@ struct ResourcesView: View {
                             retryConnection()
                         }) {
                             Text("Retry Connection")
+                                .font(.headline)
                                 .foregroundColor(.white)
-                                .padding()
-                                .background(Color.accentColor)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 12)
+                                .background(Color.purple)
                                 .cornerRadius(10)
+                        }
+                    }
+                    .frame(maxHeight: .infinity)
+                }
+            }
+            .navigationTitle("Resources")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                if isConnected && !bookStore.books.isEmpty {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            Button(action: {
+                                showAddBookSheet = true
+                            }) {
+                                Label("Add Book", systemImage: "plus.circle")
+                            }
+                            
+                            Button(action: {
+                                showCSVUploadSheet = true
+                            }) {
+                                Label("Upload CSV", systemImage: "doc.badge.plus")
+                            }
+                        } label: {
+                            Image(systemName: "plus")
+                                .foregroundColor(.purple)
+                                .font(.system(size: 20, weight: .semibold))
                         }
                     }
                 }
             }
-            .navigationTitle("Resources")
         }
         .sheet(isPresented: $showAddBookSheet) {
             AddBookView()
@@ -132,7 +174,7 @@ struct ResourcesView: View {
                 .environmentObject(bookStore)
         }
         .sheet(item: $selectedBook) { book in
-            BookDetailView(book: book)
+            AdminBookDetailView(book: book)
                 .environmentObject(bookStore)
         }
         .onAppear {
@@ -193,31 +235,36 @@ struct BookCard: View {
                     .lineLimit(2)
                 
                 Text(book.author.joined(separator: ", "))
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
-                    .lineLimit(1)
+                    .lineLimit(2)
                 
                 Text(book.genre)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .font(.caption)
+                    .foregroundColor(.purple)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.purple.opacity(0.1))
+                    .cornerRadius(4)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
         }
         .background(Color(.systemBackground))
-        .cornerRadius(8)
-        .shadow(radius: 2)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
     }
     
     private var placeholderCover: some View {
         Rectangle()
-            .fill(Color.gray.opacity(0.2))
+            .fill(Color.gray.opacity(0.1))
             .frame(width: 160, height: 240)
             .overlay(
                 Image(systemName: "book.fill")
-                    .foregroundColor(.gray)
-                    .font(.largeTitle)
+                    .foregroundColor(.gray.opacity(0.5))
+                    .font(.system(size: 40))
             )
+            .cornerRadius(8)
     }
 }
 
@@ -264,6 +311,7 @@ struct AddBookView: View {
                     }
                     
                     Picker("Genre", selection: $genre) {
+                        Text("Select a genre").tag("")
                         ForEach(genres, id: \.self) { genre in
                             Text(genre).tag(genre)
                         }
@@ -283,19 +331,33 @@ struct AddBookView: View {
                     Section {
                         Text("Please fill in all required fields correctly")
                             .foregroundColor(.red)
+                            .font(.subheadline)
                     }
                 }
             }
             .navigationTitle("Add Book")
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    dismiss()
-                },
-                trailing: Button("Add") {
-                    addBook()
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
-                .disabled(!isValid)
-            )
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") {
+                        addBook()
+                    }
+                    .disabled(!isValid)
+                }
+            }
+            .overlay {
+                if isLoading {
+                    Color.black.opacity(0.2)
+                        .ignoresSafeArea()
+                    ProgressView()
+                        .tint(.white)
+                }
+            }
         }
         .alert(isPresented: $showAlert) {
             Alert(
@@ -341,6 +403,141 @@ struct AddBookView: View {
                     isLoading = false
                 }
             }
+        }
+    }
+}
+
+struct AdminBookDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var bookStore: BookStore
+    let book: LibrarianBook
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Book Cover
+                    if let imageURL = book.imageLink, let url = URL(string: imageURL) {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .empty:
+                                ProgressView()
+                                    .frame(height: 280)
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(height: 280)
+                                    .cornerRadius(12)
+                                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                            case .failure:
+                                placeholderCover
+                            @unknown default:
+                                placeholderCover
+                            }
+                        }
+                    } else {
+                        placeholderCover
+                    }
+                    
+                    // Book Information
+                    VStack(spacing: 16) {
+                        // Title and Author
+                        VStack(spacing: 8) {
+                            Text(book.title)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .multilineTextAlignment(.center)
+                            
+                            Text(book.author.joined(separator: ", "))
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(.horizontal)
+                        
+                        // Genre Tag
+                        Text(book.genre)
+                            .font(.subheadline)
+                            .foregroundColor(.purple)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.purple.opacity(0.1))
+                            .cornerRadius(8)
+                        
+                        // Book Details
+                        VStack(spacing: 16) {
+                            detailRow(title: "ISBN", value: book.ISBN)
+                            detailRow(title: "Publication Year", value: book.publicationDate)
+                            detailRow(title: "Total Copies", value: "\(book.totalCopies)")
+                            detailRow(title: "Available Copies", value: "\(book.availableCopies)")
+                            
+                            if let description = book.Description {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Description")
+                                        .font(.headline)
+                                        .foregroundColor(.secondary)
+                                    Text(description)
+                                        .font(.body)
+                                        .foregroundColor(.primary)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, 8)
+                            }
+                        }
+                        .padding(20)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
+                        
+                        // Availability Status
+                        HStack {
+                            Image(systemName: book.availableCopies > 0 ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundColor(book.availableCopies > 0 ? .green : .red)
+                            Text(book.availableCopies > 0 ? "Available" : "Not Available")
+                                .font(.headline)
+                                .foregroundColor(book.availableCopies > 0 ? .green : .red)
+                        }
+                        .padding(.top, 8)
+                    }
+                }
+                .padding(.vertical)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundColor(.purple)
+                }
+            }
+        }
+    }
+    
+    private var placeholderCover: some View {
+        Rectangle()
+            .fill(Color.gray.opacity(0.1))
+            .frame(height: 280)
+            .overlay(
+                Image(systemName: "book.fill")
+                    .foregroundColor(.gray.opacity(0.5))
+                    .font(.system(size: 60))
+            )
+            .cornerRadius(12)
+    }
+    
+    private func detailRow(title: String, value: String) -> some View {
+        HStack(alignment: .center) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
         }
     }
 }

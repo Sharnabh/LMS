@@ -297,12 +297,12 @@ struct MainAppView: View {
                     }
                     .tag(2)
                 
-                PoliciesView()
-                    .tabItem {
-                        Image(systemName: "book.pages")
-                        Text("Policies")
-                    }
-                    .tag(3)
+//                PoliciesView()
+//                    .tabItem {
+//                        Image(systemName: "book.pages")
+//                        Text("Policies")
+//                    }
+//                    .tag(3)
             }
             .toolbar(selectedTab == 0 ? .visible : .hidden, for: .navigationBar)
         }

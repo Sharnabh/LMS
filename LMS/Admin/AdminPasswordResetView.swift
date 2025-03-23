@@ -19,7 +19,8 @@ struct AdminPasswordResetView: View {
     @State private var showNewPassword = false
     @State private var showConfirmPassword = false
     @State private var animateContent = false
-    @State private var showProfileSetup = false
+//    @State private var showProfileSetup = false
+    @State private var showAdminOnboarding = false
     
     private let dataController = SupabaseDataController()
     
@@ -168,13 +169,16 @@ struct AdminPasswordResetView: View {
                 message: Text(alertMessage),
                 dismissButton: .default(Text("OK")) {
                     if !alertMessage.contains("Error") {
-                        showProfileSetup = true
+//                        showProfileSetup = true
+                        showAdminOnboarding = true
                     }
                 }
             )
         }
-        .fullScreenCover(isPresented: $showProfileSetup) {
-            AdminProfileSetupView(adminId: adminId, onComplete: onComplete)
+//        .fullScreenCover(isPresented: $showProfileSetup) {
+//            AdminProfileSetupView(adminId: adminId, onComplete: onComplete)
+        .fullScreenCover(isPresented: $showAdminOnboarding) {
+            AdminOnboardingView()
         }
         .onAppear {
             withAnimation(.easeOut(duration: 0.6)) {

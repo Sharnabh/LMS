@@ -17,24 +17,11 @@ struct LibrarianFormView: View {
                     VStack(spacing: 16) {
                         Image(systemName: "person.badge.plus.circle.fill")
                             .font(.system(size: 60))
-                            .foregroundStyle(
-                                .linearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .foregroundColor(.purple)
                         
                         Text("Add New Librarian")
                             .font(.title2)
                             .fontWeight(.bold)
-                            .foregroundStyle(
-                                .linearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
                         
                         Text("Fill in the details to create a new librarian account")
                             .font(.subheadline)
@@ -50,13 +37,7 @@ struct LibrarianFormView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Image(systemName: "person.fill")
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
+                                    .foregroundColor(.purple)
                                 Text("Full Name")
                                     .font(.headline)
                             }
@@ -68,14 +49,7 @@ struct LibrarianFormView: View {
                                 .cornerRadius(12)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(
-                                            LinearGradient(
-                                                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            ),
-                                            lineWidth: 1
-                                        )
+                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
                                 )
                         }
                         
@@ -83,13 +57,7 @@ struct LibrarianFormView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Image(systemName: "envelope.fill")
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
+                                    .foregroundColor(.purple)
                                 Text("Email Address")
                                     .font(.headline)
                             }
@@ -103,14 +71,7 @@ struct LibrarianFormView: View {
                                 .autocapitalization(.none)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(
-                                            LinearGradient(
-                                                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            ),
-                                            lineWidth: 1
-                                        )
+                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
                                 )
                         }
                         
@@ -118,13 +79,7 @@ struct LibrarianFormView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Image(systemName: "id.badge.fill")
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
+                                    .foregroundColor(.purple)
                                 Text("Librarian ID")
                                     .font(.headline)
                             }
@@ -136,14 +91,7 @@ struct LibrarianFormView: View {
                                 .cornerRadius(12)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(
-                                            LinearGradient(
-                                                colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            ),
-                                            lineWidth: 1
-                                        )
+                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
                                 )
                         }
                     }
@@ -179,18 +127,12 @@ struct LibrarianFormView: View {
                         .padding()
                         .background(
                             LinearGradient(
-                                colors: [.blue, .purple.opacity(0.8)],
+                                gradient: Gradient(colors: [Color.purple, Color.purple.opacity(0.8)]),
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
-                        .cornerRadius(16)
-                        .shadow(
-                            color: .blue.opacity(0.3),
-                            radius: 15,
-                            x: 0,
-                            y: 8
-                        )
+                        .cornerRadius(12)
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 30)
@@ -203,13 +145,7 @@ struct LibrarianFormView: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .foregroundStyle(
-                        .linearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundColor(.purple)
                 }
             }
             .alert(isPresented: $showAlert) {
@@ -470,18 +406,12 @@ struct BookFormView: View {
                         .padding()
                         .background(
                             LinearGradient(
-                                colors: [.blue, .purple.opacity(0.8)],
+                                gradient: Gradient(colors: [Color.purple, Color.purple.opacity(0.8)]),
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
-                        .cornerRadius(16)
-                        .shadow(
-                            color: .blue.opacity(0.3),
-                            radius: 15,
-                            x: 0,
-                            y: 8
-                        )
+                        .cornerRadius(12)
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 30)
@@ -494,13 +424,7 @@ struct BookFormView: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .foregroundStyle(
-                        .linearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundColor(.purple)
                 }
             }
             .alert(isPresented: $showAlert) {
@@ -588,13 +512,7 @@ struct AddBooksSelectionView: View {
                             HStack {
                                 Image(systemName: "square.and.pencil")
                                     .font(.system(size: 40))
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
+                                    .foregroundColor(.purple)
                                 
                                 VStack(alignment: .leading) {
                                     Text("Add Manually")
@@ -610,34 +528,17 @@ struct AddBooksSelectionView: View {
                                 Spacer()
                                 
                                 Image(systemName: "chevron.right")
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
+                                    .foregroundColor(.purple)
                             }
                             .padding()
                             .frame(maxWidth: .infinity)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(.ultraThinMaterial)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .stroke(
-                                                LinearGradient(
-                                                    colors: [.blue.opacity(0.5), .purple.opacity(0.5)],
-                                                    startPoint: .leading,
-                                                    endPoint: .trailing
-                                                ),
-                                                lineWidth: 1
-                                            )
-                                    )
-                            )
                         }
                     }
                     .padding(.vertical)
+                    .background(Color.white)
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                    .padding(.horizontal)
                     
                     // CSV Import Card
                     VStack {
@@ -683,13 +584,7 @@ struct AddBooksSelectionView: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .foregroundStyle(
-                        .linearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundColor(.purple)
                 }
             }
             .sheet(isPresented: $showManualForm) {
@@ -739,23 +634,11 @@ struct CSVImportView: View {
                             VStack(spacing: 12) {
                                 Image(systemName: "doc.badge.plus")
                                     .font(.system(size: 40))
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
+                                    .foregroundColor(.purple)
                                 
                                 Text("Select CSV File")
                                     .font(.headline)
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
+                                    .foregroundColor(.purple)
                                 
                                 Text("Choose a CSV file with book details")
                                     .font(.subheadline)
@@ -784,18 +667,12 @@ struct CSVImportView: View {
                             .padding()
                             .background(
                                 LinearGradient(
-                                    colors: [.blue, .purple.opacity(0.8)],
+                                    gradient: Gradient(colors: [Color.purple, Color.purple.opacity(0.8)]),
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
                             )
-                            .cornerRadius(16)
-                            .shadow(
-                                color: .blue.opacity(0.3),
-                                radius: 15,
-                                x: 0,
-                                y: 8
-                            )
+                            .cornerRadius(12)
                         }
                         .padding(.horizontal)
                     }
@@ -808,13 +685,7 @@ struct CSVImportView: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .foregroundStyle(
-                        .linearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundColor(.purple)
                 }
             }
             .alert(isPresented: $showAlert) {
@@ -853,24 +724,11 @@ struct AdminOnboardingView: View {
                     VStack(spacing: 16) {
                         Image(systemName: "building.columns.fill")
                             .font(.system(size: 60))
-                            .foregroundStyle(
-                                .linearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .foregroundColor(.purple)
                         
                         Text("Library Management")
                             .font(.largeTitle)
                             .fontWeight(.bold)
-                            .foregroundStyle(
-                                .linearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
                         
                         Text("Manage your library resources")
                             .font(.headline)
@@ -890,13 +748,7 @@ struct AdminOnboardingView: View {
                             HStack {
                                 Image(systemName: "person.badge.plus")
                                     .font(.system(size: 40))
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
+                                    .foregroundColor(.purple)
                                 
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Add Librarian")
@@ -911,32 +763,11 @@ struct AdminOnboardingView: View {
                                 Spacer()
                                 
                                 Image(systemName: showLibrarianForm ? "chevron.up" : "chevron.down")
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
+                                    .foregroundColor(.purple)
                             }
                             .padding(.vertical, 20)
                             .padding(.horizontal)
                             .frame(maxWidth: .infinity)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(.ultraThinMaterial)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .stroke(
-                                                LinearGradient(
-                                                    colors: [.blue.opacity(0.5), .purple.opacity(0.5)],
-                                                    startPoint: .leading,
-                                                    endPoint: .trailing
-                                                ),
-                                                lineWidth: 1
-                                            )
-                                    )
-                            )
                         }
                         
                         if showLibrarianForm {
@@ -945,34 +776,12 @@ struct AdminOnboardingView: View {
                                 TextField("Librarian Name", text: $librarianName)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .padding(.horizontal)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(
-                                                LinearGradient(
-                                                    colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                                    startPoint: .leading,
-                                                    endPoint: .trailing
-                                                ),
-                                                lineWidth: 1
-                                            )
-                                    )
                                 
                                 TextField("Librarian Email", text: $librarianEmail)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .keyboardType(.emailAddress)
                                     .autocapitalization(.none)
                                     .padding(.horizontal)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(
-                                                LinearGradient(
-                                                    colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
-                                                    startPoint: .leading,
-                                                    endPoint: .trailing
-                                                ),
-                                                lineWidth: 1
-                                            )
-                                    )
                                 
                                 Button(action: {
                                     Task {
@@ -988,20 +797,8 @@ struct AdminOnboardingView: View {
                                             .foregroundColor(.white)
                                             .frame(maxWidth: .infinity)
                                             .padding()
-                                            .background(
-                                                LinearGradient(
-                                                    colors: [.blue, .purple.opacity(0.8)],
-                                                    startPoint: .leading,
-                                                    endPoint: .trailing
-                                                )
-                                            )
-                                            .cornerRadius(16)
-                                            .shadow(
-                                                color: .blue.opacity(0.3),
-                                                radius: 15,
-                                                x: 0,
-                                                y: 8
-                                            )
+                                            .background(Color.purple)
+                                            .cornerRadius(12)
                                     }
                                 }
                                 .disabled(isLoading)
@@ -1025,13 +822,7 @@ struct AdminOnboardingView: View {
                             HStack {
                                 Image(systemName: "books.vertical")
                                     .font(.system(size: 40))
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
+                                    .foregroundColor(.purple)
                                 
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Add Books")
@@ -1046,13 +837,7 @@ struct AdminOnboardingView: View {
                                 Spacer()
                                 
                                 Image(systemName: showBookForm ? "chevron.up" : "chevron.down")
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [.blue, .purple],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
+                                    .foregroundColor(.purple)
                             }
                             .padding(.vertical, 20)
                             .padding(.horizontal)
@@ -1066,48 +851,21 @@ struct AdminOnboardingView: View {
                                 }) {
                                     HStack {
                                         Image(systemName: "square.and.pencil")
-                                            .font(.system(size: 40))
-                                            .foregroundStyle(
-                                                .linearGradient(
-                                                    colors: [.blue, .purple],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
+                                            .font(.system(size: 30))
+                                            .foregroundColor(.purple)
                                         
                                         Text("Add Manually")
-                                            .font(.title2)
-                                            .fontWeight(.bold)
+                                            .font(.headline)
                                             .foregroundColor(.primary)
                                         
                                         Spacer()
                                         
                                         Image(systemName: "chevron.right")
-                                            .foregroundStyle(
-                                                .linearGradient(
-                                                    colors: [.blue, .purple],
-                                                    startPoint: .leading,
-                                                    endPoint: .trailing
-                                                )
-                                            )
+                                            .foregroundColor(.purple)
                                     }
                                     .padding()
-                                    .frame(maxWidth: .infinity)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .fill(.ultraThinMaterial)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 16)
-                                                    .stroke(
-                                                        LinearGradient(
-                                                            colors: [.blue.opacity(0.5), .purple.opacity(0.5)],
-                                                            startPoint: .leading,
-                                                            endPoint: .trailing
-                                                        ),
-                                                        lineWidth: 1
-                                                    )
-                                            )
-                                    )
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(12)
                                 }
                                 .padding(.horizontal)
                                 
@@ -1117,13 +875,7 @@ struct AdminOnboardingView: View {
                                     HStack {
                                         Image(systemName: "doc.text.fill")
                                             .font(.system(size: 30))
-                                            .foregroundStyle(
-                                                .linearGradient(
-                                                    colors: [.blue, .purple],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
+                                            .foregroundColor(.purple)
                                         
                                         Text("Import from CSV")
                                             .font(.headline)
@@ -1132,30 +884,11 @@ struct AdminOnboardingView: View {
                                         Spacer()
                                         
                                         Image(systemName: "chevron.right")
-                                            .foregroundStyle(
-                                                .linearGradient(
-                                                    colors: [.blue, .purple],
-                                                    startPoint: .leading,
-                                                    endPoint: .trailing
-                                                )
-                                            )
+                                            .foregroundColor(.purple)
                                     }
                                     .padding()
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(.ultraThinMaterial)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(
-                                                        LinearGradient(
-                                                            colors: [.blue.opacity(0.5), .purple.opacity(0.5)],
-                                                            startPoint: .leading,
-                                                            endPoint: .trailing
-                                                        ),
-                                                        lineWidth: 1
-                                                    )
-                                            )
-                                    )
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(12)
                                 }
                                 .padding(.horizontal)
                                 .padding(.bottom, 20)
@@ -1181,20 +914,8 @@ struct AdminOnboardingView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(
-                                LinearGradient(
-                                    colors: [.blue, .purple.opacity(0.8)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .cornerRadius(16)
-                            .shadow(
-                                color: .blue.opacity(0.3),
-                                radius: 15,
-                                x: 0,
-                                y: 8
-                            )
+                            .background(Color.green)
+                            .cornerRadius(12)
                     }
                     .padding(.horizontal, 30)
                     .padding(.bottom, 40)

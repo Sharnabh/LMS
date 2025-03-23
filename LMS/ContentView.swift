@@ -35,205 +35,129 @@ struct OnboardingView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Enhanced animated gradient background
+                // Updated gradient background with slower animation
                 LinearGradient(
                     colors: [
-                        Color(hex: "8B5CF6").opacity(0.15),  // Violet
-                        Color(hex: "D946EF").opacity(0.15),  // Fuchsia
-                        Color(hex: "EC4899").opacity(0.15),  // Pink
-                        Color(hex: "8B5CF6").opacity(0.15)   // Violet
+                        Color.blue.opacity(0.15),
+                        Color.purple.opacity(0.15),
+                        Color.blue.opacity(0.15)
                     ],
                     startPoint: animateGradient ? .topLeading : .bottomLeading,
                     endPoint: animateGradient ? .bottomTrailing : .topTrailing
                 )
                 .ignoresSafeArea()
                 .onAppear {
-                    withAnimation(.linear(duration: 15.0).repeatForever(autoreverses: true)) {
+                    withAnimation(.linear(duration: 8.0).repeatForever(autoreverses: true)) {
                         animateGradient.toggle()
                     }
                 }
                 
-                // Enhanced pattern overlay
-                ZStack {
-                    Color.white.opacity(0.1)
-                        .blendMode(.overlay)
-                    Circle()
-                        .fill(Color(hex: "32CE7A").opacity(0.1))
-                        .frame(width: 300, height: 300)
-                        .blur(radius: 20)
-                        .offset(x: animateGradient ? 50 : -50, y: animateGradient ? -100 : 100)
-                    Circle()
-                        .fill(Color(hex: "FFEC19").opacity(0.1))
-                        .frame(width: 250, height: 250)
-                        .blur(radius: 20)
-                        .offset(x: animateGradient ? -100 : 100, y: animateGradient ? 50 : -50)
-                    Circle()
-                        .fill(Color(hex: "091C27").opacity(0.1))
-                        .frame(width: 200, height: 200)
-                        .blur(radius: 15)
-                        .offset(x: animateGradient ? 80 : -80, y: animateGradient ? 80 : -80)
-                    Circle()
-                        .fill(Color(hex: "D9D9D9").opacity(0.1))
-                        .frame(width: 200, height: 200)
-                        .blur(radius: 15)
-                        .offset(x: animateGradient ? 80 : -80, y: animateGradient ? 80 : -80)
-                    Circle()
-                        .fill(Color(hex: "FFFFFF").opacity(0.1))
-                        .frame(width: 200, height: 200)
-                        .blur(radius: 15)
-                        .offset(x: animateGradient ? 80 : -80, y: animateGradient ? 80 : -80)
-                }
-                .ignoresSafeArea()
+                // Add subtle pattern overlay
+                Color.white.opacity(0.1)
+                    .blendMode(.overlay)
+                    .ignoresSafeArea()
                 
-                ScrollView {
+                VStack(spacing: 30) {
+                    // Header with subtle animation
                     VStack(spacing: 16) {
-                        // Enhanced header with 3D animation
-                        VStack(spacing: 20) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color(hex: "8B5CF6").opacity(0.1))
-                                    .frame(width: 120, height: 120)
-                                
-                                Image(systemName: "books.vertical.fill")
-                                    .font(.system(size: 80))
-                                    .foregroundStyle(
-                                        .linearGradient(
-                                            colors: [
-                                                Color(hex: "8B5CF6"),
-                                                Color(hex: "D946EF")
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                            }
-                            .padding(.top, 40)
-                            
-                            Text("Welcome to Pustak")
-                                .font(.system(size: 36, weight: .bold, design: .rounded))
-                                .foregroundStyle(
-                                    .linearGradient(
-                                        colors: [
-                                            Color(hex: "8B5CF6"),
-                                            Color(hex: "D946EF")
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .opacity(animateHeader ? 1 : 0)
-                                .offset(y: animateHeader ? 0 : 20)
-                                .animation(.spring(response: 0.8, dampingFraction: 0.7), value: animateHeader)
-                            
-                            Text("Your Digital Library Companion")
-                                .font(.title3)
-                                .foregroundColor(.secondary)
-                                .opacity(animateHeader ? 1 : 0)
-                                .offset(y: animateHeader ? 0 : 10)
-                                .animation(.spring(response: 0.8, dampingFraction: 0.7).delay(0.2), value: animateHeader)
-                        }
-                        .padding(.bottom, 40)
-                        .onAppear {
+                        Image(systemName: "books.vertical.fill")
+                            .font(.system(size: 80))
+                            .foregroundColor(.blue)
+                            .scaleEffect(animateHeader ? 1.05 : 1.0)
+                            .rotationEffect(.degrees(animateHeader ? 2 : -2))
+                        
+                        Text("Welcome to SampleLMS")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .opacity(animateHeader ? 1 : 0)
+                            .offset(y: animateHeader ? 0 : 10)
+                        
+                        Text("Please select your role to continue")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                            .opacity(animateHeader ? 1 : 0)
+                            .offset(y: animateHeader ? 0 : 10)
+                    }
+                    .padding(.top, 60)
+                    .onAppear {
+                        withAnimation(.easeOut(duration: 0.5)) {
                             animateHeader = true
                         }
-                        
-                        // Role selection cards with enhanced spacing
-                        VStack(spacing: 24) {
-                            Text("Select your role")
-                                .font(.headline)
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal)
-                                .opacity(animateCards ? 1 : 0)
-                            
-                            RoleCard(
-                                title: "Admin",
-                                description: "Manage the entire library system",
-                                iconName: "person.badge.shield.checkmark",
-                                color: .purple,
-                                isSelected: selectedRole == .admin,
-                                delay: 0.2
-                            ) {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    selectedRole = .admin
-                                }
-                            }
-                            
-                            RoleCard(
-                                title: "Librarian",
-                                description: "Manage books and member borrowings",
-                                iconName: "person.text.rectangle",
-                                color: .blue,
-                                isSelected: selectedRole == .librarian,
-                                delay: 0.3
-                            ) {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    selectedRole = .librarian
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                        .opacity(animateCards ? 1 : 0)
-                        .offset(y: animateCards ? 0 : 20)
-                        .onAppear {
-                            withAnimation(.easeOut(duration: 0.6).delay(0.3)) {
-                                animateCards = true
+                    }
+                    
+                    Spacer()
+                    
+                    // Role selection cards with subtle animation
+                    VStack(spacing: 20) {
+                        RoleCard(
+                            title: "Admin",
+                            description: "Manage the entire library system",
+                            iconName: "person.badge.shield.checkmark",
+                            color: .purple,
+                            isSelected: selectedRole == .admin,
+                            delay: 0.2
+                        ) {
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                selectedRole = .admin
                             }
                         }
                         
-                        Spacer(minLength: 40)
-                        
-                        // Continue button with subtle animation
-                        NavigationLink(destination: {
-                            if selectedRole == .admin {
-                                AdminLoginView(showMainApp: $showMainApp)
-                            } else if selectedRole == .librarian {
-                                LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $selectedRole)
-                            } else {
-                                EmptyView()
+                        RoleCard(
+                            title: "Librarian",
+                            description: "Manage books and member borrowings",
+                            iconName: "person.text.rectangle",
+                            color: .blue,
+                            isSelected: selectedRole == .librarian,
+                            delay: 0.3
+                        ) {
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                selectedRole = .librarian
                             }
-                        }) {
-                            HStack {
-                                Text("Continue")
-                                    .font(.headline)
-                                if selectedRole != nil {
-                                    Image(systemName: "arrow.right")
-                                        .font(.headline)
-                                        .opacity(animateButton ? 1 : 0)
-                                        .offset(x: animateButton ? 0 : -10)
-                                }
-                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .opacity(animateCards ? 1 : 0)
+                    .offset(y: animateCards ? 0 : 20)
+                    .onAppear {
+                        withAnimation(.easeOut(duration: 0.5).delay(0.2)) {
+                            animateCards = true
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    // Continue button with subtle animation
+                    NavigationLink(destination: {
+                        if selectedRole == .admin {
+                            AdminLoginView(showMainApp: $showMainApp)
+                        } else if selectedRole == .librarian {
+                            LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $selectedRole)
+                        } else {
+                            EmptyView()
+                        }
+                    }) {
+                        Text("Continue")
+                            .font(.headline)
                             .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .padding(.horizontal, 40)
+                            .frame(minWidth: 120, maxWidth: 280)
+                            .padding(.vertical, 16)
+                            .padding(.horizontal, 24)
                             .background(
-                                LinearGradient(
-                                    colors: [
-                                        Color(hex: "8B5CF6"),
-                                        Color(hex: "D946EF")
-                                    ],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
+                                selectedRole != nil ?
+                                LinearGradient(colors: [.blue, .blue.opacity(0.8)], startPoint: .leading, endPoint: .trailing) :
+                                LinearGradient(colors: [.gray, .gray.opacity(0.8)], startPoint: .leading, endPoint: .trailing)
                             )
-                            .cornerRadius(16)
-                            .shadow(
-                                color: Color(hex: "8B5CF6").opacity(0.3),
-                                radius: 15,
-                                x: 0,
-                                y: 8
-                            )
-                        }
-                        .disabled(selectedRole == nil)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 40)
-                        .opacity(animateButton ? 1 : 0)
-                        .offset(y: animateButton ? 0 : 10)
-                        .onAppear {
-                            withAnimation(.easeOut(duration: 0.5).delay(0.6)) {
-                                animateButton = true
-                            }
+                            .cornerRadius(12)
+                            .shadow(color: selectedRole != nil ? .blue.opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
+                    }
+                    .disabled(selectedRole == nil)
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, 40)
+                    .opacity(animateButton ? 1 : 0)
+                    .offset(y: animateButton ? 0 : 10)
+                    .onAppear {
+                        withAnimation(.easeOut(duration: 0.5).delay(0.4)) {
+                            animateButton = true
                         }
                     }
                 }
@@ -391,6 +315,7 @@ enum UserRole: String {
     case member = "Member"
 }
 
+// The rest of the file remains the same
 #Preview {
     ContentView()
 }

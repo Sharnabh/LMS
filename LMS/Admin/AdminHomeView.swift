@@ -31,26 +31,14 @@ struct AdminHomeView: View {
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 100, height: 100)
-                                .foregroundStyle(
-                                    .linearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
+                                .foregroundColor(.accentColor)
                                 .accessibilityLabel("Profile photo")
                             
                             if isEditing {
                                 Button(action: { showingImagePicker = true }) {
                                     Text("Change Photo")
                                         .font(.subheadline)
-                                        .foregroundStyle(
-                                            .linearGradient(
-                                                colors: [.blue, .purple],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
+                                        .foregroundColor(.accentColor)
                                 }
                                 .accessibilityLabel("Change profile photo")
                             }
@@ -59,7 +47,6 @@ struct AdminHomeView: View {
                         Spacer()
                     }
                 }
-                .listRowBackground(Color.clear)
                 
                 // Personal Information Section
                 Section {
@@ -73,7 +60,6 @@ struct AdminHomeView: View {
                                 set: { profile.fullName = $0 }
                             ))
                             .textContentType(.name)
-                            .textFieldStyle(CustomTextFieldStyle())
                         }
                         
                         VStack(alignment: .leading, spacing: 8) {
@@ -84,7 +70,6 @@ struct AdminHomeView: View {
                                 get: { profile.dateOfBirth },
                                 set: { profile.dateOfBirth = $0 }
                             ))
-                            .textFieldStyle(CustomTextFieldStyle())
                         }
                         
                         VStack(alignment: .leading, spacing: 8) {
@@ -98,7 +83,6 @@ struct AdminHomeView: View {
                             .textContentType(.emailAddress)
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
-                            .textFieldStyle(CustomTextFieldStyle())
                         }
                     } else {
                         ProfileInfoRow(title: "Full Name", value: profile.fullName)
@@ -108,13 +92,12 @@ struct AdminHomeView: View {
                 } header: {
                     Text("Personal Information")
                         .textCase(.none)
-                        .foregroundStyle(
-                            .linearGradient(
-                                colors: [.blue, .purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                } footer: {
+                    if isEditing {
+                        Text("Your information will be used to personalize your experience")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 // Preferences Section
@@ -124,25 +107,12 @@ struct AdminHomeView: View {
                             Text("Notifications")
                         } icon: {
                             Image(systemName: "bell.fill")
-                                .foregroundStyle(
-                                    .linearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
+                                .foregroundColor(.accentColor)
                         }
                     }
                 } header: {
                     Text("Preferences")
                         .textCase(.none)
-                        .foregroundStyle(
-                            .linearGradient(
-                                colors: [.blue, .purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
                 }
                 
                 // Help & Support Section
@@ -152,13 +122,7 @@ struct AdminHomeView: View {
                             Text("Contact Support")
                         } icon: {
                             Image(systemName: "questionmark.circle.fill")
-                                .foregroundStyle(
-                                    .linearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
+                                .foregroundColor(.accentColor)
                         }
                     }
                     
@@ -167,13 +131,7 @@ struct AdminHomeView: View {
                             Text("Help Center")
                         } icon: {
                             Image(systemName: "book.fill")
-                                .foregroundStyle(
-                                    .linearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
+                                .foregroundColor(.accentColor)
                         }
                     }
                     
@@ -182,25 +140,12 @@ struct AdminHomeView: View {
                             Text("Privacy Policy")
                         } icon: {
                             Image(systemName: "hand.raised.fill")
-                                .foregroundStyle(
-                                    .linearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
+                                .foregroundColor(.accentColor)
                         }
                     }
                 } header: {
                     Text("Help & Support")
                         .textCase(.none)
-                        .foregroundStyle(
-                            .linearGradient(
-                                colors: [.blue, .purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
                 }
                 
                 // Logout Section
@@ -226,13 +171,6 @@ struct AdminHomeView: View {
                             isEditing.toggle()
                         }
                     }
-                    .foregroundStyle(
-                        .linearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
                     .accessibilityLabel(isEditing ? "Done editing profile" : "Edit profile")
                 }
             }

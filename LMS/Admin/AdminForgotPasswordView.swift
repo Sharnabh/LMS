@@ -26,6 +26,9 @@ struct AdminForgotPasswordView: View {
     @State private var showConfirmPassword = false
     @State private var animateContent = false
     @State private var shouldReturnToLogin = false // Flag to indicate if the alert should return to login
+    @FocusState private var otpFieldFocused: Bool
+    @State private var resendCountdown = 0
+    @State private var timer: Timer?
     
     // Data controller
     private let dataController = SupabaseDataController()
@@ -124,6 +127,11 @@ struct AdminForgotPasswordView: View {
                 animateContent = true
             }
         }
+        .onDisappear {
+            // Invalidate timer when view disappears to avoid memory leaks
+            timer?.invalidate()
+            timer = nil
+        }
     }
     
     // MARK: - Email Verification View
@@ -187,9 +195,22 @@ struct AdminForgotPasswordView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
-                TextField("Enter 6-digit code", text: $otp)
+                // OTP digit boxes
+                HStack(spacing: 10) {
+                    ForEach(0..<6, id: \.self) { index in
+                        OTPDigitBox(index: index, otp: $otp, onTap: {
+                            otpFieldFocused = true
+                        })
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                
+                // Hidden text field to handle actual input
+                TextField("", text: $otp)
                     .keyboardType(.numberPad)
-                    .textFieldStyle(CustomTextFieldStyle())
+                    .frame(width: 0, height: 0)
+                    .opacity(0)
+                    .focused($otpFieldFocused)
                     .onChange(of: otp) { newValue in
                         // Limit to 6 digits
                         if newValue.count > 6 {
@@ -206,8 +227,7 @@ struct AdminForgotPasswordView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, -10)
-            
+                
             // Verify Button
             Button(action: {
                 verifyOTP()
@@ -230,18 +250,62 @@ struct AdminForgotPasswordView: View {
             }
             .disabled(isLoading || otp.count != 6)
             
-            // Resend OTP Button
-            Button(action: {
-                Task {
-                    await resendOTP()
-                }
-            }) {
-                Text("Resend Code")
+            // Resend OTP Button with timer
+            VStack(spacing: 8) {
+                Text("Didn't receive the code?")
                     .font(.subheadline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.secondary)
+                
+                if resendCountdown > 0 {
+                    Text("Resend code in \(resendCountdown)s")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                } else {
+                    Button(action: {
+                        Task {
+                            await resendOTP()
+                        }
+                    }) {
+                        Text("Resend Code")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                    }
+                    .disabled(isLoading)
+                }
             }
-            .padding(.top, 8)
-            .disabled(isLoading)
+            .padding(.top, 10)
+        }
+    }
+    
+    // OTP Digit Box
+    private struct OTPDigitBox: View {
+        let index: Int
+        @Binding var otp: String
+        var onTap: () -> Void
+        
+        var body: some View {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.gray.opacity(0.3), lineWidth: 1.5)
+                    .frame(width: 45, height: 55)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(.systemBackground)))
+                
+                if index < otp.count {
+                    let digit = String(Array(otp)[index])
+                    Text(digit)
+                        .font(.title2.bold())
+                        .foregroundColor(.primary)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(index < otp.count ? Color.blue : Color.clear, lineWidth: 1.5)
+            )
+            .animation(.spring(response: 0.2), value: otp.count)
+            .onTapGesture {
+                onTap()
+            }
         }
     }
     
@@ -306,11 +370,9 @@ struct AdminForgotPasswordView: View {
                 }
             }
             
-            // Password Requirements Text
-            Text("Password must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, -10)
+            // Password Requirements Checklist
+            passwordRequirements
+                .padding(.top, 5)
             
             // Reset Password Button
             Button(action: {
@@ -335,6 +397,36 @@ struct AdminForgotPasswordView: View {
                 .cornerRadius(12)
             }
             .disabled(isLoading || newPassword.isEmpty || confirmPassword.isEmpty)
+        }
+    }
+    
+    // Password requirements checklist
+    private var passwordRequirements: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Password Requirements:")
+                .font(.headline)
+                .foregroundColor(.secondary)
+            
+            Group {
+                requirementRow("At least 8 characters", isValid: newPassword.count >= 8)
+                requirementRow("One uppercase letter", isValid: newPassword.range(of: "[A-Z]", options: .regularExpression) != nil)
+                requirementRow("One lowercase letter", isValid: newPassword.range(of: "[a-z]", options: .regularExpression) != nil)
+                requirementRow("One number", isValid: newPassword.range(of: "[0-9]", options: .regularExpression) != nil)
+                requirementRow("One special character", isValid: newPassword.range(of: "[!@#$%^&*(),.?\":{}|<>]", options: .regularExpression) != nil)
+                requirementRow("Passwords match", isValid: !newPassword.isEmpty && newPassword == confirmPassword)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(10)
+    }
+    
+    private func requirementRow(_ text: String, isValid: Bool) -> some View {
+        HStack {
+            Image(systemName: isValid ? "checkmark.circle.fill" : "circle")
+                .foregroundColor(isValid ? .green : .gray)
+            Text(text)
+                .foregroundColor(.secondary)
         }
     }
     
@@ -387,6 +479,8 @@ struct AdminForgotPasswordView: View {
                 DispatchQueue.main.async {
                     isLoading = false
                     step = 2
+                    // Start countdown for resend button
+                    startResendCountdown()
                 }
             } else {
                 DispatchQueue.main.async {
@@ -433,12 +527,32 @@ struct AdminForgotPasswordView: View {
             
             DispatchQueue.main.async {
                 isLoading = false
+                // Start countdown for resend button
+                startResendCountdown()
             }
         } catch {
             DispatchQueue.main.async {
                 isLoading = false
                 alertMessage = "Failed to resend code: \(error.localizedDescription)"
                 showAlert = true
+            }
+        }
+    }
+    
+    private func startResendCountdown() {
+        // Invalidate existing timer
+        timer?.invalidate()
+        
+        // Set initial countdown value (30 seconds)
+        resendCountdown = 30
+        
+        // Create new timer
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            if resendCountdown > 0 {
+                resendCountdown -= 1
+            } else {
+                timer?.invalidate()
+                timer = nil
             }
         }
     }

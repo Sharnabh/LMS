@@ -128,6 +128,9 @@ struct AdminPasswordResetView: View {
                     }
                     .padding(.horizontal, 24)
                     
+                    // Password Requirements
+                    passwordRequirements
+                    
                     // Reset Button
                     Button(action: {
                         Task {
@@ -154,14 +157,6 @@ struct AdminPasswordResetView: View {
                     .padding(.horizontal, 24)
                     .opacity(animateContent ? 1 : 0)
                     .offset(y: animateContent ? 0 : 20)
-                    
-                    if !newPassword.isEmpty && !confirmPassword.isEmpty && !passwordsMatch {
-                        Text("Passwords do not match")
-                            .foregroundColor(.red)
-                            .font(.subheadline)
-                            .padding(.top, 8)
-                            .opacity(animateContent ? 1 : 0)
-                    }
                     
                     Spacer()
                 }
@@ -190,6 +185,36 @@ struct AdminPasswordResetView: View {
     
     private var passwordsMatch: Bool {
         return newPassword == confirmPassword
+    }
+    
+    // Password requirements checklist
+    private var passwordRequirements: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Password Requirements:")
+                .font(.headline)
+                .foregroundColor(.secondary)
+            
+            Group {
+                requirementRow("At least 8 characters", isValid: newPassword.count >= 8)
+                requirementRow("One uppercase letter", isValid: newPassword.range(of: "[A-Z]", options: .regularExpression) != nil)
+                requirementRow("One lowercase letter", isValid: newPassword.range(of: "[a-z]", options: .regularExpression) != nil)
+                requirementRow("One number", isValid: newPassword.range(of: "[0-9]", options: .regularExpression) != nil)
+                requirementRow("One special character", isValid: newPassword.range(of: "[!@#$%^&*(),.?\":{}|<>]", options: .regularExpression) != nil)
+                requirementRow("Passwords match", isValid: !newPassword.isEmpty && newPassword == confirmPassword)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(10)
+    }
+    
+    private func requirementRow(_ text: String, isValid: Bool) -> some View {
+        HStack {
+            Image(systemName: isValid ? "checkmark.circle.fill" : "circle")
+                .foregroundColor(isValid ? .green : .gray)
+            Text(text)
+                .foregroundColor(.secondary)
+        }
     }
     
     private func resetPassword() async {

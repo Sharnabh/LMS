@@ -927,7 +927,11 @@ struct AdminOnboardingView: View {
                 Alert(
                     title: Text("Notification"),
                     message: Text(alertMessage),
-                    dismissButton: .default(Text("OK"))
+                    dismissButton: .default(Text("OK")) {
+                        if alertMessage.contains("Are you sure you want to continue without adding any books?") {
+                            showMainApp = true
+                        }
+                    }
                 )
             }
             .sheet(isPresented: $showMailComposer) {

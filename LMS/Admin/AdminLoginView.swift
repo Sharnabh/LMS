@@ -19,6 +19,7 @@ struct AdminLoginView: View {
     @State private var showOnboarding = false
     @State private var showPasswordReset = false
     @State private var currentAdminId: String?
+    @State private var showForgotPassword = false
     
     private let dataController = SupabaseDataController()
     
@@ -138,6 +139,18 @@ struct AdminLoginView: View {
                     .opacity(animateContent ? 1 : 0)
                     .offset(y: animateContent ? 0 : 20)
                     
+                    // Forgot Password Link
+                    Button(action: {
+                        showForgotPassword = true
+                    }) {
+                        Text("Forgot Password?")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                    }
+                    .padding(.top, 8)
+                    .opacity(animateContent ? 1 : 0)
+                    .offset(y: animateContent ? 0 : 20)
+                    
                     Spacer()
                 }
             }
@@ -156,6 +169,11 @@ struct AdminLoginView: View {
         }
         .fullScreenCover(isPresented: $showOnboarding) {
             AdminOnboardingView()
+        }
+        .fullScreenCover(isPresented: $showForgotPassword) {
+            AdminForgotPasswordView(onComplete: {
+                showForgotPassword = false
+            })
         }
         .onAppear {
             withAnimation(.easeOut(duration: 0.6)) {

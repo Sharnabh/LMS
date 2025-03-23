@@ -196,5 +196,154 @@ class SupabaseDataController: ObservableObject {
             return false
         }
     }
+    
+    // MARK: - Admin Password Reset
+    
+    // Structure to store OTP information with expiry
+    private struct OTPInfo {
+        let otp: String
+        let expiryTime: Date
+        let email: String
+        
+        var isValid: Bool {
+            return Date() < expiryTime
+        }
+    }
+    
+    // Dictionary to store active OTPs
+    private static var activeOTPs: [String: OTPInfo] = [:]
+    
+    func generateOTP(for email: String) -> String {
+        // Generate a 6-digit OTP
+        let digits = "0123456789"
+        var otp = ""
+        for _ in 0..<6 {
+            let randomIndex = Int.random(in: 0..<digits.count)
+            let digit = digits[digits.index(digits.startIndex, offsetBy: randomIndex)]
+            otp.append(digit)
+        }
+        
+        // Set expiry time to 10 minutes from now
+        let expiryTime = Date().addingTimeInterval(10 * 60)
+        
+        // Store OTP with expiry
+        let otpInfo = OTPInfo(otp: otp, expiryTime: expiryTime, email: email)
+        SupabaseDataController.activeOTPs[email] = otpInfo
+        
+        return otp
+    }
+    
+    func verifyOTP(email: String, otp: String) -> Bool {
+        guard let otpInfo = SupabaseDataController.activeOTPs[email] else {
+            return false // No OTP found for this email
+        }
+        
+        // Check if OTP is expired
+        if !otpInfo.isValid {
+            // Remove expired OTP
+            SupabaseDataController.activeOTPs.removeValue(forKey: email)
+            return false
+        }
+        
+        // Verify OTP
+        let isValid = otpInfo.otp == otp
+        
+        // If valid, remove the used OTP
+        if isValid {
+            SupabaseDataController.activeOTPs.removeValue(forKey: email)
+        }
+        
+        return isValid
+    }
+    
+    func generateOTP() -> String {
+        // DEPRECATED: Use generateOTP(for:) instead to include expiry
+        // This is maintained for backward compatibility
+        // Generate a 6-digit OTP
+        let digits = "0123456789"
+        var otp = ""
+        for _ in 0..<6 {
+            let randomIndex = Int.random(in: 0..<digits.count)
+            let digit = digits[digits.index(digits.startIndex, offsetBy: randomIndex)]
+            otp.append(digit)
+        }
+        return otp
+    }
+    
+    func verifyAdminEmail(email: String) async throws -> (exists: Bool, adminId: String?, isFirstLogin: Bool) {
+        do {
+            let response: [AdminModel] = try await client.from("Admin")
+                .select("*")
+                .eq("email", value: email)
+                .execute()
+                .value
+            
+            if let admin = response.first {
+                return (true, admin.id, admin.is_first_login)
+            }
+            
+            return (false, nil, false)
+        } catch {
+            print("Verification error: \(error)")
+            throw error
+        }
+    }
+    
+    func verifyLibrarianEmail(email: String) async throws -> (exists: Bool, librarianId: String?, isFirstLogin: Bool) {
+        do {
+            let response: [LibrarianModel] = try await client.from("Librarian")
+                .select("*")
+                .eq("email", value: email)
+                .execute()
+                .value
+            
+            if let librarian = response.first {
+                return (true, librarian.id, librarian.isFirstLogin)
+            }
+            
+            return (false, nil, false)
+        } catch {
+            print("Librarian verification error: \(error)")
+            throw error
+        }
+    }
+    
+    func sendOTP(to email: String, name: String, otp: String) async throws -> Bool {
+        // Create email content
+        let emailContent = """
+        Hello,
+        
+        You've requested to reset your admin password for the Library Management System.
+        
+        Your OTP is: \(otp)
+        
+        This code will expire in 10 minutes.
+        
+        If you didn't request this, please ignore this email or contact support.
+        
+        Best regards,
+        Library Management Team
+        """
+        
+        // Create recipient user
+        let recipientUser = Mail.User(name: name, email: email)
+        
+        // Create the email
+        let mail = Mail(
+            from: senderUser,
+            to: [recipientUser],
+            subject: "Password Reset OTP - Library Management System",
+            text: emailContent
+        )
+        
+        do {
+            // Send the email
+            try await smtp.send(mail)
+            return true
+        } catch {
+            print("Error sending OTP: \(error)")
+            throw error
+        }
+    }
 }
 

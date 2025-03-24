@@ -30,11 +30,11 @@ struct LibrarianLoginView: View {
                     .foregroundColor(.blue)
                 
                 Text("Librarian Login")
-                    .font(.largeTitle)
+                    .font(.title)
                     .fontWeight(.bold)
                 
-                Text("Enter your credentials to access the librarian dashboard")
-                    .font(.headline)
+                Text("Enter your credentials to access as librarian dashboard")
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)

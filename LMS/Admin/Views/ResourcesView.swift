@@ -163,51 +163,60 @@ struct BookCard: View {
     @State private var fetchedImageURL: String? = nil
     
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 0) {
             // Book cover with actual image or placeholder
             if let imageURL = book.imageLink ?? fetchedImageURL, let url = URL(string: imageURL) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .empty:
                         ProgressView()
-                            .frame(width: 160, height: 240)
+                            .frame(width: 160, height: 200)
+                            .background(Color.gray.opacity(0.1))
                     case .success(let image):
                         image
                             .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 160, height: 240)
-                            .clipped()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 160, height: 200)
+                            .background(Color.white)
                     case .failure:
                         placeholderCover
                     @unknown default:
                         placeholderCover
                     }
                 }
+                .cornerRadius(4)
+                .padding(.bottom, 8)
             } else {
                 placeholderCover
+                    .padding(.bottom, 8)
             }
             
             // Book info
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
                     .font(.headline)
-                    .lineLimit(2)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                 
                 Text(book.author.joined(separator: ", "))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                
+                Text(book.genre)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
-                
-                Text(book.genre)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .padding(.top, 2)
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .frame(height: 80, alignment: .top)
         }
+        .frame(width: 160, height: 290)
         .background(Color(.systemBackground))
-        .cornerRadius(8)
-        .shadow(radius: 2)
+        .cornerRadius(10)
+        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
         .onAppear {
             // If book doesn't have an image link but has an ISBN, try to fetch the image
             if book.imageLink == nil && !book.ISBN.isEmpty {
@@ -218,15 +227,16 @@ struct BookCard: View {
     
     private var placeholderCover: some View {
         Rectangle()
-            .fill(Color.gray.opacity(0.2))
-            .frame(width: 160, height: 240)
+            .fill(Color.gray.opacity(0.1))
+            .frame(width: 160, height: 200)
             .overlay(
-                Image(systemName: "book.fill")
+                Image(systemName: "book.closed")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .padding(40)
-                    .foregroundColor(.yellow)
+                    .foregroundColor(Color.gray.opacity(0.5))
             )
+            .cornerRadius(4)
     }
     
     private func fetchBookImage() {
@@ -263,11 +273,11 @@ struct AddBookView: View {
     let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
     
     private var isValid: Bool {
-        !title.isEmpty && 
-        !author.isEmpty && 
-        !genre.isEmpty && 
+        !title.isEmpty &&
+        !author.isEmpty &&
+        !genre.isEmpty &&
         !isbn.isEmpty && isbn.count >= 10 &&
-        !publicationDate.isEmpty && 
+        !publicationDate.isEmpty &&
         !totalCopies.isEmpty &&
         Int(publicationDate) != nil &&
         Int(totalCopies) != nil &&
@@ -371,4 +381,4 @@ struct AddBookView: View {
 
 #Preview {
     ResourcesView()
-} 
+}

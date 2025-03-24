@@ -66,7 +66,7 @@ struct OnboardingView: View {
                             .scaleEffect(animateHeader ? 1.05 : 1.0)
                             .rotationEffect(.degrees(animateHeader ? 2 : -2))
                         
-                        Text("Welcome to SampleLMS")
+                        Text("Welcome to PustakAILay")
                             .font(.largeTitle)
                             .fontWeight(.bold)
                             .opacity(animateHeader ? 1 : 0)

@@ -71,12 +71,6 @@ struct OnboardingView: View {
                             .fontWeight(.bold)
                             .opacity(animateHeader ? 1 : 0)
                             .offset(y: animateHeader ? 0 : 10)
-                        
-                        Text("Please select your role to continue")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                            .opacity(animateHeader ? 1 : 0)
-                            .offset(y: animateHeader ? 0 : 10)
                     }
                     .padding(.top, 60)
                     .onAppear {
@@ -86,6 +80,14 @@ struct OnboardingView: View {
                     }
                     
                     Spacer()
+                    
+                    // Role selection text
+                    Text("Please select your role to continue")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                        .opacity(animateCards ? 1 : 0)
+                        .offset(y: animateCards ? 0 : 10)
+                        .padding(.bottom, 10)
                     
                     // Role selection cards with subtle animation
                     VStack(spacing: 20) {
@@ -197,9 +199,10 @@ struct RoleCard: View {
                         .foregroundColor(.primary)
                     
                     Text(description)
-                        .font(.body)
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
-                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(2)
                 }
                 
                 Spacer()

@@ -33,6 +33,30 @@ struct LibrarianModel: Codable {
     let isFirstLogin: Bool
 }
 
+struct MemberModel: Codable {
+    let id: String?
+    let firstName: String?
+    let lastName: String?
+    let email: String?
+    let password: String?
+    let created_at: String?
+    let favourites: [String]?
+    let enrollmentNumber: String?
+    let collegeName: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case firstName = "firstName"
+        case lastName = "lastName"
+        case email
+        case password
+        case created_at
+        case favourites
+        case enrollmentNumber = "enrollmentNumber" 
+        case collegeName = "collegeName"
+    }
+}
+
 struct LibrarianPasswordUpdate: Codable {
     let password: String
     let isFirstLogin: Bool

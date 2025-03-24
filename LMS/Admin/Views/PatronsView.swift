@@ -12,6 +12,7 @@ import Supabase
 struct PatronsView: View {
     @State private var selectedSegment = 0
     @State private var librarians: [LibrarianModel] = []
+    @State private var members: [MemberModel] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
     @StateObject private var supabaseController = SupabaseDataController()
@@ -32,7 +33,7 @@ struct PatronsView: View {
                 if selectedSegment == 0 {
                     LibrariansList(librarians: librarians, isLoading: isLoading, errorMessage: errorMessage)
                 } else {
-                    MembersList()
+                    MembersList(members: members, isLoading: isLoading, errorMessage: errorMessage)
                 }
             }
             .navigationTitle("Patrons")
@@ -53,7 +54,22 @@ struct PatronsView: View {
                 AddLibrarianView()
             }
             .task {
-                await fetchLibrarians()
+                if selectedSegment == 0 {
+                    await fetchLibrarians()
+                } else {
+                    await fetchMembers()
+                }
+            }
+            .onChange(of: selectedSegment) { _, newValue in
+                if newValue == 0 {
+                    Task {
+                        await fetchLibrarians()
+                    }
+                } else {
+                    Task {
+                        await fetchMembers()
+                    }
+                }
             }
         }
     }
@@ -70,6 +86,39 @@ struct PatronsView: View {
             self.librarians = librarians
         } catch {
             errorMessage = "Failed to fetch librarians: \(error.localizedDescription)"
+        }
+        
+        isLoading = false
+    }
+    
+    private func fetchMembers() async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let query = supabaseController.client.from("Member")
+                .select()
+            
+            // Debug: Print raw response data
+            let response = try await query.execute()
+            if let jsonString = String(data: response.data, encoding: .utf8) {
+                print("Raw Member data: \(jsonString)")
+            }
+            
+            // Use JSONDecoder with appropriate settings
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            
+            do {
+                self.members = try decoder.decode([MemberModel].self, from: response.data)
+                print("Successfully decoded \(self.members.count) members")
+            } catch {
+                print("Decoder error: \(error)")
+                errorMessage = "Failed to decode member data: \(error.localizedDescription)"
+            }
+        } catch {
+            errorMessage = "Failed to fetch members: \(error.localizedDescription)"
+            print("Fetch error: \(error)")
         }
         
         isLoading = false
@@ -131,34 +180,56 @@ struct LibrariansList: View {
 }
 
 struct MembersList: View {
+    let members: [MemberModel]
+    let isLoading: Bool
+    let errorMessage: String?
+    
     var body: some View {
-        List {
-            ForEach(0..<10) { index in
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 40))
-                            .foregroundColor(.blue)
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Member \(index + 1)")
-                                .font(.headline)
-                            Text("member\(index + 1)@email.com")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+        Group {
+            if isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let error = errorMessage {
+                Text(error)
+                    .foregroundColor(.red)
+                    .padding()
+            } else if members.isEmpty {
+                Text("No members found")
+                    .foregroundColor(.secondary)
+                    .padding()
+            } else {
+                List {
+                    ForEach(members, id: \.id) { member in
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "person.circle.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.blue)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("\(member.firstName ?? "Unknown") \(member.lastName ?? "")")
+                                        .font(.headline)
+                                    if let email = member.email {
+                                        Text(email)
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    if let enrollmentNumber = member.enrollmentNumber {
+                                        Text("Enrollment: \(enrollmentNumber)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding(.vertical, 4)
                         }
-                        
-                        Spacer()
-                        
-                        Text("ID: MEM\(String(format: "%03d", index + 1))")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
                     }
-                    .padding(.vertical, 4)
                 }
+                .listStyle(.plain)
             }
         }
-        .listStyle(.plain)
     }
 }
 

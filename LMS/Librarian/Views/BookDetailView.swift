@@ -2,8 +2,14 @@ import SwiftUI
 
 struct BookDetailView: View {
     let book: LibrarianBook
+    let showAddToCollectionButton: Bool
     @State private var showingAddForm = false
     @EnvironmentObject var bookStore: BookStore
+    
+    init(book: LibrarianBook, showAddToCollectionButton: Bool = true) {
+        self.book = book
+        self.showAddToCollectionButton = showAddToCollectionButton
+    }
     
     var body: some View {
         ScrollView {
@@ -73,19 +79,21 @@ struct BookDetailView: View {
                     }
                 }
                 
-                Button(action: {
-                    showingAddForm = true
-                }) {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Add to Collection")
+                if showAddToCollectionButton {
+                    Button(action: {
+                        showingAddForm = true
+                    }) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add to Collection")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .padding(.top, 20)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                    .padding(.top, 20)
                 }
             }
             .padding()
@@ -117,21 +125,45 @@ struct InfoRow: View {
 }
 
 #Preview {
-    NavigationView {
-        BookDetailView(book: LibrarianBook(
-            title: "Sample Book",
-            author: ["Author One", "Author Two"],
-            genre: "Fiction",
-            publicationDate: "2023",
-            totalCopies: 1,
-            availableCopies: 1,
-            ISBN: "9781234567890",
-            Description: "This is a sample description for the book. It contains information about the book's content and other relevant details that a reader might find useful.",
-            shelfLocation: "A1",
-            dateAdded: Date(),
-            publisher: "Sample Publisher",
-            imageLink: "https://via.placeholder.com/150x200"
-        ))
-        .environmentObject(BookStore())
+    VStack {
+        // Preview with Add to Collection button
+        NavigationView {
+            BookDetailView(book: LibrarianBook(
+                title: "Sample Book",
+                author: ["Author One", "Author Two"],
+                genre: "Fiction",
+                publicationDate: "2023",
+                totalCopies: 1,
+                availableCopies: 1,
+                ISBN: "9781234567890",
+                Description: "This is a sample description for the book. It contains information about the book's content and other relevant details that a reader might find useful.",
+                shelfLocation: "A1",
+                dateAdded: Date(),
+                publisher: "Sample Publisher",
+                imageLink: "https://via.placeholder.com/150x200"
+            ), showAddToCollectionButton: true)
+            .environmentObject(BookStore())
+        }
+        .previewDisplayName("With Add to Collection Button")
+        
+        // Preview without Add to Collection button
+        NavigationView {
+            BookDetailView(book: LibrarianBook(
+                title: "Sample Book",
+                author: ["Author One", "Author Two"],
+                genre: "Fiction",
+                publicationDate: "2023",
+                totalCopies: 1,
+                availableCopies: 1,
+                ISBN: "9781234567890",
+                Description: "This is a sample description for the book. It contains information about the book's content and other relevant details that a reader might find useful.",
+                shelfLocation: "A1",
+                dateAdded: Date(),
+                publisher: "Sample Publisher",
+                imageLink: "https://via.placeholder.com/150x200"
+            ), showAddToCollectionButton: false)
+            .environmentObject(BookStore())
+        }
+        .previewDisplayName("Without Add to Collection Button")
     }
 } 

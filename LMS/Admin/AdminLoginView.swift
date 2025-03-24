@@ -17,7 +17,9 @@ struct AdminLoginView: View {
     @Binding var showMainApp: Bool
     @State private var animateContent = false
     @State private var showOnboarding = false
+    @State private var showPasswordReset = false
     @State private var currentAdminId: String?
+    @State private var showForgotPassword = false
     
     private let dataController = SupabaseDataController()
     
@@ -137,6 +139,18 @@ struct AdminLoginView: View {
                     .opacity(animateContent ? 1 : 0)
                     .offset(y: animateContent ? 0 : 20)
                     
+                    // Forgot Password Link
+                    Button(action: {
+                        showForgotPassword = true
+                    }) {
+                        Text("Forgot Password?")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                    }
+                    .padding(.top, 8)
+                    .opacity(animateContent ? 1 : 0)
+                    .offset(y: animateContent ? 0 : 20)
+                    
                     Spacer()
                 }
             }
@@ -148,8 +162,18 @@ struct AdminLoginView: View {
                 dismissButton: .default(Text("OK"))
             )
         }
+        .fullScreenCover(isPresented: $showPasswordReset) {
+            AdminPasswordResetView(adminId: currentAdminId ?? "", onComplete: {
+                showMainApp = true
+            })
+        }
         .fullScreenCover(isPresented: $showOnboarding) {
             AdminOnboardingView()
+        }
+        .fullScreenCover(isPresented: $showForgotPassword) {
+            AdminForgotPasswordView(onComplete: {
+                showForgotPassword = false
+            })
         }
         .onAppear {
             withAnimation(.easeOut(duration: 0.6)) {
@@ -170,7 +194,7 @@ struct AdminLoginView: View {
                 if result.isAuthenticated {
                     currentAdminId = result.adminId
                     if result.isFirstLogin {
-                        showOnboarding = true
+                        showPasswordReset = true
                     } else {
                         showMainApp = true
                     }

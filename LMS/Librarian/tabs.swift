@@ -26,11 +26,11 @@ struct LibrarianInitialView: View {
                         
                 }
 
-            ProfileView()
-                .tabItem {
-                    Image(systemName: "person.fill")
-                    Text("Profile")
-                }
+//            ProfileView()
+//                .tabItem {
+//                    Image(systemName: "person.fill")
+//                    Text("Profile")
+//                }
         }
         .environmentObject(bookStore)
         .accentColor(.blue)

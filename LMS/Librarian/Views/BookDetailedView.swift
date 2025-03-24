@@ -7,15 +7,21 @@ struct BookDetailedView: View {
     
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
-    
-    // Computed property to get the latest book data
-    private var book: LibrarianBook? {
-        bookStore.books.first { $0.id == bookId }
-    }
+    @State private var showingAssignShelfSheet = false
+    @State private var bookData: LibrarianBook? = nil
+    @State private var isLoading = true
     
     var body: some View {
         Group {
-            if let book = book {
+            if isLoading {
+                VStack {
+                    ProgressView("Loading book details...")
+                    Text("Book ID: \(bookId?.uuidString ?? "nil")")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .padding()
+                }
+            } else if let book = bookData {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
                         // Book cover and basic info
@@ -87,8 +93,18 @@ struct BookDetailedView: View {
                                 StatBox(title: "Available", value: "\(book.availableCopies)", icon: "book.closed.fill", color: .green)
                             }
                             
-                            if let shelfLocation = book.shelfLocation {
-                                StatBox(title: "Shelf Location", value: shelfLocation, icon: "mappin.and.ellipse", color: .orange)
+                            if let shelfLocation = book.shelfLocation, !shelfLocation.isEmpty {
+                                Button(action: {
+                                    showingAssignShelfSheet = true
+                                }) {
+                                    StatBox(title: "Shelf Location", value: shelfLocation, icon: "mappin.and.ellipse", color: .orange)
+                                }
+                            } else {
+                                Button(action: {
+                                    showingAssignShelfSheet = true
+                                }) {
+                                    StatBox(title: "Shelf Location", value: "Not Assigned", icon: "mappin.slash", color: .red)
+                                }
                             }
                         }
                         
@@ -107,12 +123,16 @@ struct BookDetailedView: View {
                 }
                 .background(Color.appBackground.ignoresSafeArea())
                 .navigationTitle("Book Details")
-                .navigationBarTitleDisplayMode(.large)
+                .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Menu {
                             Button(action: { showingEditSheet = true }) {
                                 Label("Edit", systemImage: "pencil")
+                            }
+                            
+                            Button(action: { showingAssignShelfSheet = true }) {
+                                Label("Assign Shelf", systemImage: "mappin.and.ellipse")
                             }
                             
                             Button(role: .destructive, action: { showingDeleteAlert = true }) {
@@ -126,6 +146,9 @@ struct BookDetailedView: View {
                 .sheet(isPresented: $showingEditSheet) {
                     EditBookFormView(book: book)
                 }
+                .sheet(isPresented: $showingAssignShelfSheet) {
+                    AssignShelfLocationView(book: book)
+                }
                 .alert("Delete Book", isPresented: $showingDeleteAlert) {
                     Button("Cancel", role: .cancel) { }
                     Button("Delete", role: .destructive) {
@@ -136,8 +159,48 @@ struct BookDetailedView: View {
                     Text("Are you sure you want to delete this book? This action cannot be undone.")
                 }
             } else {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack(spacing: 20) {
+                    Image(systemName: "book.slash")
+                        .font(.system(size: 60))
+                        .foregroundColor(.red)
+                    
+                    Text("Book not found")
+                        .font(.title)
+                        .fontWeight(.bold)
+                    
+                    Text("The book you're looking for could not be found.")
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.secondary)
+                    
+                    Text("Book ID: \(bookId?.uuidString ?? "nil")")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+                .padding()
+            }
+        }
+        .background(Color.appBackground.ignoresSafeArea())
+        .onAppear {
+            loadBookData()
+        }
+    }
+    
+    private func loadBookData() {
+        isLoading = true
+        print("Loading book data for ID: \(bookId?.uuidString ?? "nil")")
+        
+        // Remove the delay and simplify the async loading logic
+        Task {
+            // Make sure the book store has loaded books
+            if bookStore.books.isEmpty {
+                await bookStore.loadBooks()
+            }
+            
+            // Find the book by ID and update on main thread
+            await MainActor.run {
+                bookData = bookStore.books.first { $0.id == bookId }
+                print("Book data loaded: \(bookData?.title ?? "Not found")")
+                isLoading = false
             }
         }
     }

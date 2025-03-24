@@ -1,6 +1,15 @@
 import SwiftUI
 
 struct AdminProfileSetupView: View {
+    let adminId: String
+    let onComplete: () -> Void
+    
+    // Public initializer
+    init(adminId: String, onComplete: @escaping () -> Void) {
+        self.adminId = adminId
+        self.onComplete = onComplete
+    }
+    
     @State private var fullName = ""
     @State private var email = ""
     @State private var dateOfBirth = Date()
@@ -27,7 +36,7 @@ struct AdminProfileSetupView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 30) {
                     // Header
                     VStack(spacing: 16) {
@@ -208,5 +217,5 @@ struct AdminProfileSetupView: View {
 }
 
 #Preview {
-    AdminProfileSetupView()
+    AdminProfileSetupView(adminId: "preview_admin_id", onComplete: {})
 } 

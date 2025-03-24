@@ -4,18 +4,23 @@ struct AddBookFormView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var bookStore: BookStore
     
+    // Add ShelfLocationStore to get available shelves
+    @StateObject private var shelfLocationStore = ShelfLocationStore()
+    
     var book: LibrarianBook
     @State private var quantity: String = "1"
     @State private var shelfLocation: String = ""
     @State private var selectedGenre: String = "Uncategorized"
     @State private var errorMessage: String? = nil
     @State private var showSuccessMessage = false
+    @State private var isLoadingShelves = true
+    @State private var showAddNewShelfSheet = false
+    @State private var newShelfName = ""
     
     // List of common book genres
     private let genres = [
-        "Fiction", "Science", "Humanities", "Business",
-        "Medicine", "Law", "Education", "Arts", "Religion",
-        "Mathematics", "Technology", "Reference", "Uncategorized"
+        "Science", "Humanities", "Business", "Medicine", "Law", 
+        "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"
     ]
     
     var body: some View {
@@ -69,8 +74,38 @@ struct AddBookFormView: View {
                         TextField("Quantity", text: $quantity)
                             .keyboardType(.numberPad)
                         
-                        TextField("Shelf Location", text: $shelfLocation)
-                            .autocapitalization(.words)
+                        // Replace TextField with Picker for shelf locations
+                        if isLoadingShelves {
+                            HStack {
+                                Text("Loading shelf locations...")
+                                Spacer()
+                                ProgressView()
+                            }
+                        } else {
+                            if shelfLocationStore.shelfLocations.isEmpty {
+                                HStack {
+                                    Text("No shelves available")
+                                    Spacer()
+                                    Button("Add New") {
+                                        showAddNewShelfSheet = true
+                                    }
+                                }
+                            } else {
+                                Picker("Shelf Location", selection: $shelfLocation) {
+                                    Text("Select a shelf").tag("")
+                                    ForEach(shelfLocationStore.shelfLocations, id: \.id) { shelf in
+                                        Text(shelf.shelfNo).tag(shelf.shelfNo)
+                                    }
+                                }
+                                .pickerStyle(MenuPickerStyle())
+                                
+                                Button("Add New Shelf") {
+                                    showAddNewShelfSheet = true
+                                }
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                            }
+                        }
                         
                         // Genre Dropdown
                         Picker("Genre", selection: $selectedGenre) {
@@ -98,6 +133,7 @@ struct AddBookFormView: View {
                     .buttonStyle(PlainButtonStyle())
                     .listRowBackground(Color.appBackground)
                     .padding(.vertical)
+                    .disabled(shelfLocation.isEmpty && !shelfLocationStore.shelfLocations.isEmpty)
                 }
                 .scrollContentBackground(.hidden) // Hide default Form background on iOS 16+
                 
@@ -142,6 +178,88 @@ struct AddBookFormView: View {
                     }
                 }
             }
+            .onAppear {
+                // Load shelf locations when view appears
+                selectedGenre = book.genre
+                loadShelfLocations()
+            }
+            .sheet(isPresented: $showAddNewShelfSheet) {
+                addNewShelfView
+            }
+        }
+    }
+    
+    // New view for adding a shelf
+    private var addNewShelfView: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Add New Shelf Location")) {
+                    TextField("Shelf Name", text: $newShelfName)
+                }
+                
+                Button("Add Shelf") {
+                    addNewShelf()
+                }
+                .disabled(newShelfName.isEmpty)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(newShelfName.isEmpty ? Color.gray : Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+                .padding()
+            }
+            .navigationTitle("New Shelf")
+            .navigationBarItems(trailing: Button("Cancel") {
+                showAddNewShelfSheet = false
+                newShelfName = ""
+            })
+        }
+    }
+    
+    private func loadShelfLocations() {
+        isLoadingShelves = true
+        Task {
+            await shelfLocationStore.loadShelfLocations()
+            
+            await MainActor.run {
+                isLoadingShelves = false
+                // If there's only one shelf, select it automatically
+                if shelfLocationStore.shelfLocations.count == 1 {
+                    shelfLocation = shelfLocationStore.shelfLocations[0].shelfNo
+                }
+            }
+        }
+    }
+    
+    private func addNewShelf() {
+        guard !newShelfName.isEmpty else { return }
+        
+        // Check if shelf already exists
+        if !shelfLocationStore.shelfLocations.contains(where: { $0.shelfNo == newShelfName }) {
+            let newShelf = BookShelfLocation(
+                id: UUID(),
+                shelfNo: newShelfName,
+                bookID: []
+            )
+            
+            shelfLocationStore.addShelfLocation(newShelf)
+            
+            // Wait briefly for the new shelf to be added to the database
+            Task {
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 sec
+                await shelfLocationStore.loadShelfLocations()
+                
+                await MainActor.run {
+                    shelfLocation = newShelfName
+                    showAddNewShelfSheet = false
+                    newShelfName = ""
+                }
+            }
+        } else {
+            // Just select the existing shelf and close
+            shelfLocation = newShelfName
+            showAddNewShelfSheet = false
+            newShelfName = ""
         }
     }
     
@@ -154,12 +272,13 @@ struct AddBookFormView: View {
         
         // Validate shelf location
         if shelfLocation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            errorMessage = "Please enter a shelf location"
+            errorMessage = "Please select a shelf location"
             return
         }
         
         // Create a new book with the quantity and shelf location
         let newBook = LibrarianBook(
+            id: UUID(), // Explicitly create a UUID
             title: book.title,
             author: book.author,
             genre: selectedGenre,
@@ -174,23 +293,57 @@ struct AddBookFormView: View {
             imageLink: book.imageLink
         )
         
-        // Add the book to the store
-        bookStore.addBook(newBook)
-        
-        // Show success message
-        withAnimation {
-            showSuccessMessage = true
-        }
-        
-        // Wait 1.5 seconds before dismissing
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            withAnimation {
-                showSuccessMessage = false
-            }
-            
-            // Dismiss the sheet after a short delay to allow the animation to complete
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                dismiss()
+        // Add the book to the database directly for better error tracking
+        Task {
+            do {
+                print("Adding book to collection with ID: \(newBook.id?.uuidString ?? "nil")")
+                
+                // Add the book to database
+                let success = try await bookStore.dataController.addBook(newBook)
+                
+                if success {
+                    // Refresh the book list to verify addition
+                    await bookStore.loadBooks()
+                    
+                    // Verify the book was actually added
+                    let addedBook = bookStore.books.first { $0.ISBN == newBook.ISBN && $0.shelfLocation == shelfLocation }
+                    
+                    if addedBook != nil {
+                        print("Book successfully verified in database: \(newBook.title)")
+                        
+                        // Show success message on main thread
+                        await MainActor.run {
+                            // Show success message
+                            withAnimation {
+                                showSuccessMessage = true
+                            }
+                            
+                            // Wait 1.5 seconds before dismissing
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                withAnimation {
+                                    showSuccessMessage = false
+                                }
+                                
+                                // Dismiss the sheet after a short delay to allow the animation to complete
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    dismiss()
+                                }
+                            }
+                        }
+                    } else {
+                        await MainActor.run {
+                            errorMessage = "Book was processed but not found in database. Please try again."
+                        }
+                    }
+                } else {
+                    await MainActor.run {
+                        errorMessage = "Failed to add book to database"
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Error: \(error.localizedDescription)"
+                }
             }
         }
     }

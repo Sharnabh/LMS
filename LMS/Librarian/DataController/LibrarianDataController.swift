@@ -87,6 +87,7 @@ extension SupabaseDataController {
         
         // Create an encodable structure for the book data
         struct BookInsert: Codable {
+            let id: String  // Add ID field to ensure it's properly sent to database
             let title: String
             let author: [String]
             let genre: String
@@ -102,6 +103,7 @@ extension SupabaseDataController {
         }
         
         let bookData = BookInsert(
+            id: book.id?.uuidString ?? UUID().uuidString,  // Convert UUID to string for database
             title: book.title,
             author: book.author,
             genre: book.genre,
@@ -117,9 +119,12 @@ extension SupabaseDataController {
         )
         
         do {
-            try await client.from("Books")
+            print("Inserting book with ID: \(book.id?.uuidString ?? "new UUID")")
+            let response = try await client.from("Books")
                 .insert(bookData)
                 .execute()
+                
+            print("Book insert response status: \(response.status)")
             return true
         } catch {
             throw error
@@ -150,17 +155,55 @@ extension SupabaseDataController {
         }
     }
     
-    // MARK: - Database Connection Test
+    // MARK: - Shelf Location Methods
     
-    func testConnection() async throws -> Bool {
+    func fetchShelfLocations() async throws -> [BookShelfLocation] {
+        let query = client.from("BookShelfLocation")
+            .select()
+        
         do {
-            let query = client.from("Books")
-                .select("*")
-                .limit(1)
-            
-            _ = try await query.execute().value
+            let locations: [BookShelfLocation] = try await query.execute().value
+            return locations
+        } catch let error {
+            print("Error fetching shelf locations: \(error)")
+            throw error
+        }
+    }
+    
+    func addShelfLocation(_ shelfLocation: BookShelfLocation) async throws -> Bool {
+        do {
+            try await client.from("BookShelfLocation")
+                .insert(shelfLocation)
+                .execute()
             return true
-        } catch {
+        } catch let error {
+            print("Error adding shelf location: \(error)")
+            throw error
+        }
+    }
+    
+    func updateShelfLocation(_ shelfLocation: BookShelfLocation) async throws -> Bool {
+        do {
+            try await client.from("BookShelfLocation")
+                .update(shelfLocation)
+                .eq("id", value: shelfLocation.id)
+                .execute()
+            return true
+        } catch let error {
+            print("Error updating shelf location: \(error)")
+            throw error
+        }
+    }
+    
+    func deleteShelfLocation(_ shelfLocation: BookShelfLocation) async throws -> Bool {
+        do {
+            try await client.from("BookShelfLocation")
+                .delete()
+                .eq("id", value: shelfLocation.id)
+                .execute()
+            return true
+        } catch let error {
+            print("Error deleting shelf location: \(error)")
             throw error
         }
     }

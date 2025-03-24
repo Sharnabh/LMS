@@ -14,6 +14,7 @@ struct LibrarianLoginView: View {
     @State private var showPassword = false
     @State private var showNewPassword = false
     @State private var showConfirmPassword = false
+    @State private var showForgotPassword = false
     
     var body: some View {
         VStack(spacing: 30) {
@@ -100,6 +101,16 @@ struct LibrarianLoginView: View {
             }
             .padding(.horizontal)
             
+            // Forgot Password Link
+            Button(action: {
+                showForgotPassword = true
+            }) {
+                Text("Forgot Password?")
+                    .font(.subheadline)
+                    .foregroundColor(.blue)
+            }
+            .padding(.top, 8)
+            
             Spacer()
             
             // Login button
@@ -140,6 +151,11 @@ struct LibrarianLoginView: View {
         }
         .fullScreenCover(isPresented: $showLibrarianInitialView) {
             LibrarianInitialView()
+        }
+        .fullScreenCover(isPresented: $showForgotPassword) {
+            LibrarianForgotPasswordView(onComplete: {
+                showForgotPassword = false
+            })
         }
     }
     

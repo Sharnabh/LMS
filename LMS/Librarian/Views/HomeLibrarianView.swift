@@ -13,15 +13,30 @@ struct HomeLibrarianView: View {
     @State private var showingCardView = false // Track which view mode to show
     @State private var isRefreshing = false // Track refresh state
     
+    // For Needs Shelf Location section
+    @State private var needsLocationCurrentBookIndex = 0 // Track which book is currently displayed in the needs location section
+    @State private var needsLocationDragOffset: CGFloat = 0
+    @State private var needsLocationCardRotation: Double = 0
+    @State private var needsLocationIsTransitioning = false
+    @State private var needsLocationIsAnimating = false
+    @State private var needsLocationCardBackgroundMap: [Int: String] = [0: "PurpleCard"]
+    @State private var needsLocationNextCardBackground: String = ""
+    
     private let cardBackgrounds = ["BlueCard", "GreenCard", "PurpleCard", "BlackCard"]
     
     // random card background
     private func randomCardBackground() -> String {
         return cardBackgrounds.randomElement() ?? "BlueCard"
     }
-        @State private var cardBackgroundMap: [Int: String] = [0: "BlueCard"]
+    @State private var cardBackgroundMap: [Int: String] = [0: "BlueCard"]
 
     @State private var nextCardBackground: String = ""
+    
+    // Computed property to get books with empty shelf locations
+    private var booksWithEmptyShelfLocation: [LibrarianBook] {
+        return bookStore.books.filter { $0.shelfLocation == nil || $0.shelfLocation?.isEmpty == true }
+    }
+
     private func backgroundForBook(at index: Int) -> String {
         if let cached = cardBackgroundMap[index] {
             return cached
@@ -30,6 +45,23 @@ struct HomeLibrarianView: View {
             cardBackgroundMap[index] = background
             return background
         }
+    }
+
+    // For Needs Shelf Location section
+    private func needsLocationBackgroundForBook(at index: Int) -> String {
+        if let cached = needsLocationCardBackgroundMap[index] {
+            return cached
+        } else {
+            let background = randomCardBackground()
+            needsLocationCardBackgroundMap[index] = background
+            return background
+        }
+    }
+    
+    // Helper function to get the index of next book for Needs Shelf Location section
+    private func getNeedsLocationNextBookIndex() -> Int? {
+        // If we're at the last book, we'll return nil
+        return needsLocationCurrentBookIndex < booksWithEmptyShelfLocation.count - 1 ? needsLocationCurrentBookIndex + 1 : nil
     }
 
     var body: some View {
@@ -68,7 +100,7 @@ struct HomeLibrarianView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
-                    .padding(.top, 16)
+                    .padding(.top, 8)
                     .padding(.bottom, 8)
 
                     if showingCardView {
@@ -84,16 +116,16 @@ struct HomeLibrarianView: View {
                             }
                             .padding(.horizontal, 16)
                         }
-                        .padding(.top, 16)
-                        .frame(height: 210)
+                        .padding(.top, 4)
+                        .frame(height: 250)
                         .transition(.move(edge: .top).combined(with: .opacity))
                     } else {
                         // Book card with swipe functionality
                         if !recentBooks.isEmpty {
                             tinderCardStack()
                                 .padding(.horizontal, 20)
-                                .padding(.top, 16)
-                                .frame(height: 250)
+                                .padding(.top, 4)
+                                .frame(height: 240)
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         } else {
                             // Empty state when no books are available
@@ -101,20 +133,111 @@ struct HomeLibrarianView: View {
                                 .foregroundColor(.secondary)
                                 .italic()
                                 .frame(maxWidth: .infinity, alignment: .center)
-                                .frame(height: 250)
+                                .frame(height: 200)
                                 .padding(.horizontal, 20)
-                                .padding(.top, 20)
+                                .padding(.top, 4)
                         }
                     }
 
-                   Spacer()
+                   // Tiny spacer to create visual separation
+                   Spacer().frame(height: 5)
+                   
+                   // Books with Empty Shelf Location Section
+                   if !booksWithEmptyShelfLocation.isEmpty {
+                       VStack(alignment: .leading, spacing: 0) {
+                           HStack {
+                               Text("Needs Shelf Location")
+                                   .font(.title2)
+                                   .fontWeight(.bold)
+                                   .foregroundColor(.primary)
+                               
+                               Button(action: {
+                                   withAnimation(.spring()) {
+                                       showingCardView.toggle()
+                                   }
+                               }) {
+                                   Image(systemName: "arrow.up.arrow.down")
+                                       .foregroundColor(.blue)
+                                       .imageScale(.medium)
+                                       .rotationEffect(showingCardView ? .degrees(180) : .degrees(0))
+                               }
+                               
+                               Spacer()
+                               
+                               NavigationLink(destination: AllBooksWithoutShelfLocationView()) {
+                                   Text("See all")
+                                       .font(.subheadline)
+                                       .foregroundColor(.blue)
+                               }
+                           }
+                           .frame(maxWidth: .infinity, alignment: .leading)
+                           .padding(.horizontal, 16)
+                           .padding(.top, 20)
+                           .padding(.bottom, 8)
+                           
+                           if showingCardView {
+                               // Horizontal scrolling list of books without shelf location
+                               ScrollView(.horizontal, showsIndicators: false) {
+                                   LazyHStack(spacing: 16) {
+                                       ForEach(booksWithEmptyShelfLocation.prefix(10)) { book in
+                                           NavigationLink(destination: BookDetailedView(bookId: book.id)) {
+                                               BookCardView(book: book)
+                                           }
+                                           .buttonStyle(PlainButtonStyle())
+                                       }
+                                   }
+                                   .padding(.horizontal, 16)
+                               }
+                               .padding(.top, 8)
+                               .frame(height: 240)
+                               .transition(.move(edge: .top).combined(with: .opacity))
+                           } else {
+                               // Use Tinder-style card stack for empty shelf location books
+                               if !booksWithEmptyShelfLocation.isEmpty {
+                                   needsLocationTinderCardStack()
+                                       .padding(.horizontal, 20)
+                                       .padding(.top, 8)
+                                       .frame(height: 240)
+                                       .transition(.move(edge: .bottom).combined(with: .opacity))
+                               } else {
+                                   // Empty state 
+                                   Text("No books need a shelf location")
+                                       .foregroundColor(.secondary)
+                                       .italic()
+                                       .frame(maxWidth: .infinity, alignment: .center)
+                                       .frame(height: 200)
+                                       .padding(.horizontal, 20)
+                                       .padding(.top, 8)
+                               }
+                           }
+                       }
+                   }
+                }
+                .padding(.bottom, 16)
+            }
+            .navigationTitle("Home")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: ShelfLocationsView()) {
+                        Image(systemName: "mappin.and.ellipse")
+                            .imageScale(.large)
+                    }
                 }
             }
         }
-        .navigationTitle("Home")
-        .navigationBarTitleDisplayMode(.large)
         .onAppear {
             refreshBooks()
+            
+            // Initialize the Next Card Background if empty
+            if needsLocationNextCardBackground.isEmpty {
+                needsLocationNextCardBackground = randomCardBackground()
+            }
+            
+            // Reset indices if they're out of bounds
+            if needsLocationCurrentBookIndex >= booksWithEmptyShelfLocation.count && !booksWithEmptyShelfLocation.isEmpty {
+                needsLocationCurrentBookIndex = 0
+            }
         }
     }
 
@@ -139,26 +262,41 @@ struct HomeLibrarianView: View {
                 // We have a next book to show
                 grayCardView(book: nextBook, backgroundName: nextCardBackground)
                     .padding(.horizontal, 2)
-                    .offset(y: 10) // Adjusted offset
+                    .offset(y: -10) // Changed from 10 to -10 to position it above
                     .scaleEffect(0.9) // Make it slightly smaller
                     .opacity(0.7) // Slightly dimmed
                     .zIndex(0) // Always at the back
+                    .animation(.spring(response: 0.5, dampingFraction: 0.7), value: currentBookIndex) // Add animation for smooth background card appearance
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.8).combined(with: .opacity),
+                        removal: .scale(scale: 1.1).combined(with: .opacity)
+                    ))
             } else if currentBookIndex == recentBooks.count - 1 {
                 // Last book - we'll still show an empty background card to maintain consistent appearance
                 grayCardView(backgroundName: nextCardBackground)
                     .padding(.horizontal, 2)
-                    .offset(y: 10) // Adjusted offset
+                    .offset(y: -10) // Changed from 10 to -10
                     .scaleEffect(0.9)
                     .opacity(0.7)
                     .zIndex(0)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.7), value: currentBookIndex) // Add animation
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.8).combined(with: .opacity),
+                        removal: .scale(scale: 1.1).combined(with: .opacity)
+                    ))
             } else {
                 // Empty gray card if no next book
                 grayCardView(backgroundName: nextCardBackground)
                     .padding(.horizontal, 25)
-                    .offset(y: 10) // Adjusted offset
+                    .offset(y: -10) // Changed from 10 to -10
                     .scaleEffect(0.9)
                     .opacity(0.5)
                     .zIndex(0)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.7), value: currentBookIndex) // Add animation
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.8).combined(with: .opacity),
+                        removal: .scale(scale: 1.1).combined(with: .opacity)
+                    ))
             }
             
             // Current book (middle/active card)
@@ -226,7 +364,11 @@ struct HomeLibrarianView: View {
                                                     if direction > 0 && currentBookIndex < recentBooks.count - 1 {
                                                         // Update the card map with the new position
                                                         cardBackgroundMap[currentBookIndex + 1] = nextCardBackground
-                                                        currentBookIndex += 1
+                                                        
+                                                        // Apply scaling animation to the background card as it becomes active
+                                                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                                                            currentBookIndex += 1
+                                                        }
                                                         // Generate a new background for the next card
                                                         nextCardBackground = randomCardBackground()
                                                     }
@@ -234,7 +376,11 @@ struct HomeLibrarianView: View {
                                                     else if direction < 0 && currentBookIndex > 0 {
                                                         // Update the card map with the new position 
                                                         cardBackgroundMap[currentBookIndex - 1] = cardBackgroundMap[currentBookIndex - 1] ?? nextCardBackground
-                                                        currentBookIndex -= 1
+                                                        
+                                                        // Apply scaling animation to the background card as it becomes active
+                                                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                                                            currentBookIndex -= 1
+                                                        }
                                                         // Generate a new background for the next card
                                                         nextCardBackground = randomCardBackground()
                                                     } else {
@@ -385,7 +531,7 @@ struct HomeLibrarianView: View {
         // Foreground card with book cover in the same layout as blue card
         ZStack {
             // Card background with image
-            if let book = book {
+            if book != nil {
                 Image(backgroundName)
                     .resizable()
                     .scaledToFill()
@@ -488,30 +634,43 @@ struct HomeLibrarianView: View {
                 .zIndex(1)
                 
                 // Book cover image with shadow
-                AsyncImage(url: URL(string: book.imageLink ?? "")) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 140, height: 170) // Adjusted height
-                            .clipped()
-                            .offset(x: -85) // Position from center to left
-                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                            .zIndex(2)
-                    case .failure, .empty:
-                        defaultBookCover()
-                            .frame(width: 140, height: 170) // Adjusted height
-                            .offset(x: -85)
-                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                            .zIndex(2)
-                    @unknown default:
-                        defaultBookCover()
-                            .frame(width: 140, height: 170) // Adjusted height
-                            .offset(x: -85)
-                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                            .zIndex(2)
+                if let imageURL = book.imageLink, let url = URL(string: imageURL) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 140, height: 170) // Adjusted height
+                                .clipped()
+                                .offset(x: -85) // Position from center to left
+                                .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                                .zIndex(2)
+                        case .failure:
+                            defaultBookCover()
+                                .frame(width: 140, height: 170) // Adjusted height
+                                .offset(x: -85)
+                                .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                                .zIndex(2)
+                        case .empty:
+                            ProgressView()
+                                .frame(width: 140, height: 170) // Adjusted height
+                                .offset(x: -85)
+                                .zIndex(2)
+                        @unknown default:
+                            defaultBookCover()
+                                .frame(width: 140, height: 170) // Adjusted height
+                                .offset(x: -85)
+                                .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                                .zIndex(2)
+                        }
                     }
+                } else {
+                    defaultBookCover()
+                        .frame(width: 140, height: 170) // Adjusted height
+                        .offset(x: -85)
+                        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                        .zIndex(2)
                 }
             }
         }
@@ -607,30 +766,43 @@ struct HomeLibrarianView: View {
             .zIndex(1)
 
             // Book cover image with shadow
-            AsyncImage(url: URL(string: book.imageLink ?? "")) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 140, height: 170) // Adjusted height
-                        .clipped()
-                        .offset(x: -85) // Position from center to left
-                        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                        .zIndex(2)
-                case .failure, .empty:
-                    defaultBookCover()
-                        .frame(width: 140, height: 170) // Adjusted height
-                        .offset(x: -85)
-                        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                        .zIndex(2)
-                @unknown default:
-                    defaultBookCover()
-                        .frame(width: 140, height: 170) // Adjusted height
-                        .offset(x: -85)
-                        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
-                        .zIndex(2)
+            if let imageURL = book.imageLink, let url = URL(string: imageURL) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 140, height: 170) // Adjusted height
+                            .clipped()
+                            .offset(x: -85) // Position from center to left
+                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                            .zIndex(2)
+                    case .failure:
+                        defaultBookCover()
+                            .frame(width: 140, height: 170) // Adjusted height
+                            .offset(x: -85)
+                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                            .zIndex(2)
+                    case .empty:
+                        ProgressView()
+                            .frame(width: 140, height: 170) // Adjusted height
+                            .offset(x: -85)
+                            .zIndex(2)
+                    @unknown default:
+                        defaultBookCover()
+                            .frame(width: 140, height: 170) // Adjusted height
+                            .offset(x: -85)
+                            .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                            .zIndex(2)
+                    }
                 }
+            } else {
+                defaultBookCover()
+                    .frame(width: 140, height: 170) // Adjusted height
+                    .offset(x: -85)
+                    .shadow(color: Color.black.opacity(0.3), radius: 8, x: 10, y: 0)
+                    .zIndex(2)
             }
         }
         .contentShape(Rectangle()) // Make the entire card tappable
@@ -662,6 +834,288 @@ struct HomeLibrarianView: View {
                 isRefreshing = false
             }
         }
+    }
+
+    // Tinder-style card stack for books that need a shelf location
+    private func needsLocationTinderCardStack() -> some View {
+        ZStack {
+            // Choose a next background color if we don't have one ready
+            if needsLocationNextCardBackground.isEmpty {
+                // This is invisible, just triggers the background selection
+                Color.clear.onAppear {
+                    needsLocationNextCardBackground = randomCardBackground()
+                }
+            }
+            
+            // Next book (background card) - shows book that will come up after swiping
+            if let nextIndex = getNeedsLocationNextBookIndex(), let nextBook = booksWithEmptyShelfLocation[safe: nextIndex] {
+                // We have a next book to show
+                grayCardView(book: nextBook, backgroundName: needsLocationNextCardBackground)
+                    .padding(.horizontal, 2)
+                    .offset(y: -10) // Changed from 10 to -10 to position it above
+                    .scaleEffect(0.9) // Make it slightly smaller
+                    .opacity(0.7) // Slightly dimmed
+                    .zIndex(0) // Always at the back
+                    .animation(.spring(response: 0.5, dampingFraction: 0.7), value: needsLocationCurrentBookIndex) // Add animation
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.8).combined(with: .opacity),
+                        removal: .scale(scale: 1.1).combined(with: .opacity)
+                    ))
+            } else if needsLocationCurrentBookIndex == booksWithEmptyShelfLocation.count - 1 {
+                // Last book - we'll still show an empty background card to maintain consistent appearance
+                grayCardView(backgroundName: needsLocationNextCardBackground)
+                    .padding(.horizontal, 2)
+                    .offset(y: -10) // Changed from 10 to -10
+                    .scaleEffect(0.9)
+                    .opacity(0.7)
+                    .zIndex(0)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.7), value: needsLocationCurrentBookIndex) // Add animation
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.8).combined(with: .opacity),
+                        removal: .scale(scale: 1.1).combined(with: .opacity)
+                    ))
+            } else {
+                // Empty gray card if no next book
+                grayCardView(backgroundName: needsLocationNextCardBackground)
+                    .padding(.horizontal, 25)
+                    .offset(y: -10) // Changed from 10 to -10
+                    .scaleEffect(0.9)
+                    .opacity(0.5)
+                    .zIndex(0)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.7), value: needsLocationCurrentBookIndex) // Add animation
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.8).combined(with: .opacity),
+                        removal: .scale(scale: 1.1).combined(with: .opacity)
+                    ))
+            }
+            
+            // Current book (middle/active card)
+            if let currentBook = booksWithEmptyShelfLocation[safe: needsLocationCurrentBookIndex] {
+                // Get current card background
+                let currentBackground = needsLocationBackgroundForBook(at: needsLocationCurrentBookIndex)
+                
+                // Show either gray card or blue card based on transition state
+                if needsLocationIsTransitioning {
+                    // Show gray card with current book details when transitioned
+                    ZStack {
+                        // This handles the gestures
+                        grayCardView(book: currentBook, backgroundName: currentBackground)
+                            .padding(.horizontal, needsLocationIsTransitioning ? 0 : 25)
+                            .offset(y: needsLocationIsTransitioning ? 20 : 0) // Adjusted offset
+                            .offset(x: needsLocationDragOffset) // Add x offset for swiping
+                            .rotationEffect(.degrees(needsLocationCardRotation), anchor: .bottom) // Add rotation for swiping
+                            .scaleEffect(needsLocationIsTransitioning ? 1.0 : 0.95)
+                            .zIndex(1)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        // Only update if not currently animating
+                                        if !needsLocationIsAnimating {
+                                            // Update drag offset and rotation based on drag distance
+                                            self.needsLocationDragOffset = value.translation.width
+                                            
+                                            // Add slight rotation effect based on drag direction
+                                            self.needsLocationCardRotation = Double(value.translation.width / 20)
+                                        }
+                                    }
+                                    .onEnded { value in
+                                        // Only handle if not already animating
+                                        if !needsLocationIsAnimating {
+                                            // Calculate if we should swipe the card
+                                            let threshold: CGFloat = 100
+                                            let swipeDistance = value.translation.width
+                                            
+                                            if abs(swipeDistance) > threshold {
+                                                // User swiped far enough to change card
+                                                let direction = swipeDistance > 0 ? 1 : -1
+                                                let targetDouble: Double = Double(direction)
+                                                let targetX = targetDouble * 1000.0 // Swipe card off screen
+                                                
+                                                // Set animating flag
+                                                needsLocationIsAnimating = true
+                                                
+                                                // Animate the card off screen
+                                                withAnimation(.easeOut(duration: 0.3)) {
+                                                    self.needsLocationDragOffset = targetX
+                                                    let directionDouble: Double = Double(direction)
+                                                    self.needsLocationCardRotation = directionDouble * 15.0
+                                                }
+                                                
+                                                // Update card indices after animation
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                    // Set transitioning state to true to show gray card
+                                                    self.needsLocationIsTransitioning = true
+                                                    
+                                                    // Reset position for next animation
+                                                    self.needsLocationDragOffset = 0
+                                                    self.needsLocationCardRotation = 0
+                                                    
+                                                    // Swiping right (older books)
+                                                    if direction > 0 && needsLocationCurrentBookIndex < booksWithEmptyShelfLocation.count - 1 {
+                                                        // Update the card map with the new position
+                                                        needsLocationCardBackgroundMap[needsLocationCurrentBookIndex + 1] = needsLocationNextCardBackground
+                                                        
+                                                        // Apply scaling animation to the background card as it becomes active
+                                                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                                                            needsLocationCurrentBookIndex += 1
+                                                        }
+                                                        // Generate a new background for the next card
+                                                        needsLocationNextCardBackground = randomCardBackground()
+                                                    }
+                                                    // Swiping left (newer books)
+                                                    else if direction < 0 && needsLocationCurrentBookIndex > 0 {
+                                                        // Update the card map with the new position 
+                                                        needsLocationCardBackgroundMap[needsLocationCurrentBookIndex - 1] = needsLocationCardBackgroundMap[needsLocationCurrentBookIndex - 1] ?? needsLocationNextCardBackground
+                                                        
+                                                        // Apply scaling animation to the background card as it becomes active
+                                                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                                                            needsLocationCurrentBookIndex -= 1
+                                                        }
+                                                        // Generate a new background for the next card
+                                                        needsLocationNextCardBackground = randomCardBackground()
+                                                    } else {
+                                                        // We hit either the first or last book - bounce back
+                                                        withAnimation(.spring()) {
+                                                            self.needsLocationDragOffset = 0
+                                                            self.needsLocationCardRotation = 0
+                                                            self.needsLocationIsTransitioning = false
+                                                        }
+                                                    }
+                                                    
+                                                    // Reset animating flag
+                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                        needsLocationIsAnimating = false
+                                                    }
+                                                }
+                                            } else {
+                                                // Not swiped far enough, reset position with animation
+                                                withAnimation(.spring()) {
+                                                    self.needsLocationDragOffset = 0
+                                                    self.needsLocationCardRotation = 0
+                                                }
+                                            }
+                                        }
+                                    }
+                            )
+                        
+                        // This is for navigation - transparent overlay that only triggers on tap
+                        NavigationLink(destination: BookDetailedView(bookId: currentBook.id)) {
+                            Color.clear
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                } else {
+                    // Show blue card with current book details when not in transition
+                    ZStack {
+                        // This handles the gestures
+                        foregroundCardView(book: currentBook, backgroundName: currentBackground)
+                            .offset(y: 20) // Add vertical positioning
+                            .offset(x: needsLocationDragOffset)
+                            .rotationEffect(.degrees(needsLocationCardRotation), anchor: .bottom)
+                            .zIndex(1)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        // Only update if not currently animating
+                                        if !needsLocationIsAnimating {
+                                            // Update drag offset and rotation based on drag distance
+                                            self.needsLocationDragOffset = value.translation.width
+                                            
+                                            // Add slight rotation effect based on drag direction
+                                            self.needsLocationCardRotation = Double(value.translation.width / 20)
+                                        }
+                                    }
+                                    .onEnded { value in
+                                        // Only handle if not already animating
+                                        if !needsLocationIsAnimating {
+                                            // Calculate if we should swipe the card
+                                            let threshold: CGFloat = 100
+                                            let swipeDistance = value.translation.width
+                                            
+                                            if abs(swipeDistance) > threshold {
+                                                // User swiped far enough to change card
+                                                let direction = swipeDistance > 0 ? 1 : -1
+                                                let targetDouble: Double = Double(direction)
+                                                let targetX = targetDouble * 1000.0 // Swipe card off screen
+                                                
+                                                // Set animating flag
+                                                needsLocationIsAnimating = true
+                                                
+                                                // Animate the card off screen
+                                                withAnimation(.easeOut(duration: 0.3)) {
+                                                    self.needsLocationDragOffset = targetX
+                                                    let directionDouble: Double = Double(direction)
+                                                    self.needsLocationCardRotation = directionDouble * 15.0
+                                                }
+                                                
+                                                // Update card indices after animation
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                    // Set transitioning state to true to show gray card
+                                                    self.needsLocationIsTransitioning = true
+                                                    
+                                                    // Reset position for next animation
+                                                    self.needsLocationDragOffset = 0
+                                                    self.needsLocationCardRotation = 0
+                                                    
+                                                    // Swiping right (older books)
+                                                    if direction > 0 && needsLocationCurrentBookIndex < booksWithEmptyShelfLocation.count - 1 {
+                                                        // Update the card map with the new position
+                                                        needsLocationCardBackgroundMap[needsLocationCurrentBookIndex + 1] = needsLocationNextCardBackground
+                                                        
+                                                        // Apply scaling animation to the background card as it becomes active
+                                                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                                                            needsLocationCurrentBookIndex += 1
+                                                        }
+                                                        // Generate a new background for the next card
+                                                        needsLocationNextCardBackground = randomCardBackground()
+                                                    }
+                                                    // Swiping left (newer books)
+                                                    else if direction < 0 && needsLocationCurrentBookIndex > 0 {
+                                                        // Update the card map with the new position 
+                                                        needsLocationCardBackgroundMap[needsLocationCurrentBookIndex - 1] = needsLocationCardBackgroundMap[needsLocationCurrentBookIndex - 1] ?? needsLocationNextCardBackground
+                                                        
+                                                        // Apply scaling animation to the background card as it becomes active
+                                                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                                                            needsLocationCurrentBookIndex -= 1
+                                                        }
+                                                        // Generate a new background for the next card
+                                                        needsLocationNextCardBackground = randomCardBackground()
+                                                    } else {
+                                                        // We hit either the first or last book - bounce back
+                                                        withAnimation(.spring()) {
+                                                            self.needsLocationDragOffset = 0
+                                                            self.needsLocationCardRotation = 0
+                                                            self.needsLocationIsTransitioning = false
+                                                        }
+                                                    }
+                                                    
+                                                    // Reset animating flag
+                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                        needsLocationIsAnimating = false
+                                                    }
+                                                }
+                                            } else {
+                                                // Not swiped far enough, reset position with animation
+                                                withAnimation(.spring()) {
+                                                    self.needsLocationDragOffset = 0
+                                                    self.needsLocationCardRotation = 0
+                                                }
+                                            }
+                                        }
+                                    }
+                            )
+                        
+                        // This is for navigation - transparent overlay that only triggers on tap
+                        NavigationLink(destination: BookDetailedView(bookId: currentBook.id)) {
+                            Color.clear
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+            }
+        }
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: needsLocationIsTransitioning)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: needsLocationCurrentBookIndex) // Add animation for the entire stack
     }
 }
 

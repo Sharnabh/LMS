@@ -2,7 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ResourcesView: View {
-    @StateObject private var bookStore = BookStore()
+    @StateObject private var bookStore = AdminBookStore()
     @State private var showAddBookSheet = false
     @State private var showCSVUploadSheet = false
     @State private var showScanner = false
@@ -160,11 +160,12 @@ struct ResourcesView: View {
 
 struct BookCard: View {
     let book: LibrarianBook
+    @State private var fetchedImageURL: String? = nil
     
     var body: some View {
         VStack(alignment: .leading) {
             // Book cover with actual image or placeholder
-            if let imageURL = book.imageLink, let url = URL(string: imageURL) {
+            if let imageURL = book.imageLink ?? fetchedImageURL, let url = URL(string: imageURL) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .empty:
@@ -207,6 +208,12 @@ struct BookCard: View {
         .background(Color(.systemBackground))
         .cornerRadius(8)
         .shadow(radius: 2)
+        .onAppear {
+            // If book doesn't have an image link but has an ISBN, try to fetch the image
+            if book.imageLink == nil && !book.ISBN.isEmpty {
+                fetchBookImage()
+            }
+        }
     }
     
     private var placeholderCover: some View {
@@ -215,16 +222,33 @@ struct BookCard: View {
             .frame(width: 160, height: 240)
             .overlay(
                 Image(systemName: "book.fill")
-                    .foregroundColor(.gray)
-                    .font(.largeTitle)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .padding(40)
+                    .foregroundColor(.yellow)
             )
+    }
+    
+    private func fetchBookImage() {
+        Task {
+            do {
+                let fetchedBook = try await GoogleBooksService.fetchBookByISBN(isbn: book.ISBN)
+                if let imageLink = fetchedBook.imageLink {
+                    await MainActor.run {
+                        self.fetchedImageURL = imageLink
+                    }
+                }
+            } catch {
+                print("Failed to fetch book image for ISBN \(book.ISBN): \(error)")
+            }
+        }
     }
 }
 
 // Add Book View
 struct AddBookView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var bookStore: BookStore
+    @EnvironmentObject private var bookStore: AdminBookStore
     @State private var title = ""
     @State private var author = ""
     @State private var genre = ""

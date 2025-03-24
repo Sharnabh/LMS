@@ -102,7 +102,14 @@ class AdminBookStore: ObservableObject {
     }
     
     func getRecentlyAddedBooks(limit: Int = 10) -> [LibrarianBook] {
-        let sortedBooks = books.sorted { ($0.dateAdded ?? Date.distantPast) > ($1.dateAdded ?? Date.distantPast) }
+        let sortedBooks = books.sorted { book1, book2 in
+            // Compare by addID first (higher addID means more recently added)
+            if let addID1 = book1.addID, let addID2 = book2.addID {
+                return addID1 > addID2
+            }
+            // Fall back to dateAdded if addID is not available
+            return (book1.dateAdded ?? Date.distantPast) > (book2.dateAdded ?? Date.distantPast)
+        }
         let limitedBooks = sortedBooks.prefix(limit).map { $0 }
         return limitedBooks
     }

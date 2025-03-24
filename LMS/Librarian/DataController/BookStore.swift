@@ -4,6 +4,12 @@ import SwiftUI
 class BookStore: ObservableObject {
     @Published var books: [LibrarianBook] = []
     let dataController = SupabaseDataController()
+    private let addIDKey = "BookStore.lastAddID" // Key for storing last addID in UserDefaults
+    private var lastAddID: Int {
+        get { UserDefaults.standard.integer(forKey: addIDKey) }
+        set { UserDefaults.standard.set(newValue, forKey: addIDKey) }
+    }
+    private var bookAddIDs: [UUID: Int] = [:] // In-memory mapping of book IDs to addIDs
     
     init() {
         Task(priority: .userInitiated) {
@@ -25,15 +31,24 @@ class BookStore: ObservableObject {
         Task {
             do {
                 print("Adding book: \(book.title)")
-                let success = try await dataController.addBook(book)
+                // Create a new book with incremented addID
+                var newBook = book
+                let nextAddID = lastAddID + 1
+                newBook.addID = nextAddID
+                
+                let success = try await dataController.addBook(newBook)
                 if success {
-                    print("Book added successfully: \(book.title)")
+                    print("Book added successfully: \(book.title) with local addID: \(nextAddID)")
+                    // Update the last addID only after successful addition
+                    lastAddID = nextAddID
                     await loadBooks()
                     
                     // Verify the book was actually added
                     let addedBook = books.first { $0.ISBN == book.ISBN }
-                    if addedBook != nil {
+                    if let addedBook = addedBook, let bookId = addedBook.id {
                         print("Book verified in database: \(book.title)")
+                        // Store the addID mapping
+                        bookAddIDs[bookId] = nextAddID
                     } else {
                         print("WARNING: Book not found in database after addition: \(book.title)")
                     }
@@ -114,7 +129,12 @@ class BookStore: ObservableObject {
     }
     
     func getRecentlyAddedBooks(limit: Int = 10) -> [LibrarianBook] {
-        let sortedBooks = books.sorted { ($0.dateAdded ?? Date.distantPast) > ($1.dateAdded ?? Date.distantPast) }
+        let sortedBooks = books.sorted { book1, book2 in
+            // Compare by addID (newer books have higher addID)
+            let id1 = book1.addID ?? -1
+            let id2 = book2.addID ?? -1
+            return id1 > id2
+        }
         let limitedBooks = sortedBooks.prefix(limit).map { $0 }
         return limitedBooks
     }
@@ -124,17 +144,29 @@ class BookStore: ObservableObject {
         print("Loading books from database...")
         do {
             let fetchedBooks = try await dataController.fetchBooks()
-            self.books = fetchedBooks
+            // Assign addIDs to books that don't have them yet
+            var processedBooks = fetchedBooks
+            for i in 0..<processedBooks.count {
+                if let bookId = processedBooks[i].id {
+                    if let existingAddID = bookAddIDs[bookId] {
+                        processedBooks[i].addID = existingAddID
+                    } else {
+                        let nextAddID = lastAddID + 1
+                        processedBooks[i].addID = nextAddID
+                        bookAddIDs[bookId] = nextAddID
+                        lastAddID = nextAddID
+                    }
+                }
+            }
+            self.books = processedBooks
             print("Successfully loaded \(fetchedBooks.count) books")
             
             // Debug info - print the first few books
             if !fetchedBooks.isEmpty {
                 let sampleBooks = fetchedBooks.prefix(min(3, fetchedBooks.count))
                 for book in sampleBooks {
-                    print("  - \(book.title) (ID: \(book.id?.uuidString ?? "nil"), Shelf: \(book.shelfLocation ?? "None"))")
+                    print("  - \(book.title) (ID: \(book.id?.uuidString ?? "nil"), AddID: \(book.addID ?? -1))")
                 }
-            } else {
-                print("Warning: No books were fetched from the database")
             }
         } catch {
             print("Error loading books: \(error)")

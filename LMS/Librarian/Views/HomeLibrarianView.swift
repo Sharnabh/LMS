@@ -229,6 +229,9 @@ struct HomeLibrarianView: View {
         .onAppear {
             refreshBooks()
             
+            // Reset current book index to show newest book
+            currentBookIndex = 0
+            
             // Initialize the Next Card Background if empty
             if needsLocationNextCardBackground.isEmpty {
                 needsLocationNextCardBackground = randomCardBackground()
@@ -239,11 +242,15 @@ struct HomeLibrarianView: View {
                 needsLocationCurrentBookIndex = 0
             }
         }
+        .onReceive(bookStore.objectWillChange) { _ in
+            // Reset to show newest book when books array changes
+            currentBookIndex = 0
+        }
     }
 
     // Computed property to get recent books
     private var recentBooks: [LibrarianBook] {
-        return bookStore.getRecentlyAddedBooks(limit: 5).reversed() // Show only 5 recent books
+        return bookStore.getRecentlyAddedBooks(limit: 5) // Show only 5 recent books
     }
 
     // Tinder-style card stack
@@ -364,23 +371,15 @@ struct HomeLibrarianView: View {
                                                     if direction > 0 && currentBookIndex < recentBooks.count - 1 {
                                                         // Update the card map with the new position
                                                         cardBackgroundMap[currentBookIndex + 1] = nextCardBackground
-                                                        
-                                                        // Apply scaling animation to the background card as it becomes active
-                                                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-                                                            currentBookIndex += 1
-                                                        }
+                                                        currentBookIndex += 1
                                                         // Generate a new background for the next card
                                                         nextCardBackground = randomCardBackground()
                                                     }
                                                     // Swiping left (newer books)
                                                     else if direction < 0 && currentBookIndex > 0 {
-                                                        // Update the card map with the new position 
-                                                        cardBackgroundMap[currentBookIndex - 1] = cardBackgroundMap[currentBookIndex - 1] ?? nextCardBackground
-                                                        
-                                                        // Apply scaling animation to the background card as it becomes active
-                                                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-                                                            currentBookIndex -= 1
-                                                        }
+                                                        // Update the card map with the new position
+                                                        cardBackgroundMap[currentBookIndex - 1] = nextCardBackground
+                                                        currentBookIndex -= 1
                                                         // Generate a new background for the next card
                                                         nextCardBackground = randomCardBackground()
                                                     } else {
@@ -477,8 +476,8 @@ struct HomeLibrarianView: View {
                                                     }
                                                     // Swiping left (newer books)
                                                     else if direction < 0 && currentBookIndex > 0 {
-                                                        // Update the card map with the new position 
-                                                        cardBackgroundMap[currentBookIndex - 1] = cardBackgroundMap[currentBookIndex - 1] ?? nextCardBackground
+                                                        // Update the card map with the new position
+                                                        cardBackgroundMap[currentBookIndex - 1] = nextCardBackground
                                                         currentBookIndex -= 1
                                                         // Generate a new background for the next card
                                                         nextCardBackground = randomCardBackground()
@@ -832,6 +831,7 @@ struct HomeLibrarianView: View {
             await bookStore.loadBooks()
             await MainActor.run {
                 isRefreshing = false
+                currentBookIndex = 0 // Reset to show newest book
             }
         }
     }
@@ -964,7 +964,7 @@ struct HomeLibrarianView: View {
                                                     }
                                                     // Swiping left (newer books)
                                                     else if direction < 0 && needsLocationCurrentBookIndex > 0 {
-                                                        // Update the card map with the new position 
+                                                        // Update the card map with the new position
                                                         needsLocationCardBackgroundMap[needsLocationCurrentBookIndex - 1] = needsLocationCardBackgroundMap[needsLocationCurrentBookIndex - 1] ?? needsLocationNextCardBackground
                                                         
                                                         // Apply scaling animation to the background card as it becomes active
@@ -1071,7 +1071,7 @@ struct HomeLibrarianView: View {
                                                     }
                                                     // Swiping left (newer books)
                                                     else if direction < 0 && needsLocationCurrentBookIndex > 0 {
-                                                        // Update the card map with the new position 
+                                                        // Update the card map with the new position
                                                         needsLocationCardBackgroundMap[needsLocationCurrentBookIndex - 1] = needsLocationCardBackgroundMap[needsLocationCurrentBookIndex - 1] ?? needsLocationNextCardBackground
                                                         
                                                         // Apply scaling animation to the background card as it becomes active

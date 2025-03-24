@@ -31,6 +31,11 @@ struct LibrarianInitialView: View {
 //                    Image(systemName: "person.fill")
 //                    Text("Profile")
 //                }
+            QRScanner()
+                .tabItem {
+                    Image(systemName: "qrcode.viewfinder")
+                    Text("Scan")
+                }
         }
         .environmentObject(bookStore)
         .accentColor(.blue)

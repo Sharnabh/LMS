@@ -132,7 +132,7 @@ struct ResourcesView: View {
                 .environmentObject(bookStore)
         }
         .sheet(item: $selectedBook) { book in
-            BookDetailView(book: book)
+            BookDetailView(book: book, showAddToCollectionButton: false)
                 .environmentObject(bookStore)
         }
         .onAppear {

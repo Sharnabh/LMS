@@ -66,7 +66,7 @@ struct OnboardingView: View {
                             .scaleEffect(animateHeader ? 1.05 : 1.0)
                             .rotationEffect(.degrees(animateHeader ? 2 : -2))
                         
-                        Text("Welcome to PustakAILay")
+                        Text("Welcome to Pustakalaya")
                             .font(.largeTitle)
                             .fontWeight(.bold)
                             .opacity(animateHeader ? 1 : 0)
@@ -91,7 +91,7 @@ struct OnboardingView: View {
                     VStack(spacing: 20) {
                         RoleCard(
                             title: "Admin",
-                            description: "Manage the entire library system",
+                            description: "Manage the entire\nlibrary system",
                             iconName: "person.badge.shield.checkmark",
                             color: .purple,
                             isSelected: selectedRole == .admin,
@@ -104,7 +104,7 @@ struct OnboardingView: View {
                         
                         RoleCard(
                             title: "Librarian",
-                            description: "Manage books and member borrowings",
+                            description: "Manage books and\nmember borrowings",
                             iconName: "person.text.rectangle",
                             color: .blue,
                             isSelected: selectedRole == .librarian,
@@ -180,9 +180,9 @@ struct RoleCard: View {
         Button(action: action) {
             HStack(spacing: 16) {
                 Image(systemName: iconName)
-                    .font(.system(size: 30))
+                    .font(.system(size: 24))
                     .foregroundColor(color)
-                    .frame(width: 60, height: 60)
+                    .frame(width: 48, height: 48)
                     .background(
                         Circle()
                             .fill(color.opacity(0.2))
@@ -192,13 +192,14 @@ struct RoleCard: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.headline)
+                        .font(.title3)
+                        .fontWeight(.medium)
                         .foregroundColor(.primary)
                     
                     Text(description)
-                        .font(.subheadline)
+                        .font(.body)
                         .foregroundColor(.secondary)
-                        .lineLimit(2)
+                        .lineSpacing(4)
                 }
                 
                 Spacer()
@@ -211,6 +212,8 @@ struct RoleCard: View {
                 }
             }
             .padding()
+            .frame(maxWidth: .infinity)
+            .frame(height: 90)
             .background(
                 ZStack {
                     // Glassmorphism background

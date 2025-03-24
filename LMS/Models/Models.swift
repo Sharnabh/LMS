@@ -147,6 +147,7 @@ struct LibrarianBook: Identifiable, Codable {
     var dateAdded: Date?
     var publisher: String?
     var imageLink: String?
+    var addID: Int? // New field for sequential book addition tracking
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -162,6 +163,7 @@ struct LibrarianBook: Identifiable, Codable {
         case dateAdded
         case publisher
         case imageLink
+        case addID
     }
     
     init(from decoder: Decoder) throws {
@@ -179,6 +181,7 @@ struct LibrarianBook: Identifiable, Codable {
         shelfLocation = try container.decodeIfPresent(String.self, forKey: .shelfLocation)
         publisher = try container.decodeIfPresent(String.self, forKey: .publisher)
         imageLink = try container.decodeIfPresent(String.self, forKey: .imageLink)
+        addID = try container.decodeIfPresent(Int.self, forKey: .addID)
         
         // Handle dateAdded decoding
         if let dateString = try container.decodeIfPresent(String.self, forKey: .dateAdded) {
@@ -202,7 +205,8 @@ struct LibrarianBook: Identifiable, Codable {
          shelfLocation: String? = nil,
          dateAdded: Date? = Date(),
          publisher: String? = nil,
-         imageLink: String? = nil) {
+         imageLink: String? = nil,
+         addID: Int? = nil) {
         self.id = id
         self.title = title
         self.author = author
@@ -216,6 +220,7 @@ struct LibrarianBook: Identifiable, Codable {
         self.dateAdded = dateAdded
         self.publisher = publisher
         self.imageLink = imageLink
+        self.addID = addID
     }
 }
 

@@ -81,6 +81,9 @@ struct ResourcesView: View {
                             }
                             .padding()
                         }
+                        .refreshable {
+                            await bookStore.loadBooks()
+                        }
                         
                         // Toolbar with add buttons
                         .toolbar {
@@ -126,14 +129,29 @@ struct ResourcesView: View {
         .sheet(isPresented: $showAddBookSheet) {
             AddBookView()
                 .environmentObject(bookStore)
+                .onDisappear {
+                    Task {
+                        await bookStore.loadBooks()
+                    }
+                }
         }
         .sheet(isPresented: $showCSVUploadSheet) {
             CSVUploadView()
                 .environmentObject(bookStore)
+                .onDisappear {
+                    Task {
+                        await bookStore.loadBooks()
+                    }
+                }
         }
         .sheet(item: $selectedBook) { book in
             BookDetailView(book: book, showAddToCollectionButton: false)
                 .environmentObject(bookStore)
+                .onDisappear {
+                    Task {
+                        await bookStore.loadBooks()
+                    }
+                }
         }
         .onAppear {
             checkConnection()

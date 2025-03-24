@@ -147,25 +147,33 @@ struct AdminCSVPreviewView: View {
                     let existingBooks = try await BookService.shared.findBooksByISBN(book.ISBN)
                     
                     if let existingBook = existingBooks.first {
-                        // Update existing book's copies
+                        // Update existing book's copies and other fields
                         let newTotalCopies = existingBook.totalCopies + book.totalCopies
                         let newAvailableCopies = existingBook.availableCopies + book.totalCopies
                         
                         try await BookService.shared.updateBookCopies(
                             id: existingBook.id,
                             totalCopies: newTotalCopies,
-                            availableCopies: newAvailableCopies
+                            availableCopies: newAvailableCopies,
+                            Description: book.Description,
+                            shelfLocation: book.shelfLocation,
+                            publisher: book.publisher,
+                            imageLink: book.imageLink
                         )
                         updatedCount += 1
                     } else {
-                        // Add as new book
+                        // Add as new book with all fields
                         let _ = try await BookService.shared.addBook(
                             title: book.title,
                             author: authorString,
                             genre: book.genre,
                             ISBN: book.ISBN,
                             publicationDate: book.publicationDate,
-                            totalCopies: book.totalCopies
+                            totalCopies: book.totalCopies,
+                            Description: book.Description,
+                            shelfLocation: book.shelfLocation,
+                            publisher: book.publisher,
+                            imageLink: book.imageLink
                         )
                         importedCount += 1
                     }
@@ -177,17 +185,12 @@ struct AdminCSVPreviewView: View {
                 }
             }
             
-            // Explicitly reload books to ensure they're updated across all views
-            await bookStore.loadBooks()
-            
-            // Short delay to ensure UI updates
-            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
-            
+            // Update the UI on the main thread
             await MainActor.run {
-                isSuccess = true
-                alertMessage = "Import summary:\n• Added \(importedCount) new books\n• Updated \(updatedCount) existing books"
                 isImporting = false
                 showAlert = true
+                alertMessage = "Import complete:\n• Added \(importedCount) new books\n• Updated \(updatedCount) existing books"
+                isSuccess = true
             }
         }
     }

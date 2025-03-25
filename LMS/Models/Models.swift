@@ -33,16 +33,41 @@ struct LibrarianModel: Codable {
     let isFirstLogin: Bool
 }
 
+//struct MemberModel: Codable {
+//    let id: String?
+//    let firstName: String?
+//    let lastName: String?
+//    let email: String?
+//    let password: String?
+//    let created_at: String?
+//    let favourites: [String]?
+//    let enrollmentNumber: String?
+//    let collegeName: String?
+//    
+//    enum CodingKeys: String, CodingKey {
+//        case id
+//        case firstName = "firstName"
+//        case lastName = "lastName"
+//        case email
+//        case password
+//        case created_at
+//        case favourites
+//        case enrollmentNumber = "enrollmentNumber" 
+//        case collegeName = "collegeName"
+//    }
+//}
+
 struct MemberModel: Codable {
-    let id: String?
-    let firstName: String?
-    let lastName: String?
-    let email: String?
-    let password: String?
-    let created_at: String?
-    let favourites: [String]?
-    let enrollmentNumber: String?
-    let collegeName: String?
+    var id: String?
+    var firstName: String?
+    var lastName: String?
+    var email: String?
+    var password: String?
+    var created_at: String?
+    var favourites: [String]?
+    var enrollmentNumber: String?
+    var collegeName: String?
+    var isDisabled: Bool?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -52,8 +77,9 @@ struct MemberModel: Codable {
         case password
         case created_at
         case favourites
-        case enrollmentNumber = "enrollmentNumber" 
+        case enrollmentNumber = "enrollmentNumber"
         case collegeName = "collegeName"
+        case isDisabled = "is_disabled"  // Make sure this matches your Supabase column name
     }
 }
 

@@ -40,7 +40,8 @@ struct ScannerView: UIViewControllerRepresentable {
             case .invalidDeviceInput:
                 scannerView.alertItem = AlertContext.invalidDeviceInput
             case .invalidScanValue:
-                scannerView.alertItem = AlertContext.invalidScanType
+                // Don't show invalid scan type error for QR codes
+                break
             }
         }
     }
@@ -139,7 +140,22 @@ final class ScannerVC: UIViewController {
         if captureSession.canAddOutput(metadataOutput) {
             captureSession.addOutput(metadataOutput)
             metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
-            metadataOutput.metadataObjectTypes = [.qr]
+            // Support all possible QR code types
+            metadataOutput.metadataObjectTypes = [
+                .qr,
+                .pdf417,
+                .aztec,
+                .code128,
+                .code39,
+                .code39Mod43,
+                .code93,
+                .dataMatrix,
+                .ean13,
+                .ean8,
+                .interleaved2of5,
+                .itf14,
+                .upce
+            ]
         } else {
             scannerDelegate?.didSurface(error: .invalidDeviceInput)
             return
@@ -156,9 +172,11 @@ extension ScannerVC: AVCaptureMetadataOutputObjectsDelegate {
         guard let metadataObject = metadataObjects.first,
               let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject,
               let stringValue = readableObject.stringValue else {
-            scannerDelegate?.didSurface(error: .invalidScanValue)
             return
         }
+        
+        // Play a haptic feedback when a code is scanned
+        AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
         
         scannerDelegate?.didFind(barcode: stringValue)
     }

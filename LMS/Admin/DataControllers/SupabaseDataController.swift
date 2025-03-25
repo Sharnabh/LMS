@@ -101,7 +101,7 @@ class SupabaseDataController: ObservableObject {
         try await updateAdminPassword(adminId: adminId, newPassword: newPassword)
     }
     
-    func authenticateAdmin(email: String, password: String) async throws -> (isAuthenticated: Bool, isFirstLogin: Bool, adminId: String?) {
+    func authenticateAdmin(email: String, password: String) async throws -> (isAuthenticated: Bool, isFirstLogin: Bool, adminId: String?, requiresOTP: Bool) {
         do {
             let response: [AdminModel] = try await client.from("Admin")
                 .select("*")
@@ -111,10 +111,17 @@ class SupabaseDataController: ObservableObject {
                 .value
             
             if let admin = response.first {
-                return (true, admin.is_first_login, admin.id)
+                if admin.is_first_login {
+                    return (true, true, admin.id, false)
+                } else {
+                    // Generate and send OTP for non-first-time logins
+                    let otp = generateOTP(for: email)
+                    let _ = try await sendOTP(to: email, name: "Admin", otp: otp)
+                    return (true, false, admin.id, true)
+                }
             }
             
-            return (false, false, nil)
+            return (false, false, nil, false)
         } catch {
             print("Authentication error: \(error)")
             throw error

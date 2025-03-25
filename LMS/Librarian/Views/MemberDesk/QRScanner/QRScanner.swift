@@ -95,6 +95,8 @@ struct QRScanner: View {
                 alertItem = AlertContext.invalidJSONFormat
             case .missingFields:
                 alertItem = AlertContext.missingRequiredFields
+            case .expired:
+                alertItem = AlertContext.expiredQRCode
             }
             // Keep isProcessing true until alert is dismissed
         }

@@ -10,7 +10,7 @@ import Supabase
 
 extension SupabaseDataController {
     
-    func authenticateLibrarian(email: String, password: String) async throws -> (Bool, Bool) {
+    func authenticateLibrarian(email: String, password: String) async throws -> (isAuthenticated: Bool, isFirstLogin: Bool, librarianId: String?, requiresOTP: Bool) {
         let query = client.from("Librarian")
             .select()
             .eq("email", value: email)
@@ -22,7 +22,15 @@ extension SupabaseDataController {
             // Store librarian email and id for future use
             UserDefaults.standard.set(librarian.id, forKey: "currentLibrarianID")
             UserDefaults.standard.set(librarian.email, forKey: "currentLibrarianEmail")
-            return (true, librarian.isFirstLogin)
+            
+            if librarian.isFirstLogin {
+                return (true, true, librarian.id, false)
+            } else {
+                // Generate and send OTP for non-first-time logins
+                let otp = generateOTP(for: email)
+                let _ = try await sendOTP(to: email, name: "Librarian", otp: otp)
+                return (true, false, librarian.id, true)
+            }
         } catch {
             throw error
         }

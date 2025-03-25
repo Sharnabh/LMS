@@ -80,8 +80,24 @@ struct IssueHistoryView: View {
         errorMessage = nil
         
         do {
+            // Join Member and BookIssue tables to get only members who have issued books
             let query = supabaseController.client.from("Member")
-                .select()
+                .select("""
+                    id,
+                    firstName,
+                    lastName,
+                    email,
+                    enrollmentNumber,
+                    BookIssue!inner (
+                        id,
+                        bookId,
+                        issueDate,
+                        dueDate,
+                        returnDate,
+                        fine,
+                        status
+                    )
+                """)
             
             let response = try await query.execute()
             if let jsonString = String(data: response.data, encoding: .utf8) {
@@ -93,7 +109,7 @@ struct IssueHistoryView: View {
             
             do {
                 self.members = try decoder.decode([MemberModel].self, from: response.data)
-                print("Successfully decoded \(self.members.count) members")
+                print("Successfully decoded \(self.members.count) members with issued books")
             } catch {
                 print("Decoder error: \(error)")
                 errorMessage = "Failed to decode member data: \(error.localizedDescription)"
@@ -115,48 +131,50 @@ struct MemberHistoryRow: View {
     @State private var errorMessage: String?
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "person.circle.fill")
-                    .font(.system(size: 40))
-                    .foregroundColor(.blue)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(member.firstName ?? "Unknown") \(member.lastName ?? "")")
-                        .font(.headline)
-                    if let email = member.email {
-                        Text(email)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    if let enrollmentNumber = member.enrollmentNumber {
-                        Text("Enrollment: \(enrollmentNumber)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                Spacer()
-                
-                VStack(alignment: .trailing) {
-                    if isLoading {
-                        ProgressView()
-                            .frame(width: 60, height: 20)
-                    } else if let error = errorMessage {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundColor(.red)
-                    } else {
-                        Text("₹\(String(format: "%.2f", fine))")
+        NavigationLink(destination: MemberDetailView(member: member)) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: "person.circle.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.blue)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(member.firstName ?? "Unknown") \(member.lastName ?? "")")
                             .font(.headline)
-                            .foregroundColor(fine > 0 ? .red : .green)
-                        Text(fine > 0 ? "Fine Due" : "No Fine")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        if let email = member.email {
+                            Text(email)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        if let enrollmentNumber = member.enrollmentNumber {
+                            Text("Enrollment: \(enrollmentNumber)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing) {
+                        if isLoading {
+                            ProgressView()
+                                .frame(width: 60, height: 20)
+                        } else if let error = errorMessage {
+                            Text(error)
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        } else {
+                            Text("₹\(String(format: "%.2f", fine))")
+                                .font(.headline)
+                                .foregroundColor(fine > 0 ? .red : .green)
+                            Text(fine > 0 ? "Fine Due" : "No Fine")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
+                .padding(.vertical, 4)
             }
-            .padding(.vertical, 4)
         }
         .task {
             await fetchMemberFine()

@@ -3,7 +3,9 @@ import SwiftUI
 struct LibrarianLoginView: View {
     @State private var email = ""
     @State private var password = ""
+    @State private var otp = ""
     @State private var showAlert = false
+    @State private var alertTitle = "Error"
     @State private var alertMessage = ""
     @State private var showPasswordReset = false
     @State private var isLoading = false
@@ -15,136 +17,268 @@ struct LibrarianLoginView: View {
     @State private var showNewPassword = false
     @State private var showConfirmPassword = false
     @State private var showForgotPassword = false
+    @State private var showOTPVerification = false
+    @FocusState private var otpFieldFocused: Bool
+    @State private var resendCountdown = 0
+    @State private var timer: Timer?
+    @State private var currentLibrarianId: String?
     
     var body: some View {
-        VStack(spacing: 30) {
-            // Header with back button
-            HStack {
-                Spacer()
-            }
-            
-            // Header
-            VStack(spacing: 16) {
-                Image(systemName: "person.text.rectangle")
-                    .font(.system(size: 80))
-                    .foregroundColor(.blue)
-                
-                Text("Librarian Login")
-                    .font(.title)
-                    .fontWeight(.bold)
-                
-                Text("Enter your credentials to access as librarian dashboard")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-            .padding(.top, 20)
-            
-            Spacer()
-            
-            // Login Form
-            VStack(spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Email")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+        ZStack {
+            if showOTPVerification {
+                // OTP Verification View - Clean focused layout
+                VStack(spacing: 16) {
+                    // Icon and title area
+                    VStack(spacing: 10) {
+                        Image(systemName: "person.badge.key.fill")
+                            .font(.system(size: 50))
+                            .foregroundColor(.blue)
+                        
+                        Text("Verify OTP")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("Enter the verification code sent to your email")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                            .padding(.bottom, 5)
+                    }
                     
-                    TextField("Enter your email", text: $email)
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(10)
-                        .autocapitalization(.none)
-                        .keyboardType(.emailAddress)
-                        .textContentType(.emailAddress)
+                    // OTP Field
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Verification Code")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        // OTP digit boxes
+                        HStack(spacing: 10) {
+                            ForEach(0..<6, id: \.self) { index in
+                                OTPDigitBox(index: index, otp: $otp, onTap: {
+                                    otpFieldFocused = true
+                                })
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        
+                        // Hidden text field to handle actual input
+                        TextField("", text: $otp)
+                            .keyboardType(.numberPad)
+                            .frame(width: 0, height: 0)
+                            .opacity(0)
+                            .focused($otpFieldFocused)
+                            .onChange(of: otp) { newValue in
+                                // Limit to 6 digits
+                                if newValue.count > 6 {
+                                    otp = String(newValue.prefix(6))
+                                }
+                                
+                                // Filter non-numeric characters
+                                otp = newValue.filter { "0123456789".contains($0) }
+                            }
+                    }
+                    
+                    // Expiry info text
+                    Text("This verification code is valid for 10 minutes")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    // Verify OTP Button
+                    Button(action: {
+                        Task {
+                            await verifyOTP()
+                        }
+                    }) {
+                        HStack {
+                            if isLoading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .padding(.trailing, 8)
+                            }
+                            
+                            Text("Verify Code")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.blue)
+                        .cornerRadius(12)
+                    }
+                    .disabled(isLoading || otp.count != 6)
+                    .padding(.top, 5)
+                    
+                    // Resend OTP Button with timer
+                    HStack(spacing: 4) {
+                        Text("Didn't receive the code?")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Button(action: {
+                            Task {
+                                await resendOTP()
+                            }
+                        }) {
+                            if resendCountdown > 0 {
+                                Text("Resend in \(resendCountdown)s")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            } else {
+                                Text("Resend Code")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .disabled(isLoading || resendCountdown > 0)
+                    }
+                    .padding(.top, 5)
+                    
+                    Spacer()
                 }
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Password")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    if showPassword {
-                        TextField("Enter your password", text: $password)
-                            .padding()
-                            .background(Color(.secondarySystemBackground))
-                            .cornerRadius(10)
-                            .textContentType(.password)
-                            .overlay(
-                                Button(action: {
-                                    showPassword.toggle()
-                                }) {
-                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                                        .foregroundColor(.gray)
-                                }
-                                .padding(.trailing, 8),
-                                alignment: .trailing
-                            )
-                    } else {
-                        SecureField("Enter your password", text: $password)
-                            .padding()
-                            .background(Color(.secondarySystemBackground))
-                            .cornerRadius(10)
-                            .textContentType(.password)
-                            .overlay(
-                                Button(action: {
-                                    showPassword.toggle()
-                                }) {
-                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                                        .foregroundColor(.gray)
-                                }
-                                .padding(.trailing, 8),
-                                alignment: .trailing
-                            )
+                .padding(.horizontal, 24)
+                .padding(.top, 30)
+                .background(Color(.systemBackground))
+                .onAppear {
+                    // Auto-focus OTP field when view appears
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        otpFieldFocused = true
                     }
                 }
-            }
-            .padding(.horizontal)
-            
-            // Forgot Password Link
-            Button(action: {
-                showForgotPassword = true
-            }) {
-                Text("Forgot Password?")
-                    .font(.subheadline)
-                    .foregroundColor(.blue)
-            }
-            .padding(.top, 8)
-            
-            Spacer()
-            
-            // Login button
-            Button(action: {
-                Task {
-                    await loginLibrarian()
+            } else {
+                // Regular login view - unchanged
+                VStack(spacing: 30) {
+                    // Header with back button
+                    HStack {
+                        Spacer()
+                    }
+                    
+                    // Header
+                    VStack(spacing: 16) {
+                        Image(systemName: "person.text.rectangle")
+                            .font(.system(size: 80))
+                            .foregroundColor(.blue)
+                        
+                        Text("Librarian Login")
+                            .font(.title)
+                            .fontWeight(.bold)
+                        
+                        Text("Enter your credentials to access as librarian dashboard")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    .padding(.top, 20)
+                    
+                    Spacer()
+                    
+                    // Login Form
+                    VStack(spacing: 20) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Email")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            
+                            TextField("Enter your email", text: $email)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(10)
+                                .autocapitalization(.none)
+                                .keyboardType(.emailAddress)
+                                .textContentType(.emailAddress)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Password")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            
+                            if showPassword {
+                                TextField("Enter your password", text: $password)
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(10)
+                                    .textContentType(.password)
+                                    .overlay(
+                                        Button(action: {
+                                            showPassword.toggle()
+                                        }) {
+                                            Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                                .foregroundColor(.gray)
+                                        }
+                                        .padding(.trailing, 8),
+                                        alignment: .trailing
+                                    )
+                            } else {
+                                SecureField("Enter your password", text: $password)
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(10)
+                                    .textContentType(.password)
+                                    .overlay(
+                                        Button(action: {
+                                            showPassword.toggle()
+                                        }) {
+                                            Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                                .foregroundColor(.gray)
+                                        }
+                                        .padding(.trailing, 8),
+                                        alignment: .trailing
+                                    )
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    // Forgot Password Link
+                    Button(action: {
+                        showForgotPassword = true
+                    }) {
+                        Text("Forgot Password?")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                    }
+                    .padding(.top, 8)
+                    
+                    Spacer()
+                    
+                    // Login button
+                    Button(action: {
+                        Task {
+                            await loginLibrarian()
+                        }
+                    }) {
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        } else {
+                            Text("Login")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .frame(minWidth: 120, maxWidth: 280)
+                    .padding(.vertical, 16)
+                    .padding(.horizontal, 24)
+                    .background(Color.blue)
+                    .cornerRadius(12)
+                    .disabled(isLoading)
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, 40)
                 }
-            }) {
-                if isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                } else {
-                    Text("Login")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                }
+                .background(Color(.systemGroupedBackground).ignoresSafeArea())
             }
-            .frame(minWidth: 120, maxWidth: 280)
-            .padding(.vertical, 16)
-            .padding(.horizontal, 24)
-            .background(Color.blue)
-            .cornerRadius(12)
-            .disabled(isLoading)
-            .padding(.horizontal, 30)
-            .padding(.bottom, 40)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        // Common modifiers for both states
         .navigationBarBackButtonHidden(false)
         .fullScreenCover(isPresented: $showPasswordReset) {
             LibrarianPasswordResetView(showMainApp: $showMainApp, showLibrarianInitialView: $showLibrarianInitialView)
         }
         .alert(isPresented: $showAlert) {
             Alert(
-                title: Text("Error"),
+                title: Text(alertTitle),
                 message: Text(alertMessage),
                 dismissButton: .default(Text("OK"))
             )
@@ -157,6 +291,11 @@ struct LibrarianLoginView: View {
                 showForgotPassword = false
             })
         }
+        .onDisappear {
+            // Invalidate timer when view disappears to avoid memory leaks
+            timer?.invalidate()
+            timer = nil
+        }
     }
     
     private func loginLibrarian() async {
@@ -166,18 +305,28 @@ struct LibrarianLoginView: View {
         
         isLoading = true
         do {
-            let (success, isFirstLogin) = try await dataController.authenticateLibrarian(email: email, password: password)
+            let result = try await dataController.authenticateLibrarian(email: email, password: password)
             isLoading = false
             
-            if success {
-                if isFirstLogin {
+            if result.isAuthenticated {
+                currentLibrarianId = result.librarianId
+                if result.isFirstLogin {
                     showPasswordReset = true
+                } else if result.requiresOTP {
+                    showOTPVerification = true
+                    // Start countdown timer for resend button when OTP view appears
+                    startResendCountdown()
                 } else {
                     showLibrarianInitialView = true
                 }
+            } else {
+                alertTitle = "Error"
+                alertMessage = "Invalid credentials. Please try again."
+                showAlert = true
             }
         } catch {
             isLoading = false
+            alertTitle = "Error"
             alertMessage = "Invalid credentials. Please try again."
             showAlert = true
         }
@@ -185,6 +334,7 @@ struct LibrarianLoginView: View {
     
     private func validateInput() -> Bool {
         if email.isEmpty || password.isEmpty {
+            alertTitle = "Error"
             alertMessage = "Please fill in all fields"
             showAlert = true
             return false
@@ -192,12 +342,83 @@ struct LibrarianLoginView: View {
         
         // Basic email validation
         if !email.contains("@") || !email.contains(".") {
+            alertTitle = "Error"
             alertMessage = "Please enter a valid email address"
             showAlert = true
             return false
         }
         
         return true
+    }
+    
+    private func verifyOTP() async {
+        isLoading = true
+        
+        do {
+            let isValid = dataController.verifyOTP(email: email, otp: otp)
+            
+            DispatchQueue.main.async {
+                isLoading = false
+                
+                if isValid {
+                    showLibrarianInitialView = true
+                } else {
+                    alertTitle = "Error"
+                    alertMessage = "Invalid verification code. Please try again."
+                    showAlert = true
+                }
+            }
+        } catch {
+            DispatchQueue.main.async {
+                isLoading = false
+                alertTitle = "Error"
+                alertMessage = "An error occurred: \(error.localizedDescription)"
+                showAlert = true
+            }
+        }
+    }
+    
+    private func resendOTP() async {
+        isLoading = true
+        
+        do {
+            let otp = dataController.generateOTP(for: email)
+            let _ = try await dataController.sendOTP(to: email, name: "Librarian", otp: otp)
+            
+            DispatchQueue.main.async {
+                isLoading = false
+                alertTitle = "Success"
+                alertMessage = "A new verification code has been sent to your email."
+                showAlert = true
+                // Start countdown for resend button
+                startResendCountdown()
+            }
+        } catch {
+            DispatchQueue.main.async {
+                isLoading = false
+                alertTitle = "Error"
+                alertMessage = "Failed to resend code: \(error.localizedDescription)"
+                showAlert = true
+            }
+        }
+    }
+    
+    private func startResendCountdown() {
+        // Invalidate existing timer
+        timer?.invalidate()
+        
+        // Set initial countdown value (30 seconds)
+        resendCountdown = 30
+        
+        // Create new timer
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            if resendCountdown > 0 {
+                resendCountdown -= 1
+            } else {
+                timer?.invalidate()
+                timer = nil
+            }
+        }
     }
 }
 
@@ -432,6 +653,38 @@ struct LibrarianPasswordResetView: View {
         }
     }
 }
+
+// OTP Digit Box View
+//struct OTPDigitBox: View {
+//    let index: Int
+//    @Binding var otp: String
+//    var onTap: () -> Void
+//    
+//    var body: some View {
+//        ZStack {
+//            RoundedRectangle(cornerRadius: 8)
+//                .stroke(Color.gray.opacity(0.3), lineWidth: 1.5)
+//                .frame(width: 45, height: 55)
+//                .background(RoundedRectangle(cornerRadius: 8).fill(Color(.systemBackground)))
+//            
+//            if index < otp.count {
+//                let digit = String(Array(otp)[index])
+//                Text(digit)
+//                    .font(.title2.bold())
+//                    .foregroundColor(.primary)
+//                    .transition(.scale.combined(with: .opacity))
+//            }
+//        }
+//        .overlay(
+//            RoundedRectangle(cornerRadius: 8)
+//                .stroke(index < otp.count ? Color.blue : Color.clear, lineWidth: 1.5)
+//        )
+//        .animation(.spring(response: 0.2), value: otp.count)
+//        .onTapGesture {
+//            onTap()
+//        }
+//    }
+//}
 
 #Preview {
     LibrarianLoginView(showMainApp: .constant(false), selectedRole: .constant(nil))

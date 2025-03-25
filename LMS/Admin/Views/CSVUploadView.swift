@@ -45,18 +45,38 @@ struct CSVUploadView: View {
                 }
                 .padding(.horizontal)
                 
-                Button(action: {
-                    showFilePicker = true
-                }) {
-                    HStack {
-                        Image(systemName: "doc.badge.plus")
-                        Text("Select CSV File")
+                HStack(spacing: 15) {
+                    Button(action: {
+                        showFilePicker = true
+                    }) {
+                        HStack {
+                            Image(systemName: "doc.badge.plus")
+                            Text("Select CSV File")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                    
+                    ShareLink(
+                        item: createTemplate(),
+                        preview: SharePreview(
+                            "Book Upload Template",
+                            image: Image(systemName: "doc.text")
+                        )
+                    ) {
+                        HStack {
+                            Image(systemName: "arrow.down.doc")
+                            Text("Download Template")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
                 }
                 .padding(.horizontal)
                 .padding(.top)
@@ -95,6 +115,24 @@ struct CSVUploadView: View {
             AdminCSVPreviewView(books: parsedBooks)
                 .environmentObject(bookStore)
         }
+    }
+    
+    private func createTemplate() -> URL {
+        let csvString = """
+        Title,Author,Genre,ISBN,PublicationDate,TotalCopies
+        To Kill a Mockingbird,Harper Lee,Fiction,978-0446310789,1960,5
+        Good Omens,Neil Gaiman; Terry Pratchett,Fiction,978-0060853976,1990,3
+        """
+        
+        // Create a temporary file with .csv extension
+        let tempDir = FileManager.default.temporaryDirectory
+        let fileName = "book_upload_template.csv"
+        let fileURL = tempDir.appendingPathComponent(fileName)
+        
+        // Write the CSV content to the file
+        try? csvString.write(to: fileURL, atomically: true, encoding: .utf8)
+        
+        return fileURL
     }
     
     private func handleFileSelection(_ result: Result<[URL], Error>) {

@@ -132,9 +132,40 @@ extension SupabaseDataController {
     }
     
     func updateBook(_ book: LibrarianBook) async throws -> Bool {
+        // Create an encodable structure for the book data
+        struct BookUpdate: Codable {
+            let title: String
+            let author: [String]
+            let genre: String
+            let publicationDate: String
+            let totalCopies: Int
+            let availableCopies: Int
+            let ISBN: String
+            let Description: String?
+            let shelfLocation: String?
+            let dateAdded: String?
+            let publisher: String?
+            let imageLink: String?
+        }
+        
+        let bookData = BookUpdate(
+            title: book.title,
+            author: book.author,
+            genre: book.genre,
+            publicationDate: book.publicationDate,
+            totalCopies: book.totalCopies,
+            availableCopies: book.availableCopies,
+            ISBN: book.ISBN,
+            Description: book.Description,
+            shelfLocation: book.shelfLocation,
+            dateAdded: book.dateAdded.map { ISO8601DateFormatter().string(from: $0) },
+            publisher: book.publisher,
+            imageLink: book.imageLink
+        )
+        
         do {
             try await client.from("Books")
-                .update(book)
+                .update(bookData)
                 .eq("id", value: book.id)
                 .execute()
             return true

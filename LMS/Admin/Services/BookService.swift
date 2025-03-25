@@ -11,7 +11,7 @@ class BookService {
     }
     
     // Check if a book already exists
-    private func findExistingBook(title: String, author: String, genre: String, ISBN: String, publicationDate: String) async throws -> Book? {
+    private func findExistingBook(title: String, author: String, genre: String, ISBN: String, publicationDate: String) async throws -> AdminBook? {
         // Convert author string to Postgres array format
         let authorArray = "{" + author.split(separator: ";").map { "\"\($0.trimmingCharacters(in: .whitespaces))\"" }.joined(separator: ",") + "}"
         
@@ -26,12 +26,12 @@ class BookService {
             .execute()
         
         let decoder = JSONDecoder()
-        let books = try decoder.decode([Book].self, from: response.data)
+        let books = try decoder.decode([AdminBook].self, from: response.data)
         return books.first
     }
     
     // Find books by ISBN
-    func findBooksByISBN(_ isbn: String) async throws -> [Book] {
+    func findBooksByISBN(_ isbn: String) async throws -> [AdminBook] {
         let response = try await supabase
             .from("Books")
             .select()
@@ -39,24 +39,39 @@ class BookService {
             .execute()
         
         let decoder = JSONDecoder()
-        let books = try decoder.decode([Book].self, from: response.data)
+        let books = try decoder.decode([AdminBook].self, from: response.data)
         return books
     }
     
     // Update existing book's copies - made public
-    func updateBookCopies(id: UUID, totalCopies: Int, availableCopies: Int) async throws {
+    func updateBookCopies(id: UUID, totalCopies: Int, availableCopies: Int, Description: String? = nil, shelfLocation: String? = nil, publisher: String? = nil, imageLink: String? = nil) async throws {
+        struct UpdateData: Encodable {
+            let totalCopies: Int
+            let availableCopies: Int
+            let Description: String?
+            let shelfLocation: String?
+            let publisher: String?
+            let imageLink: String?
+        }
+        
+        let updateData = UpdateData(
+            totalCopies: totalCopies,
+            availableCopies: availableCopies,
+            Description: Description,
+            shelfLocation: shelfLocation,
+            publisher: publisher,
+            imageLink: imageLink
+        )
+        
         try await supabase
             .from("Books")
-            .update([
-                "totalCopies": totalCopies,
-                "availableCopies": availableCopies
-            ])
+            .update(updateData)
             .eq("id", value: id)
             .execute()
     }
     
     // Add a single book with duplicate check
-    func addBook(title: String, author: String, genre: String, ISBN: String, publicationDate: String, totalCopies: Int) async throws -> (isNewBook: Bool, book: Book) {
+    func addBook(title: String, author: String, genre: String, ISBN: String, publicationDate: String, totalCopies: Int, Description: String? = nil, shelfLocation: String? = nil, publisher: String? = nil, imageLink: String? = nil) async throws -> (isNewBook: Bool, book: AdminBook) {
         // Convert author string to array, splitting by semicolons
         let authorArray = author.split(separator: ";").map { String($0.trimmingCharacters(in: .whitespaces)) }
         
@@ -75,11 +90,15 @@ class BookService {
             try await updateBookCopies(
                 id: existingBook.id,
                 totalCopies: newTotalCopies,
-                availableCopies: newAvailableCopies
+                availableCopies: newAvailableCopies,
+                Description: Description,
+                shelfLocation: shelfLocation,
+                publisher: publisher,
+                imageLink: imageLink
             )
             
             // Return updated book information
-            let updatedBook = Book(
+            let updatedBook = AdminBook(
                 id: existingBook.id,
                 title: existingBook.title,
                 author: existingBook.author,
@@ -87,13 +106,18 @@ class BookService {
                 ISBN: existingBook.ISBN,
                 publicationDate: existingBook.publicationDate,
                 totalCopies: newTotalCopies,
-                availableCopies: newAvailableCopies
+                availableCopies: newAvailableCopies,
+                Description: existingBook.Description,
+                shelfLocation: existingBook.shelfLocation,
+                dateAdded: existingBook.dateAdded,
+                publisher: existingBook.publisher,
+                imageLink: existingBook.imageLink
             )
             return (false, updatedBook)
         }
         
         // If no existing book found, add new book
-        let newBook = Book(
+        let newBook = AdminBook(
             id: UUID(),
             title: title,
             author: authorArray,
@@ -101,7 +125,12 @@ class BookService {
             ISBN: ISBN,
             publicationDate: publicationDate,
             totalCopies: totalCopies,
-            availableCopies: totalCopies
+            availableCopies: totalCopies,
+            Description: Description,
+            shelfLocation: shelfLocation,
+            dateAdded: Date(),
+            publisher: publisher,
+            imageLink: imageLink
         )
         
         // Create an encodable book data structure
@@ -114,6 +143,11 @@ class BookService {
             let publicationDate: String
             let totalCopies: Int
             let availableCopies: Int
+            let Description: String?
+            let shelfLocation: String?
+            let dateAdded: String
+            let publisher: String?
+            let imageLink: String?
         }
         
         let bookData = BookData(
@@ -124,7 +158,12 @@ class BookService {
             ISBN: ISBN,
             publicationDate: publicationDate,
             totalCopies: totalCopies,
-            availableCopies: totalCopies
+            availableCopies: totalCopies,
+            Description: Description,
+            shelfLocation: shelfLocation,
+            dateAdded: ISO8601DateFormatter().string(from: Date()),
+            publisher: publisher,
+            imageLink: imageLink
         )
         
         try await supabase
@@ -136,7 +175,7 @@ class BookService {
     }
     
     // Add multiple books from CSV with duplicate check
-    func addBooksFromCSV(books: [Book]) async throws -> (newBooks: Int, updatedBooks: Int) {
+    func addBooksFromCSV(books: [AdminBook]) async throws -> (newBooks: Int, updatedBooks: Int) {
         var newBooksCount = 0
         var updatedBooksCount = 0
         
@@ -148,7 +187,11 @@ class BookService {
                 genre: book.genre,
                 ISBN: book.ISBN,
                 publicationDate: book.publicationDate,
-                totalCopies: book.totalCopies
+                totalCopies: book.totalCopies,
+                Description: book.Description,
+                shelfLocation: book.shelfLocation,
+                publisher: book.publisher,
+                imageLink: book.imageLink
             )
             
             if result.isNewBook {
@@ -162,7 +205,7 @@ class BookService {
     }
     
     // Parse CSV file
-    func parseCSVFile(url: URL) throws -> [Book] {
+    func parseCSVFile(url: URL) throws -> [AdminBook] {
         let csvContent = try String(contentsOf: url, encoding: .utf8)
         let rows = csvContent.components(separatedBy: .newlines)
         
@@ -179,7 +222,7 @@ class BookService {
             let authorString = columns[1].trimmingCharacters(in: .whitespaces)
             let authorArray = authorString.split(separator: ";").map { String($0.trimmingCharacters(in: .whitespaces)) }
             
-            return Book(
+            return AdminBook(
                 id: UUID(),
                 title: columns[0].trimmingCharacters(in: .whitespaces),
                 author: authorArray,
@@ -187,7 +230,12 @@ class BookService {
                 ISBN: columns[3].trimmingCharacters(in: .whitespaces),
                 publicationDate: columns[4].trimmingCharacters(in: .whitespaces),
                 totalCopies: Int(columns[5]) ?? 1,
-                availableCopies: Int(columns[5]) ?? 1
+                availableCopies: Int(columns[5]) ?? 1,
+                Description: nil,
+                shelfLocation: nil,
+                dateAdded: Date(),
+                publisher: nil,
+                imageLink: nil
             )
         }
     }
@@ -196,4 +244,20 @@ class BookService {
 enum BookError: Error {
     case invalidCSVFormat
     case invalidData
+}
+
+struct AdminBook: Codable, Identifiable {
+    var id: UUID
+    var title: String
+    var author: [String]
+    var genre: String
+    var ISBN: String
+    var publicationDate: String
+    var totalCopies: Int
+    var availableCopies: Int
+    var Description: String?
+    var shelfLocation: String?
+    var dateAdded: Date?
+    var publisher: String?
+    var imageLink: String?
 } 

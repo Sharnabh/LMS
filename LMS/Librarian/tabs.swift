@@ -17,6 +17,12 @@ struct LibrarianInitialView: View {
                     Image(systemName: "house.fill")
                     Text("Home")
                 }
+            
+            IssueHistoryView()
+                .tabItem {
+                    Image(systemName: "person.crop.rectangle.stack.fill")
+                    Text("Member Desk")
+                }
 
             AddView()
                 .tabItem {
@@ -31,11 +37,6 @@ struct LibrarianInitialView: View {
 //                    Image(systemName: "person.fill")
 //                    Text("Profile")
 //                }
-            QRScanner()
-                .tabItem {
-                    Image(systemName: "qrcode.viewfinder")
-                    Text("Scan")
-                }
         }
         .environmentObject(bookStore)
         .accentColor(.blue)

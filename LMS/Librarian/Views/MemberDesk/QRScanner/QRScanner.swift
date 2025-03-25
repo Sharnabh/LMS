@@ -37,7 +37,6 @@ struct QRScanner: View {
                 }
             }
             .edgesIgnoringSafeArea(.all)
-            .navigationTitle("Library QR Scanner")
             .onChange(of: scannedCode) { newValue in
                 // Only process if we have a non-empty code, we're not already processing,
                 // and this isn't the same code we just processed

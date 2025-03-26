@@ -289,3 +289,60 @@ struct BookShelfLocation: Codable, Identifiable {
         case bookID
     }
 }
+
+// MARK: - Policy Models
+struct LibraryPolicy: Codable, Identifiable {
+    let id: UUID
+    var borrowingLimit: Int
+    var returnPeriod: Int
+    var reissuePeriod: Int
+    var fineAmount: Int
+    var gracePeriod: Int
+    var maxFine: Int
+    var lastUpdated: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case borrowingLimit = "borrowing_limit"
+        case returnPeriod = "return_period"
+        case reissuePeriod = "reissue_period"
+        case fineAmount = "fine_amount"
+        case gracePeriod = "grace_period"
+        case maxFine = "max_fine"
+        case lastUpdated = "last_updated"
+    }
+}
+
+struct LibraryTiming: Codable, Identifiable {
+    let id: UUID
+    var weekdayOpeningTime: Date
+    var weekdayClosingTime: Date
+    var sundayOpeningTime: Date
+    var sundayClosingTime: Date
+    var lastUpdated: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case weekdayOpeningTime = "weekday_opening_time"
+        case weekdayClosingTime = "weekday_closing_time"
+        case sundayOpeningTime = "sunday_opening_time"
+        case sundayClosingTime = "sunday_closing_time"
+        case lastUpdated = "last_updated"
+    }
+}
+
+struct BookManagementPolicy: Codable, Identifiable {
+    let id: UUID
+    var bookManagementText: String
+    var bookStatusText: String
+    var borrowingRules: String
+    var lastUpdated: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case bookManagementText = "book_management_text"
+        case bookStatusText = "book_status_text"
+        case borrowingRules = "borrowing_rules"
+        case lastUpdated = "last_updated"
+    }
+}

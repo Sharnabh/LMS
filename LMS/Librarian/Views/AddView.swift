@@ -120,9 +120,19 @@ struct AddView: View {
             .overlay(
                 VStack {
                     Spacer()
-                    Button(action: {
-                        showAddBookSheet = true
-                    }) {
+                    Menu {
+                        Button(action: {
+                            showAddBookSheet = true
+                        }) {
+                            Label("Add Book", systemImage: "plus.circle")
+                        }
+                        
+                        Button(action: {
+                            showCSVUploadSheet = true
+                        }) {
+                            Label("Upload CSV", systemImage: "doc.badge.plus")
+                        }
+                    } label: {
                         ZStack {
                             Circle()
                                 .fill(Color.blue)

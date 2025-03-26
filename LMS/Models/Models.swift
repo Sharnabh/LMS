@@ -346,3 +346,34 @@ struct BookManagementPolicy: Codable, Identifiable {
         case lastUpdated = "last_updated"
     }
 }
+
+// MARK: - Announcement Models
+struct AnnouncementModel: Codable, Identifiable {
+    let id: UUID
+    var title: String
+    var content: String
+    var type: AnnouncementType
+    var expiryDate: Date
+    var createdAt: Date
+    var isActive: Bool
+    var isArchived: Bool
+    var lastModified: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case content
+        case type
+        case expiryDate = "expiry_date"
+        case createdAt = "created_at"
+        case isActive = "is_active"
+        case isArchived = "is_archived"
+        case lastModified = "last_modified"
+    }
+}
+
+enum AnnouncementType: String, Codable {
+    case member = "member"
+    case librarian = "librarian"
+    case all = "all"
+}

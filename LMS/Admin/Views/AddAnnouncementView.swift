@@ -7,6 +7,7 @@ struct AddAnnouncementView: View {
     @State private var title = ""
     @State private var content = ""
     @State private var selectedType = AnnouncementType.all
+    @State private var startDate = Date()
     @State private var expiryDate = Date().addingTimeInterval(7 * 24 * 60 * 60) // Default 7 days
     @State private var showingAlert = false
     @State private var alertMessage = ""
@@ -33,11 +34,18 @@ struct AddAnnouncementView: View {
                         .pickerStyle(.segmented)
                     }
                     
-                    Section(header: Text("Expiry Date")) {
+                    Section(header: Text("Schedule")) {
+                        DatePicker(
+                            "Starts on",
+                            selection: $startDate,
+                            in: Date()...,
+                            displayedComponents: [.date, .hourAndMinute]
+                        )
+                        
                         DatePicker(
                             "Expires on",
                             selection: $expiryDate,
-                            in: Date()...,
+                            in: startDate...,
                             displayedComponents: [.date, .hourAndMinute]
                         )
                     }
@@ -91,6 +99,7 @@ struct AddAnnouncementView: View {
                     title: title,
                     content: content,
                     type: selectedType,
+                    startDate: startDate,
                     expiryDate: expiryDate
                 )
                 

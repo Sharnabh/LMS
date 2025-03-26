@@ -52,11 +52,12 @@ class AnnouncementStore: ObservableObject {
         isLoading = false
     }
     
-    func createAnnouncement(title: String, content: String, type: AnnouncementType, expiryDate: Date) async throws {
+    func createAnnouncement(title: String, content: String, type: AnnouncementType, startDate: Date, expiryDate: Date) async throws {
         try await AnnouncementService.shared.createAnnouncement(
             title: title,
             content: content,
             type: type,
+            startDate: startDate,
             expiryDate: expiryDate
         )
         await loadAnnouncements()

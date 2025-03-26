@@ -117,25 +117,28 @@ struct AddView: View {
             }
             .navigationTitle("Add Books")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button(action: {
-                            showAddBookSheet = true
-                        }) {
-                            Label("Add Book", systemImage: "plus.circle")
+            .overlay(
+                VStack {
+                    Spacer()
+                    Button(action: {
+                        showAddBookSheet = true
+                    }) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.blue)
+                                .frame(width: 60, height: 60)
+                                .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
+                            
+                            Image(systemName: "plus")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 25, height: 25)
+                                .foregroundColor(.white)
                         }
-                        
-                        Button(action: {
-                            showCSVUploadSheet = true
-                        }) {
-                            Label("Upload CSV", systemImage: "doc.badge.plus")
-                        }
-                    } label: {
-                        Image(systemName: "plus")
                     }
+                    .padding(.bottom, 24)
                 }
-            }
+            )
             .sheet(isPresented: $showScanner) {
                 BarcodeScannerView(scannedCode: $scannedCode)
                     .ignoresSafeArea()

@@ -13,6 +13,8 @@ struct HomeView: View {
     @State private var showingAddAnnouncementSheet = false
     @State private var selectedAnnouncementType: AnnouncementListType = .active
     @State private var showingAnnouncementList = false
+    @State private var totalMembersCount: Int = 0
+    @State private var isLoadingMembers: Bool = false
     
     enum AnnouncementListType {
         case active, scheduled, archived
@@ -60,7 +62,7 @@ struct HomeView: View {
                         // Card 2
                         HomeCard(
                             title: "All Members",
-                            value: "567",
+                            value: isLoadingMembers ? "..." : "\(totalMembersCount)",
                             icon: "person.2.fill",
                             color: .green
                         )
@@ -145,11 +147,11 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("Home")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.automatic)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink {
-                        AdminHomeView()
+                        AdminProfileView()
                     } label: {
                         Image(systemName: "person.crop.circle.fill")
                             .font(.system(size: 22))
@@ -166,7 +168,20 @@ struct HomeView: View {
                     announcementStore: announcementStore
                 )
             }
+            .task {
+                await loadMembersCount()
+            }
         }
+    }
+    
+    private func loadMembersCount() async {
+        isLoadingMembers = true
+        do {
+            totalMembersCount = try await MemberService.shared.getTotalMembersCount()
+        } catch {
+            print("Error loading members count: \(error)")
+        }
+        isLoadingMembers = false
     }
 }
 

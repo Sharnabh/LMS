@@ -94,7 +94,7 @@ struct HomeView: View {
                         Button(action: {
                             showingAddAnnouncementSheet = true
                         }) {
-                            Image(systemName: "plus.circle.fill")
+                            Image(systemName: "plus")
                                 .font(.title2)
                                 .foregroundColor(.blue)
                         }
@@ -220,34 +220,27 @@ struct AnnouncementTypeCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Image(systemName: icon)
-                        .font(.title2)
+                        .font(.system(size: 18))
                         .foregroundColor(type.color)
                     
-                    Spacer()
-                    
                     if showCount {
+                        Spacer()
                         Text("\(count)")
-                            .font(.headline)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .font(.footnote)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
                             .background(type.color.opacity(0.2))
                             .foregroundColor(type.color)
-                            .cornerRadius(8)
+                            .cornerRadius(6)
                     }
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(type.title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    
-                    Text("View \(type.title.lowercased())")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                Text(type.title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.primary)
             }
             .padding()
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: 90)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color(.systemBackground))

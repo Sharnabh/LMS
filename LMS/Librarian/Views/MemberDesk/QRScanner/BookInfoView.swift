@@ -1,5 +1,20 @@
 import SwiftUI
 
+struct BookIssueData: Codable {
+    let id: String
+    let memberId: String
+    let bookId: String
+    let issueDate: String
+    let dueDate: String
+    let returnDate: String?
+    let fine: Double
+    let status: String
+}
+
+struct BookUpdateData: Codable {
+    let availableCopies: Int
+}
+
 struct BookInfoView: View {
     let bookInfo: BookInfo
     @Environment(\.dismiss) private var dismiss
@@ -8,6 +23,9 @@ struct BookInfoView: View {
     @State private var books: [LibrarianBook] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var showAlert = false
+    @State private var alertMessage = ""
+    @State private var isSuccess = false
     
     var body: some View {
         ScrollView {
@@ -89,6 +107,27 @@ struct BookInfoView: View {
                         .cornerRadius(12)
                         .shadow(radius: 2)
                     }
+                    
+                    // Approve Button
+                    if bookInfo.issueStatus == "Pending" {
+                        Button(action: {
+                            Task {
+                                await approveBookIssue()
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                Text("Approve Book Issue")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                        }
+                        .padding(.top)
+                        .disabled(isLoading)
+                    }
                 }
             }
             .padding()
@@ -99,6 +138,17 @@ struct BookInfoView: View {
         })
         .task {
             await fetchDetails()
+        }
+        .alert(isPresented: $showAlert) {
+            Alert(
+                title: Text(isSuccess ? "Success" : "Error"),
+                message: Text(alertMessage),
+                dismissButton: .default(Text("OK")) {
+                    if isSuccess {
+                        dismiss()
+                    }
+                }
+            )
         }
     }
     
@@ -137,6 +187,68 @@ struct BookInfoView: View {
         } catch {
             await MainActor.run {
                 errorMessage = "Failed to fetch details: \(error.localizedDescription)"
+                isLoading = false
+            }
+        }
+    }
+    
+    private func approveBookIssue() async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            // Update BookIssue status in Supabase
+            for bookId in bookInfo.bookIds {
+                let bookIssue = BookIssueData(
+                    id: UUID().uuidString,
+                    memberId: bookInfo.memberId,
+                    bookId: bookId,
+                    issueDate: ISO8601DateFormatter().string(from: Date()),
+                    dueDate: ISO8601DateFormatter().string(from: Date().addingTimeInterval(7 * 24 * 60 * 60)), // 7 days from now
+                    returnDate: nil, // Will be updated when book is returned
+                    fine: 0.0, // Initial fine is 0
+                    status: "Issued"
+                )
+                
+                let query = try supabaseController.client.from("BookIssue")
+                    .insert(bookIssue)
+                
+                try await query.execute()
+            }
+            
+            // Update book availability
+            for bookId in bookInfo.bookIds {
+                let bookQuery = supabaseController.client.from("Books")
+                    .select()
+                    .eq("id", value: bookId)
+                
+                let bookResponse = try await bookQuery.execute()
+                let books = try JSONDecoder().decode([LibrarianBook].self, from: bookResponse.data)
+                
+                if let book = books.first {
+                    let updatedBook = BookUpdateData(
+                        availableCopies: book.availableCopies - 1
+                    )
+                    
+                    let updateQuery = try supabaseController.client.from("Books")
+                        .update(updatedBook)
+                        .eq("id", value: bookId)
+                    
+                    try await updateQuery.execute()
+                }
+            }
+            
+            await MainActor.run {
+                isSuccess = true
+                alertMessage = "Book issue approved successfully"
+                showAlert = true
+                isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                isSuccess = false
+                alertMessage = "Failed to approve book issue: \(error.localizedDescription)"
+                showAlert = true
                 isLoading = false
             }
         }

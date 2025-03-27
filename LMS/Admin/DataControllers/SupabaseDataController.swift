@@ -354,3 +354,97 @@ class SupabaseDataController: ObservableObject {
     }
 }
 
+// MARK: - Library Policies Extension
+extension SupabaseDataController {
+    // Fetch policies from Supabase
+    func fetchLibraryPolicies() async throws -> (borrowingLimit: Int, returnPeriod: Int, fineAmount: Int, lostBookFine: Int) {
+        do {
+            // Create a decodable struct to match the database columns
+            struct PolicyResponse: Decodable {
+                let borrowing_limit: Int
+                let return_period: Int
+                let fine_amount: Int
+                let lost_book_fine: Int
+            }
+            
+            let response: [PolicyResponse] = try await client
+                .from("library_policies")
+                .select("borrowing_limit, return_period, fine_amount, lost_book_fine")
+                .limit(1)
+                .execute()
+                .value
+            
+            if let policy = response.first {
+                return (
+                    borrowingLimit: policy.borrowing_limit,
+                    returnPeriod: policy.return_period,
+                    fineAmount: policy.fine_amount,
+                    lostBookFine: policy.lost_book_fine
+                )
+            } else {
+                // Return default values if no policy exists
+                return (borrowingLimit: 5, returnPeriod: 14, fineAmount: 5, lostBookFine: 500)
+            }
+        } catch {
+            print("Error fetching library policies: \(error)")
+            throw error
+        }
+    }
+    
+    // Update policies in Supabase
+    func updateLibraryPolicies(borrowingLimit: Int, returnPeriod: Int, fineAmount: Int, lostBookFine: Int) async throws {
+        struct UpdateData: Encodable {
+            let borrowing_limit: Int
+            let return_period: Int
+            let fine_amount: Int
+            let lost_book_fine: Int
+            let last_updated: String
+        }
+        
+        // Get current timestamp in ISO 8601 format
+        let dateFormatter = ISO8601DateFormatter()
+        let currentTimestamp = dateFormatter.string(from: Date())
+        
+        let updateData = UpdateData(
+            borrowing_limit: borrowingLimit,
+            return_period: returnPeriod,
+            fine_amount: fineAmount,
+            lost_book_fine: lostBookFine,
+            last_updated: currentTimestamp
+        )
+        
+        do {
+            // First check if a policy exists
+            struct PolicyIdResponse: Decodable {
+                let id: UUID
+            }
+            
+            let response: [PolicyIdResponse] = try await client
+                .from("library_policies")
+                .select("id")
+                .limit(1)
+                .execute()
+                .value
+            
+            if response.isEmpty {
+                // If no policy exists, create one
+                try await client
+                    .from("library_policies")
+                    .insert(updateData)
+                    .execute()
+            } else {
+                // If policy exists, update it
+                let policyId = response[0].id
+                try await client
+                    .from("library_policies")
+                    .update(updateData)
+                    .eq("id", value: policyId)
+                    .execute()
+            }
+        } catch {
+            print("Error updating library policies: \(error)")
+            throw error
+        }
+    }
+}
+

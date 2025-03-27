@@ -295,20 +295,16 @@ struct LibraryPolicy: Codable, Identifiable {
     let id: UUID
     var borrowingLimit: Int
     var returnPeriod: Int
-    var reissuePeriod: Int
+//    var reissuePeriod: Int
     var fineAmount: Int
-    var gracePeriod: Int
-    var maxFine: Int
     var lastUpdated: Date
     
     enum CodingKeys: String, CodingKey {
         case id
         case borrowingLimit = "borrowing_limit"
         case returnPeriod = "return_period"
-        case reissuePeriod = "reissue_period"
+//        case reissuePeriod = "reissue_period"
         case fineAmount = "fine_amount"
-        case gracePeriod = "grace_period"
-        case maxFine = "max_fine"
         case lastUpdated = "last_updated"
     }
 }
@@ -328,6 +324,90 @@ struct LibraryTiming: Codable, Identifiable {
         case sundayOpeningTime = "sunday_opening_time"
         case sundayClosingTime = "sunday_closing_time"
         case lastUpdated = "last_updated"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        lastUpdated = try container.decode(Date.self, forKey: .lastUpdated)
+        
+        // Parse time strings for time fields
+        let weekdayOpeningTimeString = try container.decode(String.self, forKey: .weekdayOpeningTime)
+        let weekdayClosingTimeString = try container.decode(String.self, forKey: .weekdayClosingTime)
+        let sundayOpeningTimeString = try container.decode(String.self, forKey: .sundayOpeningTime)
+        let sundayClosingTimeString = try container.decode(String.self, forKey: .sundayClosingTime)
+        
+        // Convert Supabase time format (HH:MM:SS) to Date
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        formatter.timeZone = TimeZone.current  // Use local timezone instead of GMT
+        
+        // Set default times in case parsing fails
+        let calendar = Calendar.current
+        var defaultDate = calendar.startOfDay(for: Date())
+        
+        if let date = formatter.date(from: weekdayOpeningTimeString) {
+            weekdayOpeningTime = date
+        } else {
+            weekdayOpeningTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: defaultDate) ?? defaultDate
+        }
+        
+        if let date = formatter.date(from: weekdayClosingTimeString) {
+            weekdayClosingTime = date
+        } else {
+            weekdayClosingTime = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: defaultDate) ?? defaultDate
+        }
+        
+        if let date = formatter.date(from: sundayOpeningTimeString) {
+            sundayOpeningTime = date
+        } else {
+            sundayOpeningTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: defaultDate) ?? defaultDate
+        }
+        
+        if let date = formatter.date(from: sundayClosingTimeString) {
+            sundayClosingTime = date
+        } else {
+            sundayClosingTime = calendar.date(bySettingHour: 16, minute: 0, second: 0, of: defaultDate) ?? defaultDate
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(lastUpdated, forKey: .lastUpdated)
+        
+        // Convert Date to Supabase time format (HH:MM:SS)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        formatter.timeZone = TimeZone.current  // Use local timezone instead of GMT
+        
+        let weekdayOpeningTimeString = formatter.string(from: weekdayOpeningTime)
+        let weekdayClosingTimeString = formatter.string(from: weekdayClosingTime)
+        let sundayOpeningTimeString = formatter.string(from: sundayOpeningTime)
+        let sundayClosingTimeString = formatter.string(from: sundayClosingTime)
+        
+        try container.encode(weekdayOpeningTimeString, forKey: .weekdayOpeningTime)
+        try container.encode(weekdayClosingTimeString, forKey: .weekdayClosingTime)
+        try container.encode(sundayOpeningTimeString, forKey: .sundayOpeningTime)
+        try container.encode(sundayClosingTimeString, forKey: .sundayClosingTime)
+    }
+    
+    init(id: UUID = UUID(),
+         weekdayOpeningTime: Date? = nil,
+         weekdayClosingTime: Date? = nil,
+         sundayOpeningTime: Date? = nil,
+         sundayClosingTime: Date? = nil,
+         lastUpdated: Date = Date()) {
+        self.id = id
+        self.lastUpdated = lastUpdated
+        
+        let calendar = Calendar.current
+        let defaultDate = calendar.startOfDay(for: Date())
+        
+        self.weekdayOpeningTime = weekdayOpeningTime ?? calendar.date(bySettingHour: 9, minute: 0, second: 0, of: defaultDate)!
+        self.weekdayClosingTime = weekdayClosingTime ?? calendar.date(bySettingHour: 20, minute: 0, second: 0, of: defaultDate)!
+        self.sundayOpeningTime = sundayOpeningTime ?? calendar.date(bySettingHour: 10, minute: 0, second: 0, of: defaultDate)!
+        self.sundayClosingTime = sundayClosingTime ?? calendar.date(bySettingHour: 16, minute: 0, second: 0, of: defaultDate)!
     }
 }
 

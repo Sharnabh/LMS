@@ -15,58 +15,68 @@ struct QRScanner: View {
     @State private var isProcessing = false
     @State private var lastProcessedCode = ""
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
+    
+    // Add flag to check if this is presented as a fullScreenCover
+    var isPresentedAsFullScreen: Bool = false
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                ScannerView(scannedCode: $scannedCode, alertItem: $alertItem)
-                    .onAppear {
-                        // Reset the scanned code when scanner appears
-                        scannedCode = ""
-                        lastProcessedCode = ""
-                    }
-                
-                VStack {
-                    Spacer()
-                    Text("Scan Library QR Code")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(Color.black.opacity(0.7))
-                        .cornerRadius(8)
-                    Spacer().frame(height: 100)
+        let content = ZStack {
+            ScannerView(scannedCode: $scannedCode, alertItem: $alertItem)
+                .onAppear {
+                    // Reset the scanned code when scanner appears
+                    scannedCode = ""
+                    lastProcessedCode = ""
                 }
+            
+            VStack {
+                Spacer()
+                Text("Scan Library QR Code")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.black.opacity(0.7))
+                    .cornerRadius(8)
+                Spacer().frame(height: 100)
             }
-            .edgesIgnoringSafeArea(.all)
-            .onChange(of: scannedCode) { newValue in
-                // Only process if we have a non-empty code, we're not already processing,
-                // and this isn't the same code we just processed
-                if !newValue.isEmpty && !isProcessing && newValue != lastProcessedCode {
-                    lastProcessedCode = newValue
-                    isProcessing = true
-                    processQRCode(newValue)
+        }
+        .edgesIgnoringSafeArea(.all)
+        .onChange(of: scannedCode) { newValue in
+            // Only process if we have a non-empty code, we're not already processing,
+            // and this isn't the same code we just processed
+            if !newValue.isEmpty && !isProcessing && newValue != lastProcessedCode {
+                lastProcessedCode = newValue
+                isProcessing = true
+                processQRCode(newValue)
+            }
+        }
+        .alert(item: $alertItem) { alertItem in
+            Alert(
+                title: Text(alertItem.title),
+                message: Text(alertItem.message),
+                dismissButton: .default(Text("OK")) {
+                    // After dismissing an alert, allow processing again
+                    isProcessing = false
                 }
+            )
+        }
+        .sheet(isPresented: $isShowingBookInfo, onDismiss: {
+            // After showing book info, prepare for a new scan
+            prepareForNewScan()
+        }) {
+            if let bookInfo = bookInfo {
+                BookInfoView(bookInfo: bookInfo)
             }
-            .alert(item: $alertItem) { alertItem in
-                Alert(
-                    title: Text(alertItem.title),
-                    message: Text(alertItem.message),
-                    dismissButton: .default(Text("OK")) {
-                        // After dismissing an alert, allow processing again
-                        isProcessing = false
-                    }
-                )
-            }
-            .sheet(isPresented: $isShowingBookInfo, onDismiss: {
-                // After showing book info, prepare for a new scan
-                prepareForNewScan()
-            }) {
-                if let bookInfo = bookInfo {
-                    BookInfoView(bookInfo: bookInfo)
-                }
-            }
-            .navigationBarItems(trailing: Button("Close") {
-                dismiss()
+        }
+        
+        // Only wrap in NavigationView if not presented as fullScreenCover
+        if isPresentedAsFullScreen {
+            return AnyView(content)
+        } else {
+            return AnyView(NavigationView {
+                content.navigationBarItems(trailing: Button("Close") {
+                    dismiss()
+                })
             })
         }
     }
@@ -127,5 +137,5 @@ struct QRScanner: View {
 }
 
 #Preview {
-    QRScanner()
+    QRScanner(isPresentedAsFullScreen: false)
 }

@@ -67,7 +67,7 @@ struct IssueHistoryView: View {
         }
         .fullScreenCover(isPresented: $showingQRScanner) {
             NavigationView {
-                QRScanner()
+                QRScanner(isPresentedAsFullScreen: true)
                     .navigationBarItems(trailing: Button("Close") {
                         showingQRScanner = false
                     })

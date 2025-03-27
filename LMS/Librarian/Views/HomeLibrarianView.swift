@@ -264,12 +264,20 @@ struct HomeLibrarianView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink {
-                        AdminProfileView()
-                    } label: {
-                        Image(systemName: "person.crop.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(.blue)
+                    HStack(spacing: 16) {
+                        NavigationLink(destination: ShelfLocationsView()) {
+                            Image(systemName: "mappin.and.ellipse")
+                                .imageScale(.large)
+                                .foregroundColor(.blue)
+                        }
+                        
+                        NavigationLink {
+                            AdminProfileView()
+                        } label: {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 22))
+                                .foregroundColor(.blue)
+                        }
                     }
                 }
             }

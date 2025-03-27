@@ -12,6 +12,7 @@ struct EditLibraryTimingsView: View {
     @State private var timings: LibraryTiming
     let viewModel: LibraryTimingsViewModel
     @Binding var isPresented: Bool
+    @State private var isSaving = false
     
     init(timings: LibraryTiming, viewModel: LibraryTimingsViewModel, isPresented: Binding<Bool>) {
         _timings = State(initialValue: timings)
@@ -33,15 +34,12 @@ struct EditLibraryTimingsView: View {
                             Spacer()
                             
                             Button(action: {
-                                // Reset to default weekday timings
-                                timings = LibraryTiming(
-                                    id: timings.id,
-                                    weekdayOpeningTime: Date(timeIntervalSince1970: 9 * 3600),
-                                    weekdayClosingTime: Date(timeIntervalSince1970: 20 * 3600),
-                                    sundayOpeningTime: timings.sundayOpeningTime,
-                                    sundayClosingTime: timings.sundayClosingTime,
-                                    lastUpdated: Date()
-                                )
+                                // Reset to default weekday timings using calendar
+                                let calendar = Calendar.current
+                                let defaultDate = calendar.startOfDay(for: Date())
+                                
+                                timings.weekdayOpeningTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: defaultDate)!
+                                timings.weekdayClosingTime = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: defaultDate)!
                             }) {
                                 Text("Reset")
                                     .font(.system(size: 17))
@@ -74,15 +72,12 @@ struct EditLibraryTimingsView: View {
                             Spacer()
                             
                             Button(action: {
-                                // Reset to default sunday timings
-                                timings = LibraryTiming(
-                                    id: timings.id,
-                                    weekdayOpeningTime: timings.weekdayOpeningTime,
-                                    weekdayClosingTime: timings.weekdayClosingTime,
-                                    sundayOpeningTime: Date(timeIntervalSince1970: 10 * 3600),
-                                    sundayClosingTime: Date(timeIntervalSince1970: 16 * 3600),
-                                    lastUpdated: Date()
-                                )
+                                // Reset to default sunday timings using calendar
+                                let calendar = Calendar.current
+                                let defaultDate = calendar.startOfDay(for: Date())
+                                
+                                timings.sundayOpeningTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: defaultDate)!
+                                timings.sundayClosingTime = calendar.date(bySettingHour: 16, minute: 0, second: 0, of: defaultDate)!
                             }) {
                                 Text("Reset")
                                     .font(.system(size: 17))
@@ -118,15 +113,60 @@ struct EditLibraryTimingsView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
+                        isSaving = true
                         Task {
                             await viewModel.updateLibraryTimings(timings)
-                            isPresented = false
+                            await MainActor.run {
+                                isSaving = false
+                                isPresented = false
+                            }
                         }
                     }
                     .font(.system(size: 17, weight: .semibold))
+                    .disabled(isSaving)
+                    .opacity(isSaving ? 0.5 : 1.0)
+                }
+            }
+            .overlay {
+                if isSaving {
+                    ProgressView("Saving...")
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(8)
+                        .shadow(radius: 4)
                 }
             }
         }
     }
 }
 
+struct TimingEditRow: View {
+    let title: String
+    @Binding var time: Date
+    let isEditing: Bool
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 17))
+                .foregroundColor(.primary)
+            
+            Spacer()
+            
+            if isEditing {
+                DatePicker("", selection: $time, displayedComponents: .hourAndMinute)
+                    .labelsHidden()
+                    .transition(.opacity)
+            } else {
+                Text(time, style: .time)
+                    .font(.system(size: 17))
+                    .foregroundColor(.secondary)
+                    .transition(.opacity)
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .animation(.easeInOut, value: isEditing)
+    }
+}

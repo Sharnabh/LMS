@@ -9,63 +9,8 @@ import Foundation
 import SwiftUI
 import Supabase
 
-class LibraryTimingsViewModel: ObservableObject {
-    @Published var libraryTimings: LibraryTiming?
-    @Published var isLoading = false
-    @Published var error: Error?
-    private var dataController: SupabaseDataController = SupabaseDataController()
-    
-    func fetchLibraryTimings() async {
-        isLoading = true
-        do {
-            let query = dataController.client
-                .from("library_timings")
-                .select()
-                .limit(1)
-                .single()
-            
-            let response: LibraryTiming = try await query.execute().value
-            await MainActor.run {
-                self.libraryTimings = response
-                self.isLoading = false
-            }
-        } catch {
-            await MainActor.run {
-                self.error = error
-                self.isLoading = false
-            }
-        }
-    }
-    
-    func updateLibraryTimings(_ timings: LibraryTiming) async {
-        isLoading = true
-        do {
-            let query = try dataController.client
-                .from("library_timings")
-                .update(timings)
-                .eq("id", value: timings.id)
-            
-            let response: LibraryTiming = try await query.execute().value
-            await MainActor.run {
-                self.libraryTimings = response
-                self.isLoading = false
-            }
-        } catch {
-            await MainActor.run {
-                self.error = error
-                self.isLoading = false
-            }
-        }
-    }
-}
-
 struct PoliciesView: View {
-    @State private var borrowingLimit = 4
-    @State private var returnPeriod = 14
-    @State private var reissuePeriod = 7
-    @State private var fineAmount = 10
-    @State private var gracePeriod = 3
-    @State private var maxFine = 500
+    @StateObject private var viewModel = LibraryPoliciesViewModel()
     
     var body: some View {
         NavigationView {
@@ -88,11 +33,7 @@ struct PoliciesView: View {
                                 )
                             }
                             
-                            NavigationLink(destination: BorrowingRulesView(
-                                borrowingLimit: $borrowingLimit,
-                                returnPeriod: $returnPeriod,
-                                reissuePeriod: $reissuePeriod
-                            )) {
+                            NavigationLink(destination: IssuingRulesView()) {
                                 PolicyCard(
                                     title: "Borrowing Rules",
                                     description: "Guidelines for borrowing books and resources",
@@ -110,11 +51,7 @@ struct PoliciesView: View {
                                 )
                             }
                             
-                            NavigationLink(destination: LateFinesView(
-                                fineAmount: $fineAmount,
-                                gracePeriod: $gracePeriod,
-                                maxFine: $maxFine
-                            )) {
+                            NavigationLink(destination: LateFinesView()) {
                                 PolicyCard(
                                     title: "Late Fines",
                                     description: "Manage late return charges and penalties",
@@ -135,9 +72,9 @@ struct PoliciesView: View {
                         
                         VStack(spacing: 16) {
                             NavigationLink(destination: MemberBorrowingRulesView(
-                                borrowingLimit: borrowingLimit,
-                                returnPeriod: returnPeriod,
-                                reissuePeriod: reissuePeriod
+                                borrowingLimit: viewModel.borrowingLimit,
+                                returnPeriod: viewModel.returnPeriod,
+                                reissuePeriod: 7 // Default value since this is no longer in our table
                             )) {
                                 PolicyCard(
                                     title: "Borrowing Rules",
@@ -148,9 +85,9 @@ struct PoliciesView: View {
                             }
                             
                             NavigationLink(destination: MemberLateFinesView(
-                                fineAmount: fineAmount,
-                                gracePeriod: gracePeriod,
-                                maxFine: maxFine
+                                fineAmount: viewModel.fineAmount,
+                                gracePeriod: 3, // Default value since this is no longer in our table
+                                maxFine: viewModel.lostBookFine
                             )) {
                                 PolicyCard(
                                     title: "Late Fees",
@@ -171,22 +108,18 @@ struct PoliciesView: View {
                     }
                 }
                 .padding(.vertical)
-                }
+            }
             .navigationTitle("Policies")
             .navigationBarTitleDisplayMode(.large)
             .background(Color(.systemGroupedBackground))
+            .onAppear {
+                Task {
+                    await viewModel.fetchPolicies()
+                }
+            }
         }
     }
 }
-
-
-
-
-
-
-
-
-
 
 struct PolicyPoint: View {
     let title: String
@@ -261,10 +194,6 @@ struct PolicyCard: View {
     }
 }
 
-
-
-
-
 struct MemberBorrowingRulesView: View {
     let borrowingLimit: Int
     let returnPeriod: Int
@@ -284,7 +213,7 @@ struct MemberBorrowingRulesView: View {
                             
                             Spacer()
                             
-                              .foregroundColor(.secondary)
+                                .foregroundColor(.secondary)
                         }
                         
                         VStack(alignment: .leading, spacing: 12) {
@@ -319,7 +248,7 @@ struct MemberBorrowingRulesView: View {
                             
                             Spacer()
                             
-                              .foregroundColor(.secondary)
+                                .foregroundColor(.secondary)
                         }
                         
                         VStack(alignment: .leading, spacing: 12) {
@@ -354,7 +283,7 @@ struct MemberBorrowingRulesView: View {
                             
                             Spacer()
                             
-                               .foregroundColor(.secondary)
+                                .foregroundColor(.secondary)
                         }
                         
                         VStack(alignment: .leading, spacing: 12) {
@@ -434,37 +363,37 @@ struct MemberLateFinesView: View {
                     .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                     
                     // Grace Period Card
-//                    VStack(alignment: .leading, spacing: 16) {
-//                        HStack {
-//                            Text("Grace Period")
-//                                .font(.headline)
-//                                .foregroundColor(.primary)
-//                            
-//                            Spacer()
-//                        }
-//                        
-//                        VStack(alignment: .leading, spacing: 12) {
-//                            HStack {
-//                                Text("Grace period:")
-//                                    .font(.subheadline)
-//                                    .foregroundColor(.secondary)
-//                                
-//                                Spacer()
-//                                
-//                                Text("\(gracePeriod) days")
-//                                    .font(.subheadline)
-//                                    .foregroundColor(.blue)
-//                            }
-//                            
-//                            Text("\(gracePeriod) days grace period before fine applies")
-//                                .font(.subheadline)
-//                                .foregroundColor(.secondary)
-//                        }
-//                    }
-//                    .padding()
-//                    .background(Color(.systemBackground))
-//                    .cornerRadius(16)
-//                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    //                    VStack(alignment: .leading, spacing: 16) {
+                    //                        HStack {
+                    //                            Text("Grace Period")
+                    //                                .font(.headline)
+                    //                                .foregroundColor(.primary)
+                    //
+                    //                            Spacer()
+                    //                        }
+                    //
+                    //                        VStack(alignment: .leading, spacing: 12) {
+                    //                            HStack {
+                    //                                Text("Grace period:")
+                    //                                    .font(.subheadline)
+                    //                                    .foregroundColor(.secondary)
+                    //
+                    //                                Spacer()
+                    //
+                    //                                Text("\(gracePeriod) days")
+                    //                                    .font(.subheadline)
+                    //                                    .foregroundColor(.blue)
+                    //                            }
+                    //
+                    //                            Text("\(gracePeriod) days grace period before fine applies")
+                    //                                .font(.subheadline)
+                    //                                .foregroundColor(.secondary)
+                    //                        }
+                    //                    }
+                    //                    .padding()
+                    //                    .background(Color(.systemBackground))
+                    //                    .cornerRadius(16)
+                    //                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                     
                     // Maximum Fine Card
                     VStack(alignment: .leading, spacing: 16) {
@@ -509,235 +438,7 @@ struct MemberLateFinesView: View {
     }
 }
 
-struct LateFinesView: View {
-    @State private var isEditing = false
-    @Binding var fineAmount: Int
-    @Binding var gracePeriod: Int
-    @Binding var maxFine: Int
-    
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Policy Cards
-                VStack(spacing: 16) {
-                    // Fine Amount Card
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Text("Fine Amount")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            
-                            Spacer()
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("Daily fine amount:")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                
-                                Spacer()
-                                
-                                Text("₹\(fineAmount)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.blue)
-                            }
-                            
-                            Text("Fine of ₹\(fineAmount) per day for late returns")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding()
-                    .background(Color(.systemBackground))
-                    .cornerRadius(16)
-                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-                    
-                  
-                        
-                        // Maximum Fine Card
-                                            VStack(alignment: .leading, spacing: 16) {
-                                                HStack {
-                                                    Text("Lost Book Fine")
-                                                        .font(.headline)
-                                                        .foregroundColor(.primary)
-                        
-                                                    Spacer()
-                                                }
-                        
-                                                VStack(alignment: .leading, spacing: 12) {
-                                                    HStack {
-                                                        Text("Maximum fine amount:")
-                                                            .font(.subheadline)
-                                                            .foregroundColor(.secondary)
-                        
-                                                        Spacer()
-                        
-                                                        Text("₹\(maxFine)")
-                                                            .font(.subheadline)
-                                                            .foregroundColor(.blue)
-                                                    }
-                        
-                                                    Text("Maximum fine capped at ₹\(maxFine) per book")
-                                                        .font(.subheadline)
-                                                        .foregroundColor(.secondary)
-                                                }
-                                            }
-                                            .padding()
-                                            .background(Color(.systemBackground))
-                                            .cornerRadius(16)
-                                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-                    }
-                    .padding(.horizontal)
-                }
-                .padding(.top)
-            }
-            .navigationTitle("Late Fines")
-            .navigationBarTitleDisplayMode(.inline)
-            .background(Color(.systemGroupedBackground))
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        isEditing = true
-                    }) {
-                        Text("Edit")
-                            .foregroundColor(.blue)
-                    }
-                }
-            }
-            .sheet(isPresented: $isEditing) {
-                EditLateFinesView(
-                    fineAmount: $fineAmount,
-                    gracePeriod: $gracePeriod,
-                    maxFine: $maxFine,
-                    isPresented: $isEditing
-                )
-            }
-        }
-    }
-    
-    struct EditLateFinesView: View {
-        @Binding var fineAmount: Int
-        @Binding var gracePeriod: Int
-        @Binding var maxFine: Int
-        @Binding var isPresented: Bool
-        
-        var body: some View {
-            NavigationView {
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Fine Amount Card
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack {
-                                Text("Fine Amount")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                
-                                Spacer()
-                            }
-                            
-                            HStack {
-                                Text("Daily fine amount:")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                
-                                Spacer()
-                                
-                                Stepper("₹\(fineAmount)", value: $fineAmount, in: 1...100)
-                                    .font(.subheadline)
-                                    .foregroundColor(.blue)
-                            }
-                            .padding()
-                            .background(Color(.tertiarySystemBackground))
-                            .cornerRadius(8)
-                        }
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-                        
-                        // Grace Period Card
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack {
-                                Text("Grace Period")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                
-                                Spacer()
-                            }
-                            
-                            HStack {
-                                Text("Grace period:")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                
-                                Spacer()
-                                
-                                Stepper("\(gracePeriod) days", value: $gracePeriod, in: 0...7)
-                                    .font(.subheadline)
-                                    .foregroundColor(.blue)
-                            }
-                            .padding()
-                            .background(Color(.tertiarySystemBackground))
-                            .cornerRadius(8)
-                        }
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-                        
-                        //Maximum Fine Card
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack {
-                                Text("Lost Book Fine")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                
-                                Spacer()
-                            }
-                            
-                            HStack {
-                                Text("Maximum fine amount:")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                
-                                Spacer()
-                                
-                                Stepper("₹\(maxFine)", value: $maxFine, in: 100...2000, step: 100)
-                                    .font(.subheadline)
-                                    .foregroundColor(.blue)
-                            }
-                            .padding()
-                            .background(Color(.tertiarySystemBackground))
-                            .cornerRadius(8)
-                        }
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-                    }
-                    .padding()
-                }
-                .navigationTitle("Edit Late Fines")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Cancel") {
-                            isPresented = false
-                        }
-                    }
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Save") {
-                            isPresented = false
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    
-    #Preview {
-        PoliciesView()
-    }
+#Preview {
+    PoliciesView()
+}
 

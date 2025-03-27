@@ -5,6 +5,12 @@ enum QRParseError: Error {
     case invalidJSON
     case missingFields
     case expired
+    case invalidAction
+}
+
+enum QRCodeType {
+    case issue
+    case bookReturn
 }
 
 struct QRCodeParser {
@@ -14,28 +20,88 @@ struct QRCodeParser {
         if let jsonData = qrContent.data(using: .utf8) {
             do {
                 let decoder = JSONDecoder()
-                // Create a custom decoder to handle string timestamps
                 decoder.keyDecodingStrategy = .useDefaultKeys
                 decoder.dateDecodingStrategy = .iso8601
                 
-                let bookInfo = try decoder.decode(BookInfo.self, from: jsonData)
-                
-                // Validate required fields
-                if bookInfo.bookIds.isEmpty || bookInfo.memberId.isEmpty {
-                    return .failure(.missingFields)
+                // First try to determine the QR code type
+                struct QRTypeCheck: Codable {
+                    let action: String?
+                    let bookIssue: BookIssueData?
+                    
+                    struct BookIssueData: Codable {
+                        let issueDate: String
+                        let bookId: String
+                        let id: String
+                        let status: String
+                        let returnDate: String
+                        let memberId: String
+                    }
                 }
                 
-                // Check if QR code is expired
-                if !bookInfo.isValid {
-                    return .failure(.expired)
+                // Try parsing as return QR code first
+                struct ReturnQRData: Codable {
+                    let issueId: String
+                    let action: String
+                    let timestamp: String
                 }
                 
-                return .success(bookInfo)
+                if let returnData = try? decoder.decode(ReturnQRData.self, from: jsonData) {
+                    if returnData.action == "return" {
+                        // This is a return QR code, we need to fetch the issue details
+                        return .failure(.invalidFormat) // We'll handle this in the return flow
+                    }
+                }
+                
+                // If not a return QR, try parsing as issue QR
+                struct IssueQRData: Codable {
+                    struct BookIssueData: Codable {
+                        let issueDate: String
+                        let bookId: String
+                        let id: String
+                        let status: String
+                        let returnDate: String
+                        let memberId: String
+                    }
+                    
+                    let bookIssue: BookIssueData
+                    let expirationDate: String
+                    let timestamp: String
+                    let isValid: Bool
+                }
+                
+                if let qrData = try? decoder.decode(IssueQRData.self, from: jsonData) {
+                    // Convert BookIssue to BookInfo format
+                    let bookInfo = BookInfo(
+                        bookIds: [qrData.bookIssue.bookId],
+                        memberId: qrData.bookIssue.memberId,
+                        issueStatus: qrData.bookIssue.status,
+                        issueDate: qrData.bookIssue.issueDate,
+                        returnDate: qrData.bookIssue.returnDate,
+                        expirationDate: TimeInterval(qrData.expirationDate) ?? 0,
+                        timestamp: TimeInterval(qrData.timestamp) ?? 0,
+                        isValid: qrData.isValid
+                    )
+                    
+                    // Validate required fields
+                    if bookInfo.bookIds.isEmpty || bookInfo.memberId.isEmpty {
+                        return .failure(.missingFields)
+                    }
+                    
+                    // Check if QR code is expired
+                    if !bookInfo.isValid {
+                        return .failure(.expired)
+                    }
+                    
+                    return .success(bookInfo)
+                }
+                
+                // If JSON parsing fails, try text format
+                return parseTextFormat(from: qrContent)
+                
             } catch {
                 print("JSON parsing error: \(error)")
                 // If JSON parsing fails, try text format parsing
-                let textResult = parseTextFormat(from: qrContent)
-                return textResult
+                return parseTextFormat(from: qrContent)
             }
         }
         

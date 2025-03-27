@@ -38,6 +38,51 @@ struct HomeView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    // Analytics Header
+                    Text("Analytics")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal)
+                    
+                    // Four Cards Grid
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 16),
+                        GridItem(.flexible(), spacing: 16)
+                    ], spacing: 16) {
+                        // Card 1
+                        HomeCard(
+                            title: "Total Books",
+                            value: "1,234",
+                            icon: "book.fill",
+                            color: .blue
+                        )
+                        
+                        // Card 2
+                        HomeCard(
+                            title: "All Members",
+                            value: "567",
+                            icon: "person.2.fill",
+                            color: .green
+                        )
+                        
+                        // Card 3
+                        HomeCard(
+                            title: "Revenue Collected",
+                            value: "120",
+                            icon: "indianrupeesign",
+                            color: .red
+                        )
+                        
+                        // Card 4
+                        HomeCard(
+                            title: "Today's Returns",
+                            value: "45",
+                            icon: "return",
+                            color: .orange
+                        )
+                    }
+                    .padding(.horizontal)
+                    
                     // Announcements Header
                     HStack {
                         Text("Announcements")
@@ -122,6 +167,41 @@ struct HomeView: View {
                 )
             }
         }
+    }
+}
+
+struct HomeCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundColor(color)
+                
+                Spacer()
+            }
+            
+            Spacer()
+            
+            Text(value)
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: 150)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
     }
 }
 

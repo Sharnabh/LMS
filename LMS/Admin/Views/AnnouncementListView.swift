@@ -1,5 +1,12 @@
 import SwiftUI
 
+// Move enum outside and make it accessible
+enum AnnouncementAction {
+    case archive
+    case restore(AnnouncementModel)
+    case edit(AnnouncementModel)
+}
+
 struct AnnouncementListView: View {
     @Environment(\.dismiss) private var dismiss
     let type: HomeView.AnnouncementListType
@@ -73,7 +80,7 @@ struct AnnouncementListView: View {
         }
     }
     
-    private func handleAction(_ action: AnnouncementRow.AnnouncementAction, for announcement: AnnouncementModel) {
+    private func handleAction(_ action: AnnouncementAction, for announcement: AnnouncementModel) {
         Task { @MainActor in
             isLoading = true
             errorMessage = nil
@@ -157,11 +164,26 @@ struct AnnouncementRow: View {
     @State private var showingEditSheet = false
     @State private var showingRestoreSheet = false
     
-    enum AnnouncementAction {
-        case archive
-        case restore(AnnouncementModel)
-        case edit(AnnouncementModel)
+    init(
+        announcement: AnnouncementModel,
+        type: HomeView.AnnouncementListType,
+        announcementStore: AnnouncementStore,
+        isLoading: Binding<Bool>,
+        onAction: @escaping (AnnouncementAction) -> Void
+    ) {
+        self.announcement = announcement
+        self.type = type
+        self.announcementStore = announcementStore
+        self._isLoading = isLoading
+        self.onAction = onAction
     }
+    
+    private var dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
+    }()
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -213,9 +235,21 @@ struct AnnouncementRow: View {
                 Spacer()
                 
                 if type == .scheduled {
-                    Label(announcement.expiryDate.formatted(date: .abbreviated, time: .shortened), systemImage: "calendar")
-                        .font(.caption)
-                        .foregroundColor(.orange)
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Label {
+                            Text(dateFormatter.string(from: announcement.startDate))
+                        } icon: {
+                            Image(systemName: "calendar.badge.plus")
+                        }
+                        
+                        Label {
+                            Text(dateFormatter.string(from: announcement.expiryDate))
+                        } icon: {
+                            Image(systemName: "calendar.badge.minus")
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundColor(.orange)
                 }
             }
         }

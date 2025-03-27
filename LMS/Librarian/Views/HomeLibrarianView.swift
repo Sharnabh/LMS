@@ -77,89 +77,241 @@ struct HomeLibrarianView: View {
                         LazyVGrid(columns: [
                             GridItem(.flexible()),
                             GridItem(.flexible())
-                        ], spacing: 16) {
+                        ], spacing: 12) {
                             // Total Books Card
-                            VStack {
+                            VStack(spacing: 12) {
                                 Image(systemName: "books.vertical.fill")
-                                    .font(.system(size: 40))
+                                    .font(.system(size: 44))
                                     .foregroundColor(.blue)
+                                    .frame(width: 100, height: 100)
+                                    .background(
+                                        Circle()
+                                            .fill(Color.blue.opacity(0.2))
+                                            .blur(radius: 2)
+                                    )
                                 Text("\(bookStore.books.count)")
-                                    .font(.title)
-                                    .fontWeight(.bold)
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(.primary)
                                 Text("Total Books")
-                                    .font(.subheadline)
+                                    .font(.system(size: 15))
                                     .foregroundColor(.secondary)
                             }
                             .frame(maxWidth: .infinity)
                             .aspectRatio(1, contentMode: .fit)
-                            .padding(.vertical, 12)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                            .padding(.vertical, 16)
+                            .background(
+                                ZStack {
+                                    // Glassmorphism background
+                                    Color.white.opacity(0.2)
+                                    Color.white.opacity(0.1)
+                                        .blur(radius: 8)
+                                    
+                                    // Subtle gradient overlay
+                                    LinearGradient(
+                                        colors: [
+                                            Color.blue.opacity(0.1),
+                                            Color.blue.opacity(0.05)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                }
+                            )
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(16)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.blue.opacity(0.5),
+                                                Color.blue.opacity(0.2)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            )
+                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                             
                             // Available Books Card
-                            VStack {
-                                Image(systemName: "book.closed.fill")
-                                    .font(.system(size: 40))
+                            VStack(spacing: 12) {
+                                Image(systemName: "person.3.fill")
+                                    .font(.system(size: 44))
                                     .foregroundColor(.green)
+                                    .frame(width: 100, height: 100)
+                                    .background(
+                                        Circle()
+                                            .fill(Color.green.opacity(0.2))
+                                            .blur(radius: 2)
+                                    )
                                 Text("\(bookStore.books.filter { $0.availableCopies > 0 }.count)")
-                                    .font(.title)
-                                    .fontWeight(.bold)
-                                Text("Available")
-                                    .font(.subheadline)
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(.primary)
+                                Text("Total Members")
+                                    .font(.system(size: 15))
                                     .foregroundColor(.secondary)
                             }
                             .frame(maxWidth: .infinity)
                             .aspectRatio(1, contentMode: .fit)
-                            .padding(.vertical, 12)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                            .padding(.vertical, 16)
+                            .background(
+                                ZStack {
+                                    // Glassmorphism background
+                                    Color.white.opacity(0.2)
+                                    Color.white.opacity(0.1)
+                                        .blur(radius: 8)
+                                    
+                                    // Subtle gradient overlay
+                                    LinearGradient(
+                                        colors: [
+                                            Color.green.opacity(0.1),
+                                            Color.green.opacity(0.05)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                }
+                            )
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(16)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.green.opacity(0.5),
+                                                Color.green.opacity(0.2)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            )
+                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                             
                             // Needs Shelf Location Card
-                            VStack {
-                                Image(systemName: "mappin.slash.fill")
-                                    .font(.system(size: 40))
+                            VStack(spacing: 12) {
+                                Image(systemName: "book.closed.fill")
+                                    .font(.system(size: 44))
                                     .foregroundColor(.orange)
+                                    .frame(width: 100, height: 100)
+                                    .background(
+                                        Circle()
+                                            .fill(Color.orange.opacity(0.2))
+                                            .blur(radius: 2)
+                                    )
                                 Text("\(booksWithEmptyShelfLocation.count)")
-                                    .font(.title)
-                                    .fontWeight(.bold)
-                                Text("Needs Location")
-                                    .font(.subheadline)
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(.primary)
+                                Text("Issued Books")
+                                    .font(.system(size: 15))
                                     .foregroundColor(.secondary)
                             }
                             .frame(maxWidth: .infinity)
                             .aspectRatio(1, contentMode: .fit)
-                            .padding(.vertical, 12)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                            .padding(.vertical, 16)
+                            .background(
+                                ZStack {
+                                    // Glassmorphism background
+                                    Color.white.opacity(0.2)
+                                    Color.white.opacity(0.1)
+                                        .blur(radius: 8)
+                                    
+                                    // Subtle gradient overlay
+                                    LinearGradient(
+                                        colors: [
+                                            Color.orange.opacity(0.1),
+                                            Color.orange.opacity(0.05)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                }
+                            )
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(16)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.orange.opacity(0.5),
+                                                Color.orange.opacity(0.2)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            )
+                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                             
                             // Recently Added Card
-                            VStack {
-                                Image(systemName: "clock.fill")
-                                    .font(.system(size: 40))
+                            VStack(spacing: 12) {
+                                Image(systemName: "creditcard.fill")
+                                    .font(.system(size: 44))
                                     .foregroundColor(.purple)
+                                    .frame(width: 100, height: 100)
+                                    .background(
+                                        Circle()
+                                            .fill(Color.purple.opacity(0.2))
+                                            .blur(radius: 2)
+                                    )
                                 Text("\(recentBooks.count)")
-                                    .font(.title)
-                                    .fontWeight(.bold)
-                                Text("Recent")
-                                    .font(.subheadline)
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(.primary)
+                                Text("Due Collected")
+                                    .font(.system(size: 15))
                                     .foregroundColor(.secondary)
                             }
                             .frame(maxWidth: .infinity)
                             .aspectRatio(1, contentMode: .fit)
-                            .padding(.vertical, 12)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                            .padding(.vertical, 16)
+                            .background(
+                                ZStack {
+                                    // Glassmorphism background
+                                    Color.white.opacity(0.2)
+                                    Color.white.opacity(0.1)
+                                        .blur(radius: 8)
+                                    
+                                    // Subtle gradient overlay
+                                    LinearGradient(
+                                        colors: [
+                                            Color.purple.opacity(0.1),
+                                            Color.purple.opacity(0.05)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                }
+                            )
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(16)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.purple.opacity(0.5),
+                                                Color.purple.opacity(0.2)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            )
+                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                         }
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, 16)
                         .padding(.top, 8)
                         
-                        // Divider
+                        // Divider with more spacing
                         Divider()
-                            .padding(.vertical, 16)
+                            .padding(.vertical, 20)
                         
                         HStack {
                             Text("Recently Added")

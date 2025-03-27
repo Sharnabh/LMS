@@ -16,7 +16,8 @@ struct AdminProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isEditing = false
     @State private var showingImagePicker = false
-    @AppStorage("isLoggedIn") private var isLoggedIn = true
+    @AppStorage("adminIsLoggedIn") private var adminIsLoggedIn = true
+    @AppStorage("adminEmail") private var adminEmail = ""
     @State private var showingLogoutAlert = false
     
     var body: some View {
@@ -150,7 +151,9 @@ struct AdminProfileView: View {
             .alert("Logout", isPresented: $showingLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Logout", role: .destructive) {
-                    isLoggedIn = false
+                    // Clear authentication state
+                    adminIsLoggedIn = false
+                    adminEmail = ""
                     dismiss()
                 }
             } message: {

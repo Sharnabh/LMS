@@ -11,9 +11,13 @@ struct ContentView: View {
     @State private var selectedRole: UserRole?
     @State private var showMainApp = false
     @State private var showAdminLogin = false
+    @AppStorage("adminIsLoggedIn") private var adminIsLoggedIn = false
+    @AppStorage("adminEmail") private var adminEmail = ""
     
     var body: some View {
-        if showMainApp {
+        if adminIsLoggedIn {
+            MainAppView(userRole: .admin, initialTab: 0)
+        } else if showMainApp {
             MainAppView(userRole: selectedRole ?? .member, initialTab: 0)
         } else if showAdminLogin {
             AdminLoginView(showMainApp: $showMainApp)

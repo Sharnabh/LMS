@@ -27,6 +27,8 @@ struct AdminLoginView: View {
     @State private var requiresOTP = false
     @State private var resendCountdown = 0
     @State private var timer: Timer?
+    @AppStorage("adminIsLoggedIn") private var adminIsLoggedIn = false
+    @AppStorage("adminEmail") private var adminEmail = ""
     
     private let dataController = SupabaseDataController()
     
@@ -311,6 +313,9 @@ struct AdminLoginView: View {
                         // Start countdown timer for resend button when OTP view appears
                         startResendCountdown()
                     } else {
+                        // Store authentication state
+                        adminIsLoggedIn = true
+                        adminEmail = email
                         showMainApp = true
                     }
                 } else {
@@ -339,6 +344,9 @@ struct AdminLoginView: View {
                 isLoading = false
                 
                 if isValid {
+                    // Store authentication state after successful OTP verification
+                    adminIsLoggedIn = true
+                    adminEmail = email
                     showMainApp = true
                 } else {
                     alertTitle = "Error"

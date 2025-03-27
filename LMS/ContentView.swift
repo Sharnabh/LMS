@@ -280,7 +280,6 @@ struct MainAppView: View {
     }
     
     var body: some View {
-        NavigationView {
             TabView(selection: $selectedTab) {
                 HomeView()
                     .tabItem {
@@ -312,7 +311,6 @@ struct MainAppView: View {
             }
             .toolbar(selectedTab == 0 ? .visible : .hidden, for: .navigationBar)
         }
-    }
 }
 
 enum UserRole: String {

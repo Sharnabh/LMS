@@ -11,7 +11,16 @@ struct AddView: View {
     @State private var showAddBookSheet = false
     @State private var showCSVUploadSheet = false
     @State private var scannedCode: String = ""
-    @State private var showingAddSection = true // Toggle between add and view sections
+    @State private var showingAddSection = true
+    @State private var isEditing = false
+    @State private var selectedBooks: Set<LibrarianBook> = []
+    @State private var showSearchBar = false
+    @State private var selectedGenre: String? = nil
+    @State private var searchQuery = ""
+    
+    // Available genres in the project
+    private let genres = ["All", "Science", "Humanities", "Business", "Medicine", "Law",
+                         "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
     
     var body: some View {
         NavigationView {
@@ -20,6 +29,63 @@ struct AddView: View {
                 Color.appBackground.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
+                    if showSearchBar {
+                        // Search bar with filter
+                        VStack(spacing: 0) {
+                            HStack {
+                                HStack {
+                                    Image(systemName: "magnifyingglass")
+                                        .foregroundColor(.gray)
+                                    TextField("Search by title, author, or ISBN...", text: $searchQuery)
+                                        .textFieldStyle(PlainTextFieldStyle())
+                                }
+                                .padding(8)
+                                .background(Color.white)
+                                .cornerRadius(8)
+                                
+                                Menu {
+                                    Button("All", action: { selectedGenre = nil })
+                                    Divider()
+                                    ForEach(genres.dropFirst(), id: \.self) { genre in
+                                        Button(action: { selectedGenre = genre }) {
+                                            HStack {
+                                                Text(genre)
+                                                if selectedGenre == genre {
+                                                    Spacer()
+                                                    Image(systemName: "checkmark")
+                                                }
+                                            }
+                                        }
+                                    }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Text(selectedGenre ?? "All")
+                                            .foregroundColor(.primary)
+                                        Image(systemName: "chevron.down")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                    .padding(8)
+                                    .background(Color.white)
+                                    .cornerRadius(8)
+                                }
+                                
+                                Button("Cancel") {
+                                    withAnimation {
+                                        showSearchBar = false
+                                        searchQuery = ""
+                                        selectedGenre = nil
+                                    }
+                                }
+                                .foregroundColor(.blue)
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                        }
+                        .background(Color.gray.opacity(0.1))
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                    
                     // Toggle between Add and View sections
                     Picker("View Mode", selection: $showingAddSection) {
                         Text("Add Books").tag(true)
@@ -99,8 +165,8 @@ struct AddView: View {
                             }
                         }
                     } else {
-                        // Embedded AllBooksView
-                        AllBooksViewContent()
+                        // Embedded AllBooksView with bindings
+                        AllBooksViewContent(isEditing: $isEditing, selectedBooks: $selectedBooks, searchQuery: $searchQuery, selectedGenre: $selectedGenre)
                             .environmentObject(bookStore)
                     }
                 }
@@ -155,8 +221,24 @@ struct AddView: View {
                             Image(systemName: "plus")
                         }
                     } else {
-                        // Show standard Edit button when in View Books mode
-                        EditButton()
+                        // Show search and edit buttons when in View Books mode
+                        HStack {
+                            if isEditing {
+                                Button(action: { selectAllBooks() }) {
+                                    Image(systemName: selectedBooks.count == bookStore.books.count ? "checkmark.square.fill" : "square")
+                                        .foregroundColor(.blue)
+                                }
+                                Button(action: { deleteSelectedBooks() }) {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(selectedBooks.isEmpty ? .gray : .red)
+                                }
+                                .disabled(selectedBooks.isEmpty)
+                            }
+                            Button(action: { withAnimation { showSearchBar.toggle() } }) {
+                                Image(systemName: "magnifyingglass")
+                            }
+                            Button(isEditing ? "Done" : "Edit") { isEditing.toggle() }
+                        }
                     }
                 }
             }
@@ -206,94 +288,101 @@ struct AddView: View {
             }
         }
     }
+    
+    private func deleteSelectedBooks() {
+        Task {
+            for book in selectedBooks {
+                bookStore.deleteBook(book)
+            }
+            selectedBooks.removeAll()
+            isEditing = false
+        }
+    }
+    
+    private func selectAllBooks() {
+        if selectedBooks.count == bookStore.books.count {
+            // If all books are selected, deselect all
+            selectedBooks.removeAll()
+        } else {
+            // If not all books are selected, select all
+            selectedBooks = Set(bookStore.books)
+        }
+    }
 }
 
 // Extracted content from AllBooksView to be embedded
 struct AllBooksViewContent: View {
     @EnvironmentObject var bookStore: BookStore
-    @State private var searchText = ""
-    @State private var selectedBook: LibrarianBook? = nil
-    @State private var showBookDetails = false
     @State private var isRefreshing = false
-    @State private var selectedGenre: String? = nil
-    @State private var showGenreFilter = false
+    @Binding var isEditing: Bool
+    @Binding var selectedBooks: Set<LibrarianBook>
+    @Binding var searchQuery: String
+    @Binding var selectedGenre: String?
     
-    // Available genres in the project
-    private let genres = ["All", "Science", "Humanities", "Business", "Medicine", "Law",
-                         "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
+    private var filteredBooks: [LibrarianBook] {
+        var books = bookStore.books
+        
+        // Apply genre filter
+        if let genre = selectedGenre {
+            books = books.filter { $0.genre == genre }
+        }
+        
+        // Apply search filter
+        if !searchQuery.isEmpty {
+            books = books.filter { book in
+                book.title.localizedCaseInsensitiveContains(searchQuery) ||
+                book.author.joined(separator: " ").localizedCaseInsensitiveContains(searchQuery) ||
+                book.ISBN.localizedCaseInsensitiveContains(searchQuery)
+            }
+        }
+        
+        return books
+    }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Search bar with filter button
-            HStack {
-                TextField("Search books...", text: $searchText)
-                    .padding(10)
-                    .background(Color.white)
-                    .cornerRadius(8)
-                
-                // Filter button - using standard menu for better HIG compliance
-                Menu {
-                    Button("All", action: { selectedGenre = nil })
-                    
-                    Divider()
-                    
-                    ForEach(genres.dropFirst(), id: \.self) { genre in
-                        Button(action: {
-                            selectedGenre = genre
-                        }) {
-                            HStack {
-                                Text(genre)
-                                if selectedGenre == genre {
-                                    Spacer()
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(selectedGenre ?? "All")
-                            .foregroundColor(.primary)
-                        
-                        Image(systemName: "chevron.down")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                    .padding(8)
-                    .background(Color.white)
-                    .cornerRadius(8)
-                }
+        ScrollView {
+            if isRefreshing {
+                ProgressView("Refreshing...")
+                    .padding()
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .padding(.bottom, 16)
             
-            // Books list
-            ScrollView {
-                if isRefreshing {
-                    ProgressView("Refreshing...")
-                        .padding()
-                }
-                
-                if filteredBooks.isEmpty {
-                    Text("No books found")
-                        .foregroundColor(.secondary)
-                        .italic()
-                        .padding(.top, 50)
-                } else {
-                    LazyVStack(spacing: 0) {
-                        ForEach(filteredBooks) { book in
+            if filteredBooks.isEmpty {
+                Text("No books found")
+                    .foregroundColor(.secondary)
+                    .italic()
+                    .padding(.top, 50)
+            } else {
+                LazyVStack(spacing: 0) {
+                    ForEach(filteredBooks) { book in
+                        HStack {
+                            if isEditing {
+                                Button(action: {
+                                    toggleSelection(for: book)
+                                }) {
+                                    Image(systemName: selectedBooks.contains(book) ? "checkmark.square.fill" : "square")
+                                        .foregroundColor(.blue)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                            
                             NavigationLink(destination: BookDetailedView(bookId: book.id)) {
                                 BookListItemView(book: book)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
+                        .padding(.horizontal, 16)
                     }
                 }
             }
         }
-        .onAppear {
-            refreshBooks()
+        .onAppear { refreshBooks() }
+    }
+    
+    private func toggleSelection(for book: LibrarianBook) {
+        if selectedBooks.contains(book) {
+            selectedBooks.remove(book)
+        } else {
+            selectedBooks.insert(book)
         }
     }
     
@@ -306,26 +395,6 @@ struct AllBooksViewContent: View {
                 isRefreshing = false
             }
         }
-    }
-    
-    // Filtered books based on search text and selected genre
-    private var filteredBooks: [LibrarianBook] {
-        var books = bookStore.books
-        
-        // Apply genre filter if selected
-        if let genre = selectedGenre {
-            books = books.filter { $0.genre == genre }
-        }
-        
-        // Apply search text filter
-        if !searchText.isEmpty {
-            books = books.filter { book in
-                book.title.localizedCaseInsensitiveContains(searchText) ||
-                book.author.joined(separator: " ").localizedCaseInsensitiveContains(searchText)
-            }
-        }
-        
-        return books
     }
 }
 

@@ -75,239 +75,42 @@ struct HomeLibrarianView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         // Quick Stats Cards
                         LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 12) {
+                            GridItem(.flexible(), spacing: 16),
+                            GridItem(.flexible(), spacing: 16)
+                        ], spacing: 16) {
                             // Total Books Card
-                            VStack(spacing: 12) {
-                                Image(systemName: "books.vertical.fill")
-                                    .font(.system(size: 44))
-                                    .foregroundColor(.blue)
-                                    .frame(width: 100, height: 100)
-                                    .background(
-                                        Circle()
-                                            .fill(Color.blue.opacity(0.2))
-                                            .blur(radius: 2)
-                                    )
-                                Text("\(bookStore.books.count)")
-                                    .font(.system(size: 32, weight: .bold))
-                                    .foregroundColor(.primary)
-                                Text("Total Books")
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.secondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .aspectRatio(1, contentMode: .fit)
-                            .padding(.vertical, 16)
-                            .background(
-                                ZStack {
-                                    // Glassmorphism background
-                                    Color.white.opacity(0.2)
-                                    Color.white.opacity(0.1)
-                                        .blur(radius: 8)
-                                    
-                                    // Subtle gradient overlay
-                                    LinearGradient(
-                                        colors: [
-                                            Color.blue.opacity(0.1),
-                                            Color.blue.opacity(0.05)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                }
+                            HomeCard(
+                                title: "Total Books",
+                                value: "\(bookStore.books.count)",
+                                icon: "book.fill",
+                                color: .blue
                             )
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(16)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.blue.opacity(0.5),
-                                                Color.blue.opacity(0.2)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 1
-                                    )
-                            )
-                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                             
-                            // Available Books Card
-                            VStack(spacing: 12) {
-                                Image(systemName: "person.3.fill")
-                                    .font(.system(size: 44))
-                                    .foregroundColor(.green)
-                                    .frame(width: 100, height: 100)
-                                    .background(
-                                        Circle()
-                                            .fill(Color.green.opacity(0.2))
-                                            .blur(radius: 2)
-                                    )
-                                Text("\(bookStore.books.filter { $0.availableCopies > 0 }.count)")
-                                    .font(.system(size: 32, weight: .bold))
-                                    .foregroundColor(.primary)
-                                Text("Total Members")
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.secondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .aspectRatio(1, contentMode: .fit)
-                            .padding(.vertical, 16)
-                            .background(
-                                ZStack {
-                                    // Glassmorphism background
-                                    Color.white.opacity(0.2)
-                                    Color.white.opacity(0.1)
-                                        .blur(radius: 8)
-                                    
-                                    // Subtle gradient overlay
-                                    LinearGradient(
-                                        colors: [
-                                            Color.green.opacity(0.1),
-                                            Color.green.opacity(0.05)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                }
+                            // Total Members Card
+                            HomeCard(
+                                title: "Total Members",
+                                value: "\(bookStore.books.filter { $0.availableCopies > 0 }.count)",
+                                icon: "person.3.fill",
+                                color: .green
                             )
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(16)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.green.opacity(0.5),
-                                                Color.green.opacity(0.2)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 1
-                                    )
-                            )
-                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                             
-                            // Needs Shelf Location Card
-                            VStack(spacing: 12) {
-                                Image(systemName: "book.closed.fill")
-                                    .font(.system(size: 44))
-                                    .foregroundColor(.orange)
-                                    .frame(width: 100, height: 100)
-                                    .background(
-                                        Circle()
-                                            .fill(Color.orange.opacity(0.2))
-                                            .blur(radius: 2)
-                                    )
-                                Text("\(booksWithEmptyShelfLocation.count)")
-                                    .font(.system(size: 32, weight: .bold))
-                                    .foregroundColor(.primary)
-                                Text("Issued Books")
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.secondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .aspectRatio(1, contentMode: .fit)
-                            .padding(.vertical, 16)
-                            .background(
-                                ZStack {
-                                    // Glassmorphism background
-                                    Color.white.opacity(0.2)
-                                    Color.white.opacity(0.1)
-                                        .blur(radius: 8)
-                                    
-                                    // Subtle gradient overlay
-                                    LinearGradient(
-                                        colors: [
-                                            Color.orange.opacity(0.1),
-                                            Color.orange.opacity(0.05)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                }
+                            // Issued Books Card
+                            HomeCard(
+                                title: "Issued Books",
+                                value: "\(booksWithEmptyShelfLocation.count)",
+                                icon: "book.closed.fill",
+                                color: .orange
                             )
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(16)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.orange.opacity(0.5),
-                                                Color.orange.opacity(0.2)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 1
-                                    )
-                            )
-                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                             
-                            // Recently Added Card
-                            VStack(spacing: 12) {
-                                Image(systemName: "creditcard.fill")
-                                    .font(.system(size: 44))
-                                    .foregroundColor(.purple)
-                                    .frame(width: 100, height: 100)
-                                    .background(
-                                        Circle()
-                                            .fill(Color.purple.opacity(0.2))
-                                            .blur(radius: 2)
-                                    )
-                                Text("\(recentBooks.count)")
-                                    .font(.system(size: 32, weight: .bold))
-                                    .foregroundColor(.primary)
-                                Text("Due Collected")
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.secondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .aspectRatio(1, contentMode: .fit)
-                            .padding(.vertical, 16)
-                            .background(
-                                ZStack {
-                                    // Glassmorphism background
-                                    Color.white.opacity(0.2)
-                                    Color.white.opacity(0.1)
-                                        .blur(radius: 8)
-                                    
-                                    // Subtle gradient overlay
-                                    LinearGradient(
-                                        colors: [
-                                            Color.purple.opacity(0.1),
-                                            Color.purple.opacity(0.05)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                }
+                            // Due Collected Card
+                            HomeCard(
+                                title: "Due Collected",
+                                value: "\(recentBooks.count)",
+                                icon: "indianrupeesign",
+                                color: .purple
                             )
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(16)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.purple.opacity(0.5),
-                                                Color.purple.opacity(0.2)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 1
-                                    )
-                            )
-                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
+                        .padding(.horizontal)
                         
                         // Divider with more spacing
                         Divider()
@@ -461,9 +264,12 @@ struct HomeLibrarianView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: ShelfLocationsView()) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .imageScale(.large)
+                    NavigationLink {
+                        AdminProfileView()
+                    } label: {
+                        Image(systemName: "person.crop.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(.blue)
                     }
                 }
             }

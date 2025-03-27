@@ -8,11 +8,12 @@
 import Foundation
 import SwiftUI
 
-struct EditBorrowingRulesView: View {
+struct EditIssuingRulesView: View {
     @Binding var borrowingLimit: Int
     @Binding var returnPeriod: Int
-    @Binding var reissuePeriod: Int
+//    @Binding var reissuePeriod: Int
     @Binding var isPresented: Bool
+    var onSave: (() -> Void)? = nil
     
     var body: some View {
         NavigationView {
@@ -21,7 +22,7 @@ struct EditBorrowingRulesView: View {
                     // Borrowing Limit Card
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
-                            Text("Borrowing Limit")
+                            Text("Issue Limit")
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             
@@ -35,7 +36,13 @@ struct EditBorrowingRulesView: View {
                             
                             Spacer()
                             
-                            Stepper("\(borrowingLimit) books", value: $borrowingLimit, in: 1...10)
+                            TextField("", value: $borrowingLimit, formatter: NumberFormatter())
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 50)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            
+                            Text("books")
                                 .font(.subheadline)
                                 .foregroundColor(.blue)
                         }
@@ -65,7 +72,13 @@ struct EditBorrowingRulesView: View {
                             
                             Spacer()
                             
-                            Stepper("\(returnPeriod) days", value: $returnPeriod, in: 1...30)
+                            TextField("", value: $returnPeriod, formatter: NumberFormatter())
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 50)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            
+                            Text("days")
                                 .font(.subheadline)
                                 .foregroundColor(.blue)
                         }
@@ -79,34 +92,34 @@ struct EditBorrowingRulesView: View {
                     .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                     
                     // Reissue Card
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Text("Reissue")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            
-                            Spacer()
-                        }
-                        
-                        HStack {
-                            Text("Reissue period:")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            
-                            Spacer()
-                            
-                            Stepper("\(reissuePeriod) days", value: $reissuePeriod, in: 1...14)
-                                .font(.subheadline)
-                                .foregroundColor(.blue)
-                        }
-                        .padding()
-                        .background(Color(.tertiarySystemBackground))
-                        .cornerRadius(8)
-                    }
-                    .padding()
-                    .background(Color(.systemBackground))
-                    .cornerRadius(16)
-                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+//                    VStack(alignment: .leading, spacing: 16) {
+//                        HStack {
+//                            Text("Reissue")
+//                                .font(.headline)
+//                                .foregroundColor(.primary)
+//                            
+//                            Spacer()
+//                        }
+//                        
+//                        HStack {
+//                            Text("Reissue period:")
+//                                .font(.subheadline)
+//                                .foregroundColor(.secondary)
+//                            
+//                            Spacer()
+//                            
+//                            Stepper("\(reissuePeriod) days", value: $reissuePeriod, in: 1...14)
+//                                .font(.subheadline)
+//                                .foregroundColor(.blue)
+//                        }
+//                        .padding()
+//                        .background(Color(.tertiarySystemBackground))
+//                        .cornerRadius(8)
+//                    }
+//                    .padding()
+//                    .background(Color(.systemBackground))
+//                    .cornerRadius(16)
+//                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                 }
                 .padding()
             }
@@ -120,6 +133,7 @@ struct EditBorrowingRulesView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
+                        onSave?()
                         isPresented = false
                     }
                 }

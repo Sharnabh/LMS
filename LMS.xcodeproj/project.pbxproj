@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CE8AE2C22D8890A4001A93FF /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = CE8AE2C12D8890A4001A93FF /* Auth */; };
-		CE8AE2C42D8890A4001A93FF /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = CE8AE2C32D8890A4001A93FF /* Functions */; };
-		CE8AE2C62D8890A4001A93FF /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = CE8AE2C52D8890A4001A93FF /* PostgREST */; };
-		CE8AE2C82D8890A4001A93FF /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = CE8AE2C72D8890A4001A93FF /* Realtime */; };
-		CE8AE2CA2D8890A4001A93FF /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = CE8AE2C92D8890A4001A93FF /* Storage */; };
-		F57897272D8AD1A600B36B63 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F57897262D8AD1A600B36B63 /* Supabase */; };
-		F57897B52D8BD60700B36B63 /* SwiftSMTP in Frameworks */ = {isa = PBXBuildFile; productRef = F57897B42D8BD60700B36B63 /* SwiftSMTP */; };
+		CECF48EC2D94756F00B37944 /* SwiftSMTP in Frameworks */ = {isa = PBXBuildFile; productRef = CECF48EB2D94756F00B37944 /* SwiftSMTP */; };
+		CECF48EF2D94759000B37944 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = CECF48EE2D94759000B37944 /* Auth */; };
+		CECF48F12D94759000B37944 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = CECF48F02D94759000B37944 /* Functions */; };
+		CECF48F32D94759000B37944 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = CECF48F22D94759000B37944 /* PostgREST */; };
+		CECF48F52D94759000B37944 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = CECF48F42D94759000B37944 /* Realtime */; };
+		CECF48F72D94759000B37944 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = CECF48F62D94759000B37944 /* Storage */; };
+		CECF48F92D94759100B37944 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = CECF48F82D94759100B37944 /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,13 +46,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CE8AE2C62D8890A4001A93FF /* PostgREST in Frameworks */,
-				CE8AE2C42D8890A4001A93FF /* Functions in Frameworks */,
-				F57897272D8AD1A600B36B63 /* Supabase in Frameworks */,
-				CE8AE2C22D8890A4001A93FF /* Auth in Frameworks */,
-				CE8AE2CA2D8890A4001A93FF /* Storage in Frameworks */,
-				F57897B52D8BD60700B36B63 /* SwiftSMTP in Frameworks */,
-				CE8AE2C82D8890A4001A93FF /* Realtime in Frameworks */,
+				CECF48F92D94759100B37944 /* Supabase in Frameworks */,
+				CECF48F72D94759000B37944 /* Storage in Frameworks */,
+				CECF48F32D94759000B37944 /* PostgREST in Frameworks */,
+				CECF48F12D94759000B37944 /* Functions in Frameworks */,
+				CECF48EF2D94759000B37944 /* Auth in Frameworks */,
+				CECF48F52D94759000B37944 /* Realtime in Frameworks */,
+				CECF48EC2D94756F00B37944 /* SwiftSMTP in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -103,13 +103,13 @@
 			);
 			name = LMS;
 			packageProductDependencies = (
-				CE8AE2C12D8890A4001A93FF /* Auth */,
-				CE8AE2C32D8890A4001A93FF /* Functions */,
-				CE8AE2C52D8890A4001A93FF /* PostgREST */,
-				CE8AE2C72D8890A4001A93FF /* Realtime */,
-				CE8AE2C92D8890A4001A93FF /* Storage */,
-				F57897262D8AD1A600B36B63 /* Supabase */,
-				F57897B42D8BD60700B36B63 /* SwiftSMTP */,
+				CECF48EB2D94756F00B37944 /* SwiftSMTP */,
+				CECF48EE2D94759000B37944 /* Auth */,
+				CECF48F02D94759000B37944 /* Functions */,
+				CECF48F22D94759000B37944 /* PostgREST */,
+				CECF48F42D94759000B37944 /* Realtime */,
+				CECF48F62D94759000B37944 /* Storage */,
+				CECF48F82D94759100B37944 /* Supabase */,
 			);
 			productName = LMS;
 			productReference = CE8AE2AA2D888E2C001A93FF /* LMS.app */;
@@ -140,8 +140,8 @@
 			mainGroup = CE8AE2A12D888E2C001A93FF;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				CE8AE2C02D8890A4001A93FF /* XCRemoteSwiftPackageReference "supabase-swift" */,
-				F57897B32D8BD60700B36B63 /* XCRemoteSwiftPackageReference "Swift-SMTP" */,
+				CECF48EA2D94756F00B37944 /* XCRemoteSwiftPackageReference "Swift-SMTP" */,
+				CECF48ED2D94759000B37944 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CE8AE2AB2D888E2C001A93FF /* Products */;
@@ -309,6 +309,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -338,6 +339,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -375,7 +377,15 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		CE8AE2C02D8890A4001A93FF /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+		CECF48EA2D94756F00B37944 /* XCRemoteSwiftPackageReference "Swift-SMTP" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Kitura/Swift-SMTP";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.0.0;
+			};
+		};
+		CECF48ED2D94759000B37944 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift.git";
 			requirement = {
@@ -383,51 +393,43 @@
 				minimumVersion = 2.5.1;
 			};
 		};
-		F57897B32D8BD60700B36B63 /* XCRemoteSwiftPackageReference "Swift-SMTP" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Kitura/Swift-SMTP.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 6.0.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		CE8AE2C12D8890A4001A93FF /* Auth */ = {
+		CECF48EB2D94756F00B37944 /* SwiftSMTP */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CE8AE2C02D8890A4001A93FF /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			package = CECF48EA2D94756F00B37944 /* XCRemoteSwiftPackageReference "Swift-SMTP" */;
+			productName = SwiftSMTP;
+		};
+		CECF48EE2D94759000B37944 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CECF48ED2D94759000B37944 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Auth;
 		};
-		CE8AE2C32D8890A4001A93FF /* Functions */ = {
+		CECF48F02D94759000B37944 /* Functions */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CE8AE2C02D8890A4001A93FF /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			package = CECF48ED2D94759000B37944 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Functions;
 		};
-		CE8AE2C52D8890A4001A93FF /* PostgREST */ = {
+		CECF48F22D94759000B37944 /* PostgREST */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CE8AE2C02D8890A4001A93FF /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			package = CECF48ED2D94759000B37944 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = PostgREST;
 		};
-		CE8AE2C72D8890A4001A93FF /* Realtime */ = {
+		CECF48F42D94759000B37944 /* Realtime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CE8AE2C02D8890A4001A93FF /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			package = CECF48ED2D94759000B37944 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Realtime;
 		};
-		CE8AE2C92D8890A4001A93FF /* Storage */ = {
+		CECF48F62D94759000B37944 /* Storage */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CE8AE2C02D8890A4001A93FF /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			package = CECF48ED2D94759000B37944 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Storage;
 		};
-		F57897262D8AD1A600B36B63 /* Supabase */ = {
+		CECF48F82D94759100B37944 /* Supabase */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CE8AE2C02D8890A4001A93FF /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			package = CECF48ED2D94759000B37944 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
-		};
-		F57897B42D8BD60700B36B63 /* SwiftSMTP */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F57897B32D8BD60700B36B63 /* XCRemoteSwiftPackageReference "Swift-SMTP" */;
-			productName = SwiftSMTP;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

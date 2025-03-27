@@ -14,6 +14,7 @@ struct QRScanner: View {
     @State private var isShowingBookInfo = false
     @State private var isProcessing = false
     @State private var lastProcessedCode = ""
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         NavigationView {
@@ -27,7 +28,7 @@ struct QRScanner: View {
                 
                 VStack {
                     Spacer()
-                    Text("Scanning for Library QR Code...")
+                    Text("Scan Library QR Code")
                         .font(.headline)
                         .foregroundColor(.white)
                         .padding()
@@ -64,6 +65,9 @@ struct QRScanner: View {
                     BookInfoView(bookInfo: bookInfo)
                 }
             }
+            .navigationBarItems(trailing: Button("Close") {
+                dismiss()
+            })
         }
     }
     
@@ -84,6 +88,25 @@ struct QRScanner: View {
         
         switch result {
         case .success(let parsedInfo):
+            // Check if the QR code is expired
+            let expirationDate = Date(timeIntervalSince1970: parsedInfo.expirationDate)
+            if Date() > expirationDate {
+                alertItem = AlertContext.expiredQRCode
+                isProcessing = false
+                return
+            }
+            
+            // Check if the issue status is valid
+            if parsedInfo.issueStatus != "Pending" {
+                alertItem = AlertItem(
+                    title: "Invalid Issue Status",
+                    message: "This QR code has already been processed or is invalid.",
+                    dismissButton: .default(Text("OK"))
+                )
+                isProcessing = false
+                return
+            }
+            
             bookInfo = parsedInfo
             isShowingBookInfo = true
             // Keep isProcessing true until book info is displayed
@@ -104,5 +127,5 @@ struct QRScanner: View {
 }
 
 #Preview {
-    ContentView()
+    QRScanner()
 }

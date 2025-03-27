@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var showingAnnouncementList = false
     @State private var totalMembersCount: Int = 0
     @State private var isLoadingMembers: Bool = false
+    @EnvironmentObject private var appState: AppState
     
     enum AnnouncementListType {
         case active, scheduled, archived
@@ -148,6 +149,7 @@ struct HomeView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink {
                         AdminProfileView()
+                            .environmentObject(appState)
                     } label: {
                         Image(systemName: "person.crop.circle.fill")
                             .font(.system(size: 22))

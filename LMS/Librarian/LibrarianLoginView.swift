@@ -22,6 +22,9 @@ struct LibrarianLoginView: View {
     @State private var resendCountdown = 0
     @State private var timer: Timer?
     @State private var currentLibrarianId: String?
+    @AppStorage("librarianIsLoggedIn") private var librarianIsLoggedIn = false
+    @AppStorage("librarianEmail") private var librarianEmail = ""
+    @EnvironmentObject private var appState: AppState
     
     var body: some View {
         ZStack {
@@ -317,6 +320,10 @@ struct LibrarianLoginView: View {
                     // Start countdown timer for resend button when OTP view appears
                     startResendCountdown()
                 } else {
+                    // Store authentication state
+                    librarianIsLoggedIn = true
+                    librarianEmail = email
+                    appState.showLibrarianApp = true
                     showLibrarianInitialView = true
                 }
             } else {
@@ -361,6 +368,10 @@ struct LibrarianLoginView: View {
                 isLoading = false
                 
                 if isValid {
+                    // Store authentication state after successful OTP verification
+                    librarianIsLoggedIn = true
+                    librarianEmail = email
+                    appState.showLibrarianApp = true
                     showLibrarianInitialView = true
                 } else {
                     alertTitle = "Error"

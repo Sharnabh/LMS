@@ -264,21 +264,21 @@ struct HomeLibrarianView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        NavigationLink(destination: ShelfLocationsView()) {
-                            Image(systemName: "mappin.and.ellipse")
-                                .imageScale(.large)
-                                .foregroundColor(.blue)
-                        }
+//                    HStack(spacing: 16) {
+//                        NavigationLink(destination: ShelfLocationsView()) {
+//                            Image(systemName: "mappin.and.ellipse")
+//                                .imageScale(.large)
+//                                .foregroundColor(.blue)
+//                        }
                         
                         NavigationLink {
-                            AdminProfileView()
+                            LibrarianProfileView()
                         } label: {
                             Image(systemName: "person.crop.circle.fill")
                                 .font(.system(size: 22))
                                 .foregroundColor(.blue)
                         }
-                    }
+//                    }
                 }
             }
         }

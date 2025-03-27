@@ -234,7 +234,7 @@ struct AnnouncementRow: View {
                 
                 Spacer()
                 
-                if type == .scheduled {
+                if type != .archived {
                     VStack(alignment: .trailing, spacing: 4) {
                         Label {
                             Text(dateFormatter.string(from: announcement.startDate))
@@ -249,7 +249,7 @@ struct AnnouncementRow: View {
                         }
                     }
                     .font(.caption)
-                    .foregroundColor(.orange)
+                    .foregroundColor(type == .active ? .green : .orange)
                 }
             }
         }

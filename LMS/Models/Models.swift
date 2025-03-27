@@ -426,3 +426,76 @@ struct BookManagementPolicy: Codable, Identifiable {
         case lastUpdated = "last_updated"
     }
 }
+
+// MARK: - Announcement Models
+struct AnnouncementModel: Codable, Identifiable {
+    let id: UUID
+    var title: String
+    var content: String
+    var type: AnnouncementType
+    var startDate: Date
+    var expiryDate: Date
+    var createdAt: Date
+    var isActive: Bool
+    var isArchived: Bool
+    var lastModified: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case content
+        case type
+        case startDate = "start_date"
+        case expiryDate = "expiry_date"
+        case createdAt = "created_at"
+        case isActive = "is_active"
+        case isArchived = "is_archived"
+        case lastModified = "last_modified"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        content = try container.decode(String.self, forKey: .content)
+        type = try container.decode(AnnouncementType.self, forKey: .type)
+        
+        let startDateString = try container.decode(String.self, forKey: .startDate)
+        startDate = dateFormatter.date(from: startDateString) ?? Date()
+        
+        let expiryDateString = try container.decode(String.self, forKey: .expiryDate)
+        expiryDate = dateFormatter.date(from: expiryDateString) ?? Date()
+        
+        let createdAtString = try container.decode(String.self, forKey: .createdAt)
+        createdAt = dateFormatter.date(from: createdAtString) ?? Date()
+        
+        let lastModifiedString = try container.decode(String.self, forKey: .lastModified)
+        lastModified = dateFormatter.date(from: lastModifiedString) ?? Date()
+        
+        isActive = try container.decode(Bool.self, forKey: .isActive)
+        isArchived = try container.decode(Bool.self, forKey: .isArchived)
+    }
+    
+    init(id: UUID = UUID(), title: String, content: String, type: AnnouncementType, startDate: Date, expiryDate: Date, createdAt: Date = Date(), isActive: Bool = true, isArchived: Bool = false, lastModified: Date = Date()) {
+        self.id = id
+        self.title = title
+        self.content = content
+        self.type = type
+        self.startDate = startDate
+        self.expiryDate = expiryDate
+        self.createdAt = createdAt
+        self.isActive = isActive
+        self.isArchived = isArchived
+        self.lastModified = lastModified
+    }
+}
+
+enum AnnouncementType: String, Codable {
+    case member = "member"
+    case librarian = "librarian"
+    case all = "all"
+}

@@ -14,11 +14,38 @@ struct QRCodeParser {
         if let jsonData = qrContent.data(using: .utf8) {
             do {
                 let decoder = JSONDecoder()
-                // Create a custom decoder to handle string timestamps
                 decoder.keyDecodingStrategy = .useDefaultKeys
                 decoder.dateDecodingStrategy = .iso8601
                 
-                let bookInfo = try decoder.decode(BookInfo.self, from: jsonData)
+                struct QRData: Codable {
+                    struct BookIssueData: Codable {
+                        let issueDate: String
+                        let bookId: String
+                        let id: String
+                        let issueStatus: String
+                        let returnDate: String
+                        let memberId: String
+                    }
+                    
+                    let bookIssue: BookIssueData
+                    let expirationDate: String
+                    let timestamp: String
+                    let isValid: Bool
+                }
+                
+                let qrData = try decoder.decode(QRData.self, from: jsonData)
+                
+                // Convert BookIssue to BookInfo format
+                let bookInfo = BookInfo(
+                    bookIds: [qrData.bookIssue.bookId],
+                    memberId: qrData.bookIssue.memberId,
+                    issueStatus: qrData.bookIssue.issueStatus,
+                    issueDate: qrData.bookIssue.issueDate,
+                    returnDate: qrData.bookIssue.returnDate,
+                    expirationDate: TimeInterval(qrData.expirationDate) ?? 0,
+                    timestamp: TimeInterval(qrData.timestamp) ?? 0,
+                    isValid: qrData.isValid
+                )
                 
                 // Validate required fields
                 if bookInfo.bookIds.isEmpty || bookInfo.memberId.isEmpty {

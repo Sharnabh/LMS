@@ -494,7 +494,7 @@ struct AnnouncementModel: Codable, Identifiable {
     }
 }
 
-enum AnnouncementType: String, Codable {
+enum AnnouncementType: String, Codable, CaseIterable {
     case member = "member"
     case librarian = "librarian"
     case all = "all"

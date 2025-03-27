@@ -5,6 +5,7 @@ struct AnnouncementListView: View {
     let type: HomeView.AnnouncementListType
     @ObservedObject var announcementStore: AnnouncementStore
     @State private var isLoading = false
+    @State private var errorMessage: String?
     
     private var announcements: [AnnouncementModel] {
         switch type {
@@ -28,6 +29,7 @@ struct AnnouncementListView: View {
                             AnnouncementRow(
                                 announcement: announcement,
                                 type: type,
+                                announcementStore: announcementStore,
                                 isLoading: $isLoading
                             ) { action in
                                 handleAction(action, for: announcement)
@@ -45,6 +47,18 @@ struct AnnouncementListView: View {
                         .background(Color(.systemBackground))
                         .cornerRadius(8)
                 }
+                
+                if let error = errorMessage {
+                    VStack {
+                        Spacer()
+                        Text(error)
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.red.opacity(0.9))
+                            .cornerRadius(8)
+                            .padding()
+                    }
+                }
             }
             .navigationTitle("\(type.title) Announcements")
             .navigationBarTitleDisplayMode(.inline)
@@ -60,25 +74,32 @@ struct AnnouncementListView: View {
     }
     
     private func handleAction(_ action: AnnouncementRow.AnnouncementAction, for announcement: AnnouncementModel) {
-        isLoading = true
-        
-        Task {
+        Task { @MainActor in
+            isLoading = true
+            errorMessage = nil
+            
             do {
                 switch action {
                 case .archive:
                     try await announcementStore.archiveAnnouncement(id: announcement.id)
-                case .restore:
-                    try await announcementStore.restoreAnnouncement(id: announcement.id)
-                }
-                await MainActor.run {
-                    isLoading = false
+                case .restore(let updatedAnnouncement):
+                    // Validate dates before restoring
+                    let now = Date()
+                    if updatedAnnouncement.expiryDate < now {
+                        errorMessage = "Expiry date must be in the future"
+                        isLoading = false
+                        return
+                    }
+                    
+                    try await announcementStore.restoreAnnouncement(updatedAnnouncement)
+                case .edit(let updatedAnnouncement):
+                    try await announcementStore.updateAnnouncement(updatedAnnouncement)
                 }
             } catch {
-                print("Error performing action: \(error)")
-                await MainActor.run {
-                    isLoading = false
-                }
+                errorMessage = error.localizedDescription
             }
+            
+            isLoading = false
         }
     }
 }
@@ -130,11 +151,16 @@ struct EmptyStateView: View {
 struct AnnouncementRow: View {
     let announcement: AnnouncementModel
     let type: HomeView.AnnouncementListType
+    @ObservedObject var announcementStore: AnnouncementStore
     @Binding var isLoading: Bool
     let onAction: (AnnouncementAction) -> Void
+    @State private var showingEditSheet = false
+    @State private var showingRestoreSheet = false
     
     enum AnnouncementAction {
-        case archive, restore
+        case archive
+        case restore(AnnouncementModel)
+        case edit(AnnouncementModel)
     }
     
     var body: some View {
@@ -147,6 +173,13 @@ struct AnnouncementRow: View {
                 
                 Menu {
                     if type != .archived {
+                        Button(action: {
+                            showingEditSheet = true
+                        }) {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        .disabled(isLoading)
+                        
                         Button(role: .destructive, action: {
                             onAction(.archive)
                         }) {
@@ -155,7 +188,7 @@ struct AnnouncementRow: View {
                         .disabled(isLoading)
                     } else {
                         Button(action: {
-                            onAction(.restore)
+                            showingRestoreSheet = true
                         }) {
                             Label("Restore", systemImage: "arrow.uturn.up")
                         }
@@ -187,6 +220,22 @@ struct AnnouncementRow: View {
             }
         }
         .padding(.vertical, 4)
+        .sheet(isPresented: $showingEditSheet) {
+            EditAnnouncementView(
+                announcementStore: announcementStore,
+                announcement: announcement
+            )
+        }
+        .sheet(isPresented: $showingRestoreSheet) {
+            EditAnnouncementView(
+                announcementStore: announcementStore,
+                announcement: announcement,
+                isRestoring: true,
+                onRestore: { updatedAnnouncement in
+                    onAction(.restore(updatedAnnouncement))
+                }
+            )
+        }
     }
 }
 

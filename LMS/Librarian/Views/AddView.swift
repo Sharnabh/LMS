@@ -135,63 +135,31 @@ struct AddView: View {
             }
             .navigationTitle("Add Books")
             .navigationBarTitleDisplayMode(.large)
-// <<<<<<< adnaan
-            .overlay(
-                VStack {
-                    Spacer()
-                    Menu {
-                        Button(action: {
-                            showAddBookSheet = true
-                        }) {
-                            Label("Add Book", systemImage: "plus.circle")
-                        }
-                        
-                        Button(action: {
-                            showCSVUploadSheet = true
-                        }) {
-                            Label("Upload CSV", systemImage: "doc.badge.plus")
-                        }
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.blue)
-                                .frame(width: 60, height: 60)
-                                .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if showingAddSection {
+                        // Show plus menu when in Add Books mode
+                        Menu {
+                            Button(action: {
+                                showAddBookSheet = true
+                            }) {
+                                Label("Add Book", systemImage: "plus.circle")
+                            }
                             
+                            Button(action: {
+                                showCSVUploadSheet = true
+                            }) {
+                                Label("Upload CSV", systemImage: "doc.badge.plus")
+                            }
+                        } label: {
                             Image(systemName: "plus")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 25, height: 25)
-                                .foregroundColor(.white)
                         }
-// =======
-//             .toolbar {
-//                 ToolbarItem(placement: .navigationBarTrailing) {
-//                     if showingAddSection {
-//                         // Show plus menu when in Add Books mode
-//                         Menu {
-//                             Button(action: {
-//                                 showAddBookSheet = true
-//                             }) {
-//                                 Label("Add Book", systemImage: "plus.circle")
-//                             }
-                            
-//                             Button(action: {
-//                                 showCSVUploadSheet = true
-//                             }) {
-//                                 Label("Upload CSV", systemImage: "doc.badge.plus")
-//                             }
-//                         } label: {
-//                             Image(systemName: "plus")
-//                         }
-//                     } else {
-//                         // Show standard Edit button when in View Books mode
-//                         EditButton()
-// >>>>>>> Development
+                    } else {
+                        // Show standard Edit button when in View Books mode
+                        EditButton()
                     }
-                    .padding(.bottom, 24)
                 }
-            )
+            }
             .sheet(isPresented: $showScanner) {
                 BarcodeScannerView(scannedCode: $scannedCode)
                     .ignoresSafeArea()

@@ -143,7 +143,8 @@ class SupabaseDataController: ObservableObject {
             username: name,  // Using name as username
             password: password,
             created_at: nil,
-            isFirstLogin: true  // Set to true for new librarians
+            isFirstLogin: true,
+            isDisabled: false   // Set to true for new librarians
         )
         
         do {

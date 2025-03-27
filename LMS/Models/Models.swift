@@ -31,6 +31,17 @@ struct LibrarianModel: Codable {
     let password: String
     let created_at: String?
     let isFirstLogin: Bool
+    let isDisabled: Bool?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case email
+        case username
+        case password
+        case created_at
+        case isFirstLogin
+        case isDisabled = "librarian_is_disabled"
+    }
 }
 
 //struct MemberModel: Codable {

@@ -346,3 +346,40 @@ struct BookManagementPolicy: Codable, Identifiable {
         case lastUpdated = "last_updated"
     }
 }
+
+// MARK: - Deletion Request Model
+struct BookDeletionRequest: Codable, Identifiable {
+    let id: UUID?
+    let bookIDs: [UUID]
+    let requestedBy: String
+    let requestDate: Date
+    let status: String  // "pending", "approved", "rejected"
+    let adminResponse: String?
+    let responseDate: Date?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case bookIDs = "book_ids"
+        case requestedBy = "requested_by"
+        case requestDate = "request_date"
+        case status
+        case adminResponse = "admin_response"
+        case responseDate = "response_date"
+    }
+    
+    init(id: UUID? = nil, 
+         bookIDs: [UUID], 
+         requestedBy: String, 
+         requestDate: Date = Date(), 
+         status: String = "pending",
+         adminResponse: String? = nil,
+         responseDate: Date? = nil) {
+        self.id = id
+        self.bookIDs = bookIDs
+        self.requestedBy = requestedBy
+        self.requestDate = requestDate
+        self.status = status
+        self.adminResponse = adminResponse
+        self.responseDate = responseDate
+    }
+}

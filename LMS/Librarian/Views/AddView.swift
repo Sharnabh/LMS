@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import UIKit
 
 struct AddView: View {
     @EnvironmentObject private var bookStore: BookStore
@@ -17,6 +18,12 @@ struct AddView: View {
     @State private var showSearchBar = false
     @State private var selectedGenre: String? = nil
     @State private var searchQuery = ""
+    
+    // Alert states
+    @State private var showDeletionConfirmation = false
+    @State private var showDeletionSuccess = false
+    @State private var showDeletionError = false
+    @State private var isProcessingDeletion = false
     
     var body: some View {
         NavigationView {
@@ -175,6 +182,54 @@ struct AddView: View {
             LibrarianCSVUploadView()
                 .environmentObject(bookStore)
         }
+        .alert("Request Book Deletion", isPresented: $showDeletionConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Send Request", role: .destructive) {
+                isProcessingDeletion = true
+                Task {
+                    let isRequestSuccessful = await bookStore.createDeletionRequest(for: selectedBooks)
+                    
+                    await MainActor.run {
+                        isProcessingDeletion = false
+                        if isRequestSuccessful {
+                            showDeletionSuccess = true
+                            selectedBooks.removeAll()
+                            isEditing = false
+                        } else {
+                            showDeletionError = true
+                        }
+                    }
+                }
+            }
+        } message: {
+            Text("This will send a request to the admin for approval to delete \(selectedBooks.count) book(s). Continue?")
+        }
+        .alert("Request Sent", isPresented: $showDeletionSuccess) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Your deletion request has been sent to the admin for approval.")
+        }
+        .alert("Request Failed", isPresented: $showDeletionError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Failed to send deletion request. Please try again later.")
+        }
+        .overlay {
+            if isProcessingDeletion {
+                ZStack {
+                    Color.black.opacity(0.4)
+                    VStack {
+                        ProgressView()
+                            .tint(.white)
+                            .scaleEffect(1.5)
+                        Text("Sending request...")
+                            .foregroundColor(.white)
+                            .padding(.top, 10)
+                    }
+                }
+                .ignoresSafeArea()
+            }
+        }
     }
     
     private func searchBook() {
@@ -203,13 +258,8 @@ struct AddView: View {
     }
     
     private func deleteSelectedBooks() {
-        Task {
-            for book in selectedBooks {
-                bookStore.deleteBook(book)
-            }
-            selectedBooks.removeAll()
-            isEditing = false
-        }
+        // Show confirmation alert for sending deletion request
+        showDeletionConfirmation = true
     }
     
     private func selectAllBooks() {

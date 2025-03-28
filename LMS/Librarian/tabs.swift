@@ -60,5 +60,6 @@ struct LibrarianInitialView: View {
 
 #Preview {
    LibrarianInitialView()
+        .environmentObject(AppState())
 }
 

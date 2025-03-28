@@ -352,5 +352,50 @@ class SupabaseDataController: ObservableObject {
             throw error
         }
     }
+    
+    // MARK: - Book Deletion Request Methods
+    
+    func updateDeletionRequestStatus(requestId: UUID, status: String, adminResponse: String?) async throws -> Bool {
+        struct RequestUpdate: Codable {
+            let status: String
+            let admin_response: String?
+            let response_date: String
+        }
+        
+        let formatter = ISO8601DateFormatter()
+        let dateString = formatter.string(from: Date())
+        
+        let updateData = RequestUpdate(
+            status: status,
+            admin_response: adminResponse,
+            response_date: dateString
+        )
+        
+        do {
+            try await client.from("book_requests")
+                .update(updateData)
+                .eq("id", value: requestId.uuidString)
+                .execute()
+            return true
+        } catch {
+            print("Error updating deletion request status: \(error)")
+            throw error
+        }
+    }
+    
+    func fetchBook(by id: UUID) async throws -> LibrarianBook? {
+        let query = client.from("Books")
+            .select()
+            .eq("id", value: id.uuidString)
+            .single()
+        
+        do {
+            let book: LibrarianBook = try await query.execute().value
+            return book
+        } catch {
+            print("Error fetching book by ID: \(error)")
+            return nil
+        }
+    }
 }
 

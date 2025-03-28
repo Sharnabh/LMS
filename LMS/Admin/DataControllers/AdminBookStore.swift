@@ -5,6 +5,9 @@ class AdminBookStore: ObservableObject {
     @Published var books: [LibrarianBook] = []
     let dataController = SupabaseDataController()
     
+    // MARK: - Book Deletion Request Handling
+    @Published var deletionRequests: [BookDeletionRequest] = []
+    
     init() {
         Task(priority: .userInitiated) {
             do {
@@ -158,5 +161,69 @@ class AdminBookStore: ObservableObject {
             }
         }
         return false
+    }
+    
+    func fetchDeletionRequests() {
+        Task {
+            do {
+                let requests = try await dataController.fetchDeletionRequests()
+                await MainActor.run {
+                    self.deletionRequests = requests
+                }
+            } catch {
+                print("Error fetching deletion requests: \(error)")
+            }
+        }
+    }
+    
+    func approveDeletionRequest(_ request: BookDeletionRequest) async -> Bool {
+        do {
+            // First update the request status
+            let success = try await dataController.updateDeletionRequestStatus(
+                requestId: request.id!,
+                status: "approved",
+                adminResponse: nil
+            )
+            
+            if success {
+                // Then delete the books
+                for bookId in request.bookIDs {
+                    if let book = try await dataController.fetchBook(by: bookId) {
+                        let _ = try await dataController.deleteBook(book)
+                    }
+                }
+                
+                // Refresh the requests list
+                await MainActor.run {
+                    fetchDeletionRequests()
+                }
+                return true
+            }
+            return false
+        } catch {
+            print("Error approving deletion request: \(error)")
+            return false
+        }
+    }
+    
+    func rejectDeletionRequest(_ request: BookDeletionRequest, reason: String) async -> Bool {
+        do {
+            let success = try await dataController.updateDeletionRequestStatus(
+                requestId: request.id!,
+                status: "rejected",
+                adminResponse: reason
+            )
+            
+            if success {
+                await MainActor.run {
+                    fetchDeletionRequests()
+                }
+                return true
+            }
+            return false
+        } catch {
+            print("Error rejecting deletion request: \(error)")
+            return false
+        }
     }
 } 

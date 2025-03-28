@@ -239,6 +239,20 @@ class BookService {
             )
         }
     }
+    
+    func getTotalBooksCount() async throws -> Int {
+        let response = try await supabase
+            .from("Books")
+            .select("*", head: true, count: .exact)
+            .execute()
+        
+        // Print response for debugging
+        if let jsonString = String(data: response.data, encoding: .utf8) {
+            print("Supabase Book Response: \(jsonString)")
+        }
+        
+        return response.count ?? 0
+    }
 }
 
 enum BookError: Error {

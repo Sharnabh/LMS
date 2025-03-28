@@ -11,14 +11,31 @@ class MemberService {
     
     func getTotalMembersCount() async throws -> Int {
         let response = try await supabase
-            .from("members")
-            .select("id", count: CountOption.exact)
+            .from("Member")
+            .select()
             .execute()
         
-        if let count = response.count {
-            return count
+        // Print response for debugging
+        if let jsonString = String(data: response.data, encoding: .utf8) {
+            print("Supabase Response: \(jsonString)")
         }
         
-        return 0
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let patrons = try decoder.decode([Patron].self, from: response.data)
+        return patrons.count
+    }
+}
+
+// Helper struct to decode patron data
+private struct Patron: Codable {
+    let id: String?
+    let userId: String?
+    let createdAt: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case createdAt = "created_at"
     }
 } 

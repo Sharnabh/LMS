@@ -9,6 +9,8 @@ struct BookDeletionRequestsView: View {
     @State private var showSuccessAlert = false
     @State private var showErrorAlert = false
     @State private var alertMessage = ""
+    @State private var selectedRequestForDetails: BookDeletionRequest?
+    @State private var showingBookDetails = false
     
     var body: some View {
         List {
@@ -20,6 +22,10 @@ struct BookDeletionRequestsView: View {
                     // Show rejection dialog
                     selectedRequest = request
                     showingRejectionDialog = true
+                }
+                .onTapGesture {
+                    selectedRequestForDetails = request
+                    showingBookDetails = true
                 }
             }
         }
@@ -79,6 +85,11 @@ struct BookDeletionRequestsView: View {
                 )
             }
             .presentationDetents([.medium])
+        }
+        .fullScreenCover(isPresented: $showingBookDetails) {
+            if let request = selectedRequestForDetails {
+                BookDeletionDetailsView(request: request)
+            }
         }
         .onAppear {
             bookStore.fetchDeletionRequests()
@@ -165,6 +176,139 @@ struct DeletionRequestCard: View {
                 }
                 .padding(.top, 8)
             }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(10)
+        .padding(.horizontal)
+    }
+}
+
+struct BookDeletionDetailsView: View {
+    let request: BookDeletionRequest
+    @EnvironmentObject private var bookStore: AdminBookStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var books: [LibrarianBook] = []
+    @State private var isLoading = true
+    @State private var errorMessage: String?
+    
+    var body: some View {
+        NavigationView {
+            Group {
+                if isLoading {
+                    ProgressView("Loading book details...")
+                } else if let error = errorMessage {
+                    VStack {
+                        Text(error)
+                            .foregroundColor(.red)
+                        Button("Retry") {
+                            Task {
+                                await loadBooks()
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                } else if books.isEmpty {
+                    ContentUnavailableView(
+                        "No Books Found",
+                        systemImage: "book.closed",
+                        description: Text("Could not find details for the requested books.")
+                    )
+                } else {
+                    List(books) { book in
+                        BookDetailCard(book: book)
+                    }
+                }
+            }
+            .navigationTitle("Books to Delete")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .interactiveDismissDisabled()
+        .task(id: request.id) {
+            await loadBooks()
+        }
+    }
+    
+    private func loadBooks() async {
+        isLoading = true
+        errorMessage = nil
+        books = []
+        
+        do {
+            var loadedBooks: [LibrarianBook] = []
+            for bookId in request.bookIDs {
+                if let book = try await bookStore.dataController.fetchBook(by: bookId) {
+                    loadedBooks.append(book)
+                }
+            }
+            
+            await MainActor.run {
+                self.books = loadedBooks
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to load book details: \(error.localizedDescription)"
+                self.isLoading = false
+            }
+        }
+    }
+}
+
+struct BookDetailCard: View {
+    let book: LibrarianBook
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(book.title)
+                    .font(.headline)
+                Spacer()
+                if let imageLink = book.imageLink {
+                    AsyncImage(url: URL(string: imageLink)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } placeholder: {
+                        Color.gray.opacity(0.2)
+                    }
+                    .frame(width: 60, height: 80)
+                    .cornerRadius(4)
+                }
+            }
+            
+            Text("Authors: \(book.author.joined(separator: ", "))")
+                .font(.subheadline)
+            
+            HStack {
+                Text("Genre: \(book.genre)")
+                Spacer()
+                Text("ISBN: \(book.ISBN)")
+            }
+            .font(.subheadline)
+            .foregroundColor(.secondary)
+            
+            if let description = book.Description {
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(3)
+            }
+            
+            HStack {
+                Text("Publication Date: \(book.publicationDate)")
+                Spacer()
+                Text("Copies: \(book.totalCopies)")
+            }
+            .font(.subheadline)
+            .foregroundColor(.secondary)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))

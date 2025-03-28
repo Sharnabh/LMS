@@ -48,6 +48,9 @@ struct AnnouncementListView: View {
                             }
                         }
                     }
+                    .refreshable {
+                        await announcementStore.loadAnnouncements()
+                    }
                 }
                 
                 if isLoading {
@@ -82,6 +85,12 @@ struct AnnouncementListView: View {
                     .disabled(isLoading || announcementStore.isLoading)
                 }
             }
+            .onAppear {
+                // Force a refresh when the view appears
+                Task {
+                    await announcementStore.loadAnnouncements()
+                }
+            }
         }
     }
     
@@ -94,6 +103,8 @@ struct AnnouncementListView: View {
                 switch action {
                 case .archive:
                     try await announcementStore.archiveAnnouncement(id: announcement.id)
+                    // Force refresh after archiving
+                    await announcementStore.loadAnnouncements()
                 case .restore(let updatedAnnouncement):
                     // Validate dates before restoring
                     let now = Date()
@@ -104,8 +115,12 @@ struct AnnouncementListView: View {
                     }
                     
                     try await announcementStore.restoreAnnouncement(updatedAnnouncement)
+                    // Force refresh after restoring
+                    await announcementStore.loadAnnouncements()
                 case .edit(let updatedAnnouncement):
                     try await announcementStore.updateAnnouncement(updatedAnnouncement)
+                    // Force refresh after editing
+                    await announcementStore.loadAnnouncements()
                 }
             } catch {
                 errorMessage = error.localizedDescription

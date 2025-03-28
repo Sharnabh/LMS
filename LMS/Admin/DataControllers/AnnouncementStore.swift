@@ -9,109 +9,79 @@ class AnnouncementStore: ObservableObject {
     @Published var error: Error?
     
     let dataController = SupabaseDataController()
-    private var refreshTimer: Timer?
+    private var nextUpdateTimer: Timer?
     private var refreshTask: Task<Void, Never>?
     private var isRefreshing = false
-    private var backgroundTask: Task<Void, Never>?
     
     init() {
-        startPeriodicRefresh()
-        setupNotificationObservers()
+        setupNextUpdate()
     }
     
     deinit {
-        stopPeriodicRefresh()
-        NotificationCenter.default.removeObserver(self)
+        cancelNextUpdate()
     }
     
-    private func setupNotificationObservers() {
-        // Listen for app entering background
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleBackgroundTransition),
-            name: UIApplication.didEnterBackgroundNotification,
-            object: nil
-        )
-        
-        // Listen for app becoming active
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleForegroundTransition),
-            name: UIApplication.didBecomeActiveNotification,
-            object: nil
-        )
-    }
-    
-    @objc private func handleBackgroundTransition() {
-        // Cancel existing refresh timer
-        refreshTimer?.invalidate()
-        refreshTimer = nil
-        
-        // Start background task for periodic updates
-        backgroundTask = Task { @MainActor [weak self] in
-            while !Task.isCancelled {
-                await self?.loadAnnouncements()
-                try? await Task.sleep(nanoseconds: 10 * 1_000_000_000) // 10 seconds
-            }
-        }
-    }
-    
-    @objc private func handleForegroundTransition() {
-        // Cancel background task
-        backgroundTask?.cancel()
-        backgroundTask = nil
-        
-        // Immediately refresh and restart normal timer
-        Task { @MainActor in
-            await loadAnnouncements()
-            startPeriodicRefresh()
-        }
-    }
-    
-    private func startPeriodicRefresh() {
-        // Cancel existing timer if any
-        refreshTimer?.invalidate()
+    private func setupNextUpdate() {
+        // Cancel any existing timer
+        cancelNextUpdate()
         
         // Initial load
         Task { @MainActor in
             await loadAnnouncements()
+            scheduleNextUpdate()
+        }
+    }
+    
+    private func cancelNextUpdate() {
+        nextUpdateTimer?.invalidate()
+        nextUpdateTimer = nil
+        refreshTask?.cancel()
+        refreshTask = nil
+    }
+    
+    private func scheduleNextUpdate() {
+        // Find the next time we need to update based on announcement transitions
+        var nextUpdateTime: Date?
+        let now = Date()
+        
+        // Check scheduled announcements for next start time
+        for announcement in scheduledAnnouncements {
+            if announcement.startDate > now {
+                if nextUpdateTime == nil || announcement.startDate < nextUpdateTime! {
+                    nextUpdateTime = announcement.startDate
+                }
+            }
         }
         
-        // Set up a timer to refresh announcements every 10 seconds
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
+        // Check active announcements for next expiry time
+        for announcement in activeAnnouncements {
+            if announcement.expiryDate > now {
+                if nextUpdateTime == nil || announcement.expiryDate < nextUpdateTime! {
+                    nextUpdateTime = announcement.expiryDate
+                }
+            }
+        }
+        
+        // If we found a next update time, schedule the timer
+        if let updateTime = nextUpdateTime {
+            let timeInterval = updateTime.timeIntervalSince(now)
+            print("📅 Scheduling next update in \(timeInterval) seconds")
             
-            // Cancel any existing refresh task
-            self.refreshTask?.cancel()
-            
-            // Start a new refresh task
-            self.refreshTask = Task { @MainActor [weak self] in
-                guard let self = self else { return }
-                
-                // Only refresh if we're not already refreshing
-                if !self.isRefreshing {
+            nextUpdateTimer = Timer.scheduledTimer(withTimeInterval: timeInterval, repeats: false) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    guard let self = self else { return }
                     await self.loadAnnouncements()
+                    self.scheduleNextUpdate() // Schedule the next update after loading
                 }
             }
         }
     }
     
-    private func stopPeriodicRefresh() {
-        refreshTimer?.invalidate()
-        refreshTimer = nil
-        refreshTask?.cancel()
-        refreshTask = nil
-        backgroundTask?.cancel()
-        backgroundTask = nil
-    }
-    
     @MainActor
     func loadAnnouncements() async {
-        // Prevent multiple concurrent refreshes
         guard !isRefreshing else { return }
         isRefreshing = true
         
-        // Don't show loading indicator for refresh operations
         let wasLoading = isLoading
         if !wasLoading {
             isLoading = true
@@ -127,27 +97,20 @@ class AnnouncementStore: ObservableObject {
             async let scheduledTask = AnnouncementService.shared.fetchScheduledAnnouncements()
             async let archivedTask = AnnouncementService.shared.fetchArchivedAnnouncements()
             
-            // Load all announcements concurrently
             let (active, scheduled, archived) = try await (activeTask, scheduledTask, archivedTask)
             
-            // Only update if the task hasn't been cancelled
             if !Task.isCancelled {
-                // Only update if we successfully got all announcements
-                await MainActor.run {
-                    self.activeAnnouncements = active
-                    self.scheduledAnnouncements = scheduled
-                    self.archivedAnnouncements = archived
-                    self.error = nil
-                    
-                    print("Successfully loaded announcements at \(Date())")
-                }
+                self.activeAnnouncements = active
+                self.scheduledAnnouncements = scheduled
+                self.archivedAnnouncements = archived
+                self.error = nil
+                
+                // Schedule next update based on the new data
+                scheduleNextUpdate()
             }
         } catch {
             print("Error loading announcements: \(error)")
-            await MainActor.run {
-                self.error = error
-            }
-            // Don't clear existing announcements on error to maintain last known good state
+            self.error = error
         }
         
         if !wasLoading {

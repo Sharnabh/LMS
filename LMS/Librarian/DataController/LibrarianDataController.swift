@@ -182,17 +182,7 @@ extension SupabaseDataController {
         }
     }
     
-    func deleteBook(_ book: LibrarianBook) async throws -> Bool {
-        do {
-            try await client.from("Books")
-                .delete()
-                .eq("id", value: book.id)
-                .execute()
-            return true
-        } catch {
-            throw error
-        }
-    }
+
     
     // MARK: - Shelf Location Methods
     
@@ -243,6 +233,86 @@ extension SupabaseDataController {
             return true
         } catch let error {
             print("Error deleting shelf location: \(error)")
+            throw error
+        }
+    }
+    
+    // MARK: - Book Deletion Requests
+    
+    func createBookDeletionRequest(_ request: BookDeletionRequest) async throws -> Bool {
+        // Create a Codable structure for the request data
+        struct RequestInsert: Codable {
+            let id: String
+            let book_ids: [String]
+            let requested_by: String
+            let request_date: String
+            let status: String
+        }
+        
+        // Format the date for Supabase
+        let formatter = ISO8601DateFormatter()
+        let dateString = formatter.string(from: request.requestDate)
+        
+        // Convert UUID arrays to string arrays for Supabase
+        let bookIDStrings = request.bookIDs.map { $0.uuidString }
+        
+        let requestData = RequestInsert(
+            id: request.id?.uuidString ?? UUID().uuidString,
+            book_ids: bookIDStrings,
+            requested_by: request.requestedBy,
+            request_date: dateString,
+            status: "pending"
+        )
+        
+        do {
+            try await client.from("book_requests")
+                .insert(requestData)
+                .execute()
+            return true
+        } catch let error {
+            print("Error creating deletion request: \(error)")
+            throw error
+        }
+    }
+    
+    func fetchDeletionRequests() async throws -> [BookDeletionRequest] {
+        let query = client.from("book_requests")
+            .select()
+        
+        do {
+            // Define a decoder type for the Supabase response
+            struct RawRequest: Codable {
+                let id: String
+                let book_ids: [String]
+                let requested_by: String
+                let request_date: String
+                let status: String
+                let admin_response: String?
+                let response_date: String?
+            }
+            
+            let rawRequests: [RawRequest] = try await query.execute().value
+            
+            // Convert the raw data to our app model
+            let formatter = ISO8601DateFormatter()
+            
+            return rawRequests.map { raw in
+                let bookIDs = raw.book_ids.compactMap { UUID(uuidString: $0) }
+                let requestDate = formatter.date(from: raw.request_date) ?? Date()
+                let responseDate = raw.response_date.flatMap { formatter.date(from: $0) }
+                
+                return BookDeletionRequest(
+                    id: UUID(uuidString: raw.id),
+                    bookIDs: bookIDs,
+                    requestedBy: raw.requested_by,
+                    requestDate: requestDate,
+                    status: raw.status,
+                    adminResponse: raw.admin_response,
+                    responseDate: responseDate
+                )
+            }
+        } catch let error {
+            print("Error fetching deletion requests: \(error)")
             throw error
         }
     }

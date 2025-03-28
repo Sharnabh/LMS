@@ -182,17 +182,7 @@ extension SupabaseDataController {
         }
     }
     
-    func deleteBook(_ book: LibrarianBook) async throws -> Bool {
-        do {
-            try await client.from("Books")
-                .delete()
-                .eq("id", value: book.id)
-                .execute()
-            return true
-        } catch {
-            throw error
-        }
-    }
+
     
     // MARK: - Shelf Location Methods
     

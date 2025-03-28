@@ -398,6 +398,31 @@ class SupabaseDataController: ObservableObject {
             return nil
         }
     }
+    
+    // MARK: - Book Operations
+    
+    func deleteBook(_ book: LibrarianBook) async throws -> Bool {
+        guard let bookId = book.id else {
+            print("Error: Book ID is nil")
+            return false
+        }
+        
+        do {
+            print("Attempting to delete book with ID: \(bookId)")
+            
+            // Delete the book from the Books table
+            try await client.from("Books")
+                .delete()
+                .eq("id", value: bookId.uuidString)
+                .execute()
+            
+            print("Book deleted successfully from database")
+            return true
+        } catch {
+            print("Error deleting book from database: \(error)")
+            throw error
+        }
+    }
 }
 
 // MARK: - Library Policies Extension

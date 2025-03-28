@@ -23,11 +23,11 @@ class SupabaseDataController: ObservableObject {
     init() {
         // Initialize SMTP configuration
         let hostname = "smtp.gmail.com"
-        let email = "sharnabhbanerjee3@gmail.com"  // Your Gmail address
-        let password = "kysb amuh xuqy zhng"       // Your app-specific password
+        let email = "pustakalaya.lms@gmail.com"  // Your Gmail address
+        let password = "kacs xgrz tndf kofp"       // Your app-specific password
         
         // Create sender user
-        senderUser = Mail.User(name: "Library Management System", email: email)
+        senderUser = Mail.User(name: "Pustakalaya", email: email)
         
         // Initialize SMTP with correct configuration
         smtp = SMTP(
@@ -116,7 +116,7 @@ class SupabaseDataController: ObservableObject {
                 } else {
                     // Generate and send OTP for non-first-time logins
                     let otp = generateOTP(for: email)
-                    let _ = try await sendOTP(to: email, name: "Admin", otp: otp)
+                    let _ = try await sendOTP(to: email, name: "Admin", otp: otp, type: "login")
                     return (true, false, admin.id, true)
                 }
             }
@@ -155,27 +155,136 @@ class SupabaseDataController: ObservableObject {
             
             // Create email content
             let emailContent = """
-            Welcome to the Library Management System! Your account has been created successfully.
-            
-            Here are your login credentials:
-            Email: \(email)
-            Password: \(password)
-            
-            Please log in and change your password immediately for security purposes.
-            
-            Best regards,
-            Library Management Team
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Pustakalaya - Welcome</title>
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&display=swap');
+                    
+                    body {
+                        font-family: 'Charter', 'Georgia', serif;
+                        line-height: 1.6;
+                        color: #333;
+                        margin: 0;
+                        padding: 0;
+                        background-color: #f9f9f7;
+                    }
+                    .container {
+                        max-width: 600px;
+                        margin: 20px auto;
+                        background-color: #ffffff;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                        border: 1px solid #e8e8e8;
+                    }
+                    .header {
+                        background-color: #FCEFD5;
+                        padding: 25px;
+                        text-align: center;
+                        border-bottom: 4px solid #FF8C00;
+                    }
+                    .header h1 {
+                        color: #FF8C00;
+                        margin: 0;
+                        font-size: 26px;
+                        font-weight: 700;
+                        letter-spacing: -0.5px;
+                    }
+                    .content {
+                        padding: 30px;
+                    }
+                    h2 {
+                        color: #5a4a3a;
+                        font-weight: 700;
+                        margin-top: 0;
+                        font-size: 22px;
+                    }
+                    .credentials-container {
+                        background-color: #FCEFD5;
+                        border-left: 4px solid #FF8C00;
+                        border-radius: 0 6px 6px 0;
+                        padding: 25px;
+                        margin: 25px 0;
+                        font-size: 18px;
+                    }
+                    .credential {
+                        font-family: 'Courier New', monospace;
+                        font-size: 18px;
+                        font-weight: bold;
+                        color: #FF8C00;
+                        margin: 15px 0;
+                        padding: 10px;
+                        background: white;
+                        display: block;
+                        border-radius: 4px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                    }
+                    .footer {
+                        background-color: #FCEFD5;
+                        padding: 20px;
+                        text-align: center;
+                        font-size: 13px;
+                        color: #666;
+                        border-top: 1px solid rgba(255,140,0,0.2);
+                    }
+                    .logo {
+                        font-weight: 700;
+                        color: #FF8C00;
+                        font-style: italic;
+                    }
+                    .signature {
+                        font-style: italic;
+                        color: #5a4a3a;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1><span class="logo">Pustakalaya</span> Library Management</h1>
+                    </div>
+                    
+                    <div class="content">
+                        <h2>Welcome to Pustakalaya</h2>
+                        <p>Dear \(name),</p>
+                        <p>Your account has been created successfully. Please use the following credentials to log in:</p>
+                        
+                        <div class="credentials-container">
+                            <p style="margin-top: 0;">Your login credentials:</p>
+                            <div class="credential"><strong>Email:</strong> \(email)</div>
+                            <div class="credential"><strong>Password:</strong> \(password)</div>
+                            <p style="margin-bottom: 0; font-size: 16px;">Please log in and change your password immediately for security purposes.</p>
+                        </div>
+                        
+                        <p>For your security, please do not share these credentials with anyone.</p>
+                        <p class="signature">With warm regards,<br>The <span class="logo">Pustakalaya</span> Team</p>
+                    </div>
+                    
+                    <div class="footer">
+                        ©️ 2023 Pustakalaya Library Management System<br>
+                        Preserving knowledge, empowering minds
+                    </div>
+                </div>
+            </body>
+            </html>
             """
             
             // Create recipient user
             let recipientUser = Mail.User(name: name, email: email)
             
+            // Create an HTML attachment
+            let htmlAttachment = Attachment(htmlContent: emailContent)
+            
             // Create the email
             let mail = Mail(
                 from: senderUser,
                 to: [recipientUser],
-                subject: "Welcome to Library Management System",
-                text: emailContent
+                subject: "Welcome To Pustakalaya",
+                attachments: [htmlAttachment]
             )
             
             // Send the email
@@ -316,32 +425,139 @@ class SupabaseDataController: ObservableObject {
         }
     }
     
-    func sendOTP(to email: String, name: String, otp: String) async throws -> Bool {
+    func sendOTP(to email: String, name: String, otp: String, type: String = "reset") async throws -> Bool {
         // Create email content
         let emailContent = """
-        Hello,
-        
-        You've requested to reset your admin password for the Library Management System.
-        
-        Your OTP is: \(otp)
-        
-        This code will expire in 10 minutes.
-        
-        If you didn't request this, please ignore this email or contact support.
-        
-        Best regards,
-        Library Management Team
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Pustakalaya - Password Reset OTP</title>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Charter:ital,wght@0,400;0,700;1,400&display=swap');
+                
+                body {
+                    font-family: 'Charter', 'Georgia', serif;
+                    line-height: 1.6;
+                    color: #333;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #f9f9f7;
+                }
+                .container {
+                    max-width: 600px;
+                    margin: 20px auto;
+                    background-color: #ffffff;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                    border: 1px solid #e8e8e8;
+                }
+                .header {
+                    background-color: #FCEFD5;
+                    padding: 25px;
+                    text-align: center;
+                    border-bottom: 4px solid #FF8C00;
+                }
+                .header h1 {
+                    color: #FF8C00;
+                    margin: 0;
+                    font-size: 26px;
+                    font-weight: 700;
+                    letter-spacing: -0.5px;
+                }
+                .content {
+                    padding: 30px;
+                }
+                h2 {
+                    color: #5a4a3a;
+                    font-weight: 700;
+                    margin-top: 0;
+                    font-size: 22px;
+                }
+                .otp-container {
+                    background-color: #FCEFD5;
+                    border-left: 4px solid #FF8C00;
+                    border-radius: 0 6px 6px 0;
+                    padding: 25px;
+                    margin: 25px 0;
+                    font-size: 18px;
+                }
+                .otp {
+                    font-family: 'Courier New', monospace;
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #FF8C00;
+                    margin: 15px 0;
+                    padding: 10px;
+                    background: white;
+                    display: block;
+                    border-radius: 4px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                }
+                .footer {
+                    background-color: #FCEFD5;
+                    padding: 20px;
+                    text-align: center;
+                    font-size: 13px;
+                    color: #666;
+                    border-top: 1px solid rgba(255,140,0,0.2);
+                }
+                .logo {
+                    font-weight: 700;
+                    color: #FF8C00;
+                    font-style: italic;
+                }
+                .signature {
+                    font-style: italic;
+                    color: #5a4a3a;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1><span class="logo">Pustakalaya</span> Library Management</h1>
+                </div>
+                
+                <div class="content">
+                    <h2>Password Reset OTP</h2>
+                    <p>Dear \(name),</p>
+                    <p>You've requested to reset your admin password for the Library Management System.</p>
+                    
+                    <div class="otp-container">
+                        <p style="margin-top: 0;">Your OTP:</p>
+                        <div class="otp">\(otp)</div>
+                        <p style="margin-bottom: 0; font-size: 16px;">This code will expire in 10 minutes.</p>
+                    </div>
+                    
+                    <p>If you didn't request this, please ignore this email or contact support.</p>
+                    <p class="signature">With warm regards,<br>The <span class="logo">Pustakalaya</span> Team</p>
+                </div>
+                
+                <div class="footer">
+                    ©️ 2023 Pustakalaya Library Management System<br>
+                    Preserving knowledge, empowering minds
+                </div>
+            </div>
+        </body>
+        </html>
         """
         
         // Create recipient user
         let recipientUser = Mail.User(name: name, email: email)
         
+        // Create an HTML attachment
+        let htmlAttachment = Attachment(htmlContent: emailContent)
+        
         // Create the email
+        let subject = type == "login" ? "Login Authentication OTP - Pustakalaya" : "Password Reset OTP - Pustakalaya"
         let mail = Mail(
             from: senderUser,
             to: [recipientUser],
-            subject: "Password Reset OTP - Library Management System",
-            text: emailContent
+            subject: subject,
+            attachments: [htmlAttachment]
         )
         
         do {

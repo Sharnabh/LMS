@@ -11,6 +11,10 @@ import SwiftUI
 struct LibrarianInitialView: View {
     @StateObject private var bookStore = BookStore()
     @EnvironmentObject private var appState: AppState
+    @StateObject private var dataController = SupabaseDataController()
+    @State private var showDisabledAlert = false
+    @AppStorage("librarianIsLoggedIn") private var librarianIsLoggedIn = false
+    @AppStorage("librarianEmail") private var librarianEmail = ""
     
     var body: some View {
         TabView {
@@ -31,8 +35,8 @@ struct LibrarianInitialView: View {
                     Image(systemName: "plus.app")
                         .imageScale(.large)
                     Text("Add Books")
-                        
                 }
+            
             ShelfLocationsView()
                 .tabItem {
                     Image(systemName: "mappin.and.ellipse")
@@ -54,6 +58,36 @@ struct LibrarianInitialView: View {
             navAppearance.backgroundColor = UIColor(Color.appBackground)
             UINavigationBar.appearance().standardAppearance = navAppearance
             UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
+            
+            // Check librarian status
+            Task {
+                await checkLibrarianStatus()
+            }
+        }
+        .alert("Account Disabled", isPresented: $showDisabledAlert) {
+            Button("OK") {
+                // Logout the librarian
+                librarianIsLoggedIn = false
+                librarianEmail = ""
+                appState.resetToFirstScreen()
+            }
+        } message: {
+            Text("Your account has been disabled. Please contact the administrator for assistance.")
+        }
+    }
+    
+    private func checkLibrarianStatus() async {
+        if let librarianId = UserDefaults.standard.string(forKey: "currentLibrarianID") {
+            do {
+                let isDisabled = try await dataController.checkLibrarianStatus(librarianId: librarianId)
+                if isDisabled {
+                    await MainActor.run {
+                        showDisabledAlert = true
+                    }
+                }
+            } catch {
+                print("Error checking librarian status: \(error)")
+            }
         }
     }
 }

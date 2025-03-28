@@ -19,6 +19,12 @@ extension SupabaseDataController {
         
         do {
             let librarian: LibrarianModel = try await query.execute().value
+            
+            // Check if librarian is disabled
+            if librarian.isDisabled == true {
+                throw NSError(domain: "", code: 403, userInfo: [NSLocalizedDescriptionKey: "Your account has been disabled. Please contact the administrator for assistance."])
+            }
+            
             // Store librarian email and id for future use
             UserDefaults.standard.set(librarian.id, forKey: "currentLibrarianID")
             UserDefaults.standard.set(librarian.email, forKey: "currentLibrarianEmail")
@@ -243,6 +249,20 @@ extension SupabaseDataController {
             return true
         } catch let error {
             print("Error deleting shelf location: \(error)")
+            throw error
+        }
+    }
+    
+    func checkLibrarianStatus(librarianId: String) async throws -> Bool {
+        let query = client.from("Librarian")
+            .select("librarian_is_disabled")
+            .eq("id", value: librarianId)
+            .single()
+        
+        do {
+            let librarian: LibrarianModel = try await query.execute().value
+            return librarian.isDisabled ?? false
+        } catch {
             throw error
         }
     }

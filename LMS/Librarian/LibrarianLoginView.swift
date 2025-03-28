@@ -331,6 +331,15 @@ struct LibrarianLoginView: View {
                 alertMessage = "Invalid credentials. Please try again."
                 showAlert = true
             }
+        } catch let error as NSError {
+            isLoading = false
+            alertTitle = "Error"
+            if error.code == 403 {
+                alertMessage = error.userInfo[NSLocalizedDescriptionKey] as? String ?? "Your account has been disabled. Please contact the administrator for assistance."
+            } else {
+                alertMessage = "Invalid credentials. Please try again."
+            }
+            showAlert = true
         } catch {
             isLoading = false
             alertTitle = "Error"

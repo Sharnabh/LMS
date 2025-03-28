@@ -17,23 +17,57 @@ struct PatronsView: View {
     @State private var errorMessage: String?
     @StateObject private var supabaseController = SupabaseDataController()
     @State private var showingAddLibrarian = false
+    @State private var isEditMode = false
+    @State private var librarianToToggle: LibrarianModel?
+    @State private var showingDisableConfirmation = false
+    @State private var showingEnableConfirmation = false
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Segmented Control
-                Picker("Patron Type", selection: $selectedSegment) {
-                    Text("Librarians").tag(0)
-                    Text("Members").tag(1)
+            ZStack {
+                VStack(spacing: 0) {
+                    // Segmented Control
+                    Picker("Patron Type", selection: $selectedSegment) {
+                        Text("Librarians").tag(0)
+                        Text("Members").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding()
+                    
+                    // Content based on selection
+                    if selectedSegment == 0 {
+                        LibrariansList(
+                            librarians: sortedLibrarians,
+                            isLoading: isLoading,
+                            errorMessage: errorMessage,
+                            isEditMode: isEditMode,
+                            onToggleDisabled: confirmToggleLibrarian
+                        )
+                    } else {
+                        MembersList(members: members, isLoading: isLoading, errorMessage: errorMessage)
+                    }
                 }
-                .pickerStyle(.segmented)
-                .padding()
                 
-                // Content based on selection
-                if selectedSegment == 0 {
-                    LibrariansList(librarians: librarians, isLoading: isLoading, errorMessage: errorMessage)
-                } else {
-                    MembersList(members: members, isLoading: isLoading, errorMessage: errorMessage)
+                // Floating add button at bottom - only show for librarians tab and not in edit mode
+                if selectedSegment == 0 && !isEditMode {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Button {
+                                showingAddLibrarian = true
+                            } label: {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.white)
+                                    .frame(width: 60, height: 60)
+                                    .background(Color.blue)
+                                    .clipShape(Circle())
+                                    .shadow(radius: 4)
+                            }
+                            .padding()
+                        }
+                    }
                 }
             }
             .navigationTitle("Patrons")
@@ -41,17 +75,44 @@ struct PatronsView: View {
             .toolbar {
                 if selectedSegment == 0 {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button {
-                            showingAddLibrarian = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 22))
+                        Button(isEditMode ? "Done" : "Edit") {
+                            withAnimation {
+                                isEditMode.toggle()
+                            }
                         }
                     }
                 }
             }
             .sheet(isPresented: $showingAddLibrarian) {
                 AddLibrarianView()
+            }
+            .alert("Disable Librarian", isPresented: $showingDisableConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Disable", role: .destructive) {
+                    if let librarian = librarianToToggle {
+                        Task {
+                            await toggleLibrarianDisabled(librarian: librarian, newStatus: true)
+                        }
+                    }
+                }
+            } message: {
+                if let librarian = librarianToToggle {
+                    Text("Are you sure you want to disable \(librarian.username)'s account? They will no longer be able to access the system.")
+                }
+            }
+            .alert("Enable Librarian", isPresented: $showingEnableConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Enable") {
+                    if let librarian = librarianToToggle {
+                        Task {
+                            await toggleLibrarianDisabled(librarian: librarian, newStatus: false)
+                        }
+                    }
+                }
+            } message: {
+                if let librarian = librarianToToggle {
+                    Text("Are you sure you want to enable \(librarian.username)'s account? They will regain access to the system.")
+                }
             }
             .task {
                 if selectedSegment == 0 {
@@ -61,6 +122,11 @@ struct PatronsView: View {
                 }
             }
             .onChange(of: selectedSegment) { _, newValue in
+                // Exit edit mode when switching tabs
+                if isEditMode {
+                    isEditMode = false
+                }
+                
                 if newValue == 0 {
                     Task {
                         await fetchLibrarians()
@@ -71,6 +137,49 @@ struct PatronsView: View {
                     }
                 }
             }
+        }
+    }
+    
+    // Sort librarians with active accounts first, then disabled accounts
+    private var sortedLibrarians: [LibrarianModel] {
+        return librarians.sorted { first, second in
+            let firstDisabled = first.isDisabled ?? false
+            let secondDisabled = second.isDisabled ?? false
+            
+            if firstDisabled == secondDisabled {
+                return first.username.lowercased() < second.username.lowercased()
+            }
+            return !firstDisabled && secondDisabled
+        }
+    }
+    
+    private func confirmToggleLibrarian(librarian: LibrarianModel) {
+        librarianToToggle = librarian
+        if librarian.isDisabled ?? false {
+            showingEnableConfirmation = true
+        } else {
+            showingDisableConfirmation = true
+        }
+    }
+    
+    private func toggleLibrarianDisabled(librarian: LibrarianModel, newStatus: Bool) async {
+        guard let id = librarian.id else { return }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            // Update in Supabase
+            try await supabaseController.client.from("Librarian")
+                .update(["librarian_is_disabled": newStatus])
+                .eq("id", value: id)
+                .execute()
+            
+            // Refresh the librarians list
+            await fetchLibrarians()
+        } catch {
+            errorMessage = "Failed to update librarian status: \(error.localizedDescription)"
+            isLoading = false
         }
     }
     
@@ -129,6 +238,8 @@ struct LibrariansList: View {
     let librarians: [LibrarianModel]
     let isLoading: Bool
     let errorMessage: String?
+    let isEditMode: Bool
+    let onToggleDisabled: (LibrarianModel) -> Void
     
     var body: some View {
         Group {
@@ -150,12 +261,13 @@ struct LibrariansList: View {
                             HStack {
                                 Image(systemName: "person.circle.fill")
                                     .font(.system(size: 40))
-                                    .foregroundColor(.purple)
+                                    .foregroundColor(librarian.isDisabled ?? false ? .gray : .purple)
                                 
                                 VStack(alignment: .leading, spacing: 4) {
                                     HStack(spacing: 4) {
                                         Text(librarian.username)
                                             .font(.headline)
+                                            .foregroundColor(librarian.isDisabled ?? false ? .gray : .primary)
                                         if !librarian.isFirstLogin {
                                             Image(systemName: "checkmark.seal.fill")
                                                 .foregroundColor(.blue)
@@ -164,13 +276,34 @@ struct LibrariansList: View {
                                     }
                                     Text(librarian.email)
                                         .font(.subheadline)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(librarian.isDisabled ?? false ? .gray : .secondary)
+                                    
+                                    // Status label
+                                    Text(librarian.isDisabled ?? false ? "Disabled" : "Active")
+                                        .font(.caption)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 2)
+                                        .background(librarian.isDisabled ?? false ? Color.red.opacity(0.2) : Color.green.opacity(0.2))
+                                        .foregroundColor(librarian.isDisabled ?? false ? .red : .green)
+                                        .cornerRadius(4)
                                 }
                                 
                                 Spacer()
+                                
+                                if isEditMode {
+                                    Toggle("", isOn: Binding(
+                                        get: { !(librarian.isDisabled ?? false) },
+                                        set: { _ in onToggleDisabled(librarian) }
+                                    ))
+                                    .labelsHidden()
+                                    .toggleStyle(SwitchToggleStyle(tint: .green))
+                                }
                             }
                             .padding(.vertical, 4)
+                            .contentShape(Rectangle())
                         }
+                        .animation(.easeInOut, value: librarian.isDisabled)
+                        .transition(.opacity)
                     }
                 }
                 .listStyle(.plain)

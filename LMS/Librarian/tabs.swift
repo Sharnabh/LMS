@@ -7,8 +7,10 @@
 
 import Foundation
 import SwiftUI
+
 struct LibrarianInitialView: View {
     @StateObject private var bookStore = BookStore()
+    @EnvironmentObject private var appState: AppState
     
     var body: some View {
         TabView {
@@ -31,14 +33,14 @@ struct LibrarianInitialView: View {
                     Text("Add Books")
                         
                 }
-
-//            ProfileView()
-//                .tabItem {
-//                    Image(systemName: "person.fill")
-//                    Text("Profile")
-//                }
+            ShelfLocationsView()
+                .tabItem {
+                    Image(systemName: "mappin.and.ellipse")
+                    Text("Book Shelf")
+                }
         }
         .environmentObject(bookStore)
+        .environmentObject(appState)
         .accentColor(.blue)
         .onAppear {
             // Set the app-wide background color

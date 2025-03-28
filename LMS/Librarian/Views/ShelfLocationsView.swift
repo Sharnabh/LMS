@@ -24,200 +24,204 @@ struct ShelfLocationsView: View {
     }
     
     var body: some View {
-        ZStack {
-            Color.appBackground.ignoresSafeArea()
-            
-            VStack {
-                // Search bar
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
+        NavigationStack {
+            ZStack {
+                Color.appBackground.ignoresSafeArea()
+                
+                VStack {
+                    // Search bar
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.gray)
+                        
+                        TextField("Search shelf locations", text: $searchText)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                    }
+                    .padding(10)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(10)
+                    .padding(.horizontal)
                     
-                    TextField("Search shelf locations", text: $searchText)
-                        .autocapitalization(.none)
-                        .disableAutocorrection(true)
-                }
-                .padding(10)
-                .background(Color(.systemGray6))
-                .cornerRadius(10)
-                .padding(.horizontal)
-                
-                if !isInitialLoaded {
-                    VStack {
-                        ProgressView("Loading shelf locations...")
-                        Text("Please wait...")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .padding(.top, 8)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if filteredShelves.isEmpty && !isAddingNew {
-                    VStack(spacing: 20) {
-                        Image(systemName: "mappin.slash")
-                            .font(.system(size: 50))
-                            .foregroundColor(.gray)
-                        
-                        Text(searchText.isEmpty ? "No shelf locations found" : "No matching shelf locations")
-                            .font(.headline)
-                            .foregroundColor(.gray)
-                        
-                        Button(action: {
-                            isAddingNew = true
-                        }) {
-                            Label("Add Shelf Location", systemImage: "plus")
-                                .padding()
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
+                    if !isInitialLoaded {
+                        VStack {
+                            ProgressView("Loading shelf locations...")
+                            Text("Please wait...")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .padding(.top, 8)
                         }
-                    }
-                    .padding()
-                    Spacer()
-                } else {
-                    List {
-                        if isAddingNew {
-                            HStack {
-                                TextField("New shelf location (e.g. A12)", text: $newShelfNo)
-                                    .autocapitalization(.allCharacters)
-                                    .disableAutocorrection(true)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                
-                                Button(action: addNewShelfLocation) {
-                                    Text("Add")
-                                }
-                                .disabled(newShelfNo.isEmpty)
-                                
-                                Button(action: {
-                                    isAddingNew = false
-                                    newShelfNo = ""
-                                }) {
-                                    Text("Cancel")
-                                        .foregroundColor(.red)
-                                }
-                            }
-                            .padding(.vertical, 5)
-                        }
-                        
-                        ForEach(filteredShelves) { shelf in
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if filteredShelves.isEmpty && !isAddingNew {
+                        VStack(spacing: 20) {
+                            Image(systemName: "mappin.slash")
+                                .font(.system(size: 50))
+                                .foregroundColor(.gray)
+                            
+                            Text(searchText.isEmpty ? "No shelf locations found" : "No matching shelf locations")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                            
                             Button(action: {
-                                selectedShelf = shelf
-                                
-                                // Pre-load books data so it's ready when sheet appears
-                                Task {
-                                    do {
-                                        try await Task.sleep(nanoseconds: 50_000_000) // 50ms delay
-                                        await bookStore.loadBooks()
-                                        showingShelfDetailSheet = true
-                                    } catch {
-                                        print("Sleep interrupted: \(error)")
-                                        showingShelfDetailSheet = true
-                                    }
-                                }
+                                isAddingNew = true
                             }) {
+                                Label("Add Shelf Location", systemImage: "plus")
+                                    .padding()
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(10)
+                            }
+                        }
+                        .padding()
+                        Spacer()
+                    } else {
+                        List {
+                            if isAddingNew {
                                 HStack {
-                                    VStack(alignment: .leading) {
-                                        Text(shelf.shelfNo)
-                                            .font(.headline)
-                                        
-                                        Text("\(shelf.bookID.count) books")
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
+                                    TextField("New shelf location (e.g. A12)", text: $newShelfNo)
+                                        .autocapitalization(.allCharacters)
+                                        .disableAutocorrection(true)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    
+                                    Button(action: addNewShelfLocation) {
+                                        Text("Add")
                                     }
+                                    .disabled(newShelfNo.isEmpty)
                                     
-                                    Spacer()
+                                    Button(action: {
+                                        isAddingNew = false
+                                        newShelfNo = ""
+                                    }) {
+                                        Text("Cancel")
+                                            .foregroundColor(.red)
+                                    }
+                                }
+                                .padding(.vertical, 5)
+                            }
+                            
+                            ForEach(filteredShelves) { shelf in
+                                Button(action: {
+                                    selectedShelf = shelf
                                     
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.gray)
+                                    // Pre-load books data so it's ready when sheet appears
+                                    Task {
+                                        do {
+                                            try await Task.sleep(nanoseconds: 50_000_000) // 50ms delay
+                                            await bookStore.loadBooks()
+                                            showingShelfDetailSheet = true
+                                        } catch {
+                                            print("Sleep interrupted: \(error)")
+                                            showingShelfDetailSheet = true
+                                        }
+                                    }
+                                }) {
+                                    HStack {
+                                        VStack(alignment: .leading) {
+                                            Text(shelf.shelfNo)
+                                                .font(.headline)
+                                            
+                                            Text("\(shelf.bookID.count) books")
+                                                .font(.subheadline)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(.gray)
+                                    }
                                 }
+                                .buttonStyle(PlainButtonStyle())
                             }
-                            .buttonStyle(PlainButtonStyle())
+                            .onDelete(perform: deleteShelfLocations)
                         }
-                        .onDelete(perform: deleteShelfLocations)
-                    }
-                    .refreshable {
-                        Task {
-                            await shelfLocationStore.loadShelfLocations()
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Shelf Locations")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        isAddingNew.toggle()
-                        if !isAddingNew {
-                            newShelfNo = ""
-                        }
-                    }) {
-                        Label(isAddingNew ? "Cancel" : "Add", systemImage: isAddingNew ? "xmark" : "plus")
-                    }
-                }
-            }
-            .onAppear {
-                Task {
-                    // Load all data first time
-                    isInitialLoaded = false
-                    await shelfLocationStore.loadShelfLocations()
-                    await bookStore.loadBooks()
-                    isInitialLoaded = true
-                }
-            }
-            .fullScreenCover(isPresented: $showingShelfDetailSheet, onDismiss: {
-                selectedShelf = nil
-            }) {
-                if let shelf = selectedShelf {
-                    NavigationView {
-                        ShelfDetailView(
-                            shelf: shelf,
-                            onBookSelected: { bookId in
-                                selectedBookId = bookId
-                                showingShelfDetailSheet = false
-                                
-                                // Ensure the book detail is shown after a slight delay
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                    showingBookDetailSheet = true
-                                }
+                        .refreshable {
+                            Task {
+                                await shelfLocationStore.loadShelfLocations()
                             }
-                        )
-                        .environmentObject(bookStore)
-                        .environmentObject(shelfLocationStore)
-                        .navigationBarTitleDisplayMode(.inline)
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarLeading) {
-                                Button("Done") {
+                        }
+                    }
+                }
+                .navigationTitle("Shelf Locations")
+                .navigationBarTitleDisplayMode(.large)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                            isAddingNew.toggle()
+                            if !isAddingNew {
+                                newShelfNo = ""
+                            }
+                        }) {
+                            Label(isAddingNew ? "Cancel" : "Add", systemImage: isAddingNew ? "xmark" : "plus")
+                        }
+                    }
+                }
+                .onAppear {
+                    Task {
+                        // Load all data first time
+                        isInitialLoaded = false
+                        await shelfLocationStore.loadShelfLocations()
+                        await bookStore.loadBooks()
+                        isInitialLoaded = true
+                    }
+                }
+                .fullScreenCover(isPresented: $showingShelfDetailSheet, onDismiss: {
+                    selectedShelf = nil
+                }) {
+                    if let shelf = selectedShelf {
+                        NavigationView {
+                            ShelfDetailView(
+                                shelf: shelf,
+                                onBookSelected: { bookId in
+                                    selectedBookId = bookId
                                     showingShelfDetailSheet = false
+                                    
+                                    // Ensure the book detail is shown after a slight delay
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                        showingBookDetailSheet = true
+                                    }
                                 }
-                            }
-                        }
-                    }
-                }
-            }
-            .fullScreenCover(isPresented: $showingBookDetailSheet, onDismiss: {
-                selectedBookId = nil
-                
-                // Only reopen shelf view if we still have a shelf selected
-                if selectedShelf != nil {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showingShelfDetailSheet = true
-                    }
-                }
-            }) {
-                if let bookId = selectedBookId {
-                    NavigationView {
-                        BookDetailedView(bookId: bookId)
+                            )
                             .environmentObject(bookStore)
+                            .environmentObject(shelfLocationStore)
+                            .navigationBarTitleDisplayMode(.inline)
                             .toolbar {
                                 ToolbarItem(placement: .navigationBarLeading) {
-                                    Button("Back") {
-                                        showingBookDetailSheet = false
+                                    Button("Done") {
+                                        showingShelfDetailSheet = false
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+                .fullScreenCover(isPresented: $showingBookDetailSheet, onDismiss: {
+                    selectedBookId = nil
+                    
+                    // Only reopen shelf view if we still have a shelf selected
+                    if selectedShelf != nil {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            showingShelfDetailSheet = true
+                        }
+                    }
+                }) {
+                    if let bookId = selectedBookId {
+                        NavigationView {
+                            BookDetailedView(bookId: bookId)
+                                .environmentObject(bookStore)
+                                .toolbar {
+                                    ToolbarItem(placement: .navigationBarLeading) {
+                                        Button("Back") {
+                                            showingBookDetailSheet = false
+                                        }
+                                    }
+                                }
+                        }
                     }
                 }
             }
+            .navigationTitle("Book Shelf")
+            .navigationBarTitleDisplayMode(.large)
         }
     }
     
@@ -365,4 +369,4 @@ struct ShelfDetailView: View {
         ShelfLocationsView()
             .environmentObject(BookStore())
     }
-} 
+}

@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var showingAnnouncementList = false
     @State private var totalMembersCount: Int = 0
     @State private var isLoadingMembers: Bool = false
+    @EnvironmentObject private var appState: AppState
     @State private var memberError: String? = nil
     
     // Add states for books
@@ -134,54 +135,50 @@ struct HomeView: View {
                         Button(action: {
                             showingAddAnnouncementSheet = true
                         }) {
-                            HStack {
-                                Image(systemName: "plus")
-                                Text("New Announcement")
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
+                            Image(systemName: "plus")
+                                .font(.title2)
+                                .foregroundColor(.blue)
                         }
                     }
                     .padding(.horizontal)
                     
                     // Announcement Type Cards
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-                            // Active Announcements Card
-                            AnnouncementTypeCard(
-                                type: .active,
-                                count: announcementStore.activeAnnouncements.count,
-                                action: {
-                                    selectedAnnouncementType = .active
-                                    showingAnnouncementList = true
-                                }
-                            )
-                            
-                            // Scheduled Announcements Card
-                            AnnouncementTypeCard(
-                                type: .scheduled,
-                                count: announcementStore.scheduledAnnouncements.count,
-                                action: {
-                                    selectedAnnouncementType = .scheduled
-                                    showingAnnouncementList = true
-                                }
-                            )
-                            
-                            // Archived Announcements Card
-                            AnnouncementTypeCard(
-                                type: .archived,
-                                showCount: false,
-                                action: {
-                                    selectedAnnouncementType = .archived
-                                    showingAnnouncementList = true
-                                }
-                            )
-                        }
-                        .padding(.horizontal)
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12)
+                    ], spacing: 12) {
+                        // Active Announcements Card
+                        AnnouncementTypeCard(
+                            type: .active,
+                            count: announcementStore.activeAnnouncements.count,
+                            action: {
+                                selectedAnnouncementType = .active
+                                showingAnnouncementList = true
+                            }
+                        )
+                        
+                        // Scheduled Announcements Card
+                        AnnouncementTypeCard(
+                            type: .scheduled,
+                            count: announcementStore.scheduledAnnouncements.count,
+                            action: {
+                                selectedAnnouncementType = .scheduled
+                                showingAnnouncementList = true
+                            }
+                        )
+                        
+                        // Archived Announcements Card
+                        AnnouncementTypeCard(
+                            type: .archived,
+                            showCount: false,
+                            action: {
+                                selectedAnnouncementType = .archived
+                                showingAnnouncementList = true
+                            }
+                        )
                     }
+                    .padding(.horizontal)
                 }
             }
             .navigationTitle("Home")
@@ -190,6 +187,7 @@ struct HomeView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink {
                         AdminProfileView()
+                            .environmentObject(appState)
                     } label: {
                         Image(systemName: "person.crop.circle.fill")
                             .font(.system(size: 22))
@@ -309,35 +307,49 @@ struct AnnouncementTypeCard: View {
     var showCount: Bool = true
     var action: () -> Void
     
+    private var icon: String {
+        switch type {
+        case .active: return "megaphone.fill"
+        case .scheduled: return "calendar"
+        case .archived: return "archivebox"
+        }
+    }
+    
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text(type.title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    
-                    Spacer()
+                    Image(systemName: icon)
+                        .font(.system(size: 18))
+                        .foregroundColor(type.color)
                     
                     if showCount {
+                        Spacer()
                         Text("\(count)")
-                            .font(.subheadline)
-                            .padding(6)
+                            .font(.footnote)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
                             .background(type.color.opacity(0.2))
                             .foregroundColor(type.color)
-                            .cornerRadius(8)
+                            .cornerRadius(6)
                     }
                 }
                 
-                Text("View \(type.title)")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                Text(type.title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.primary)
             }
             .padding()
-            .frame(width: 160)
-            .background(Color(.systemBackground))
-            .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            .frame(maxWidth: .infinity, minHeight: 90)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: type.color.opacity(0.1), radius: 8, x: 0, y: 4)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(type.color.opacity(0.2), lineWidth: 1)
+                    )
+            )
         }
     }
 }

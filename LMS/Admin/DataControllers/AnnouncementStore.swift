@@ -73,8 +73,8 @@ class AnnouncementStore: ObservableObject {
         await loadAnnouncements()
     }
     
-    func restoreAnnouncement(id: UUID) async throws {
-        try await AnnouncementService.shared.restoreAnnouncement(id: id)
+    func restoreAnnouncement(_ announcement: AnnouncementModel) async throws {
+        try await AnnouncementService.shared.restoreAnnouncement(announcement)
         await loadAnnouncements()
     }
 } 

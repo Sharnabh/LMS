@@ -1,25 +1,24 @@
 import SwiftUI
 import Supabase
 
-struct AdminProfile: Codable {
+struct LibrarianProfile: Codable {
     var fullName: String
     var dateOfBirth: String
     var email: String
 }
 
-struct AdminProfileView: View {
-    @State private var profile = AdminProfile(
-        fullName: "John Doe",
-        dateOfBirth: "20 Mar 2025",
-        email: "john.doe@example.com"
+struct LibrarianProfileView: View {
+    @State private var profile = LibrarianProfile(
+        fullName: "Jane Smith",
+        dateOfBirth: "15 Apr 1990",
+        email: "jane.smith@example.com"
     )
     @Environment(\.dismiss) private var dismiss
     @State private var isEditing = false
     @State private var showingImagePicker = false
-    @AppStorage("adminIsLoggedIn") private var adminIsLoggedIn = true
-    @AppStorage("adminEmail") private var adminEmail = ""
+    @AppStorage("librarianIsLoggedIn") private var librarianIsLoggedIn = true
+    @AppStorage("librarianEmail") private var librarianEmail = ""
     @State private var showingLogoutAlert = false
-    @State private var shouldDismissToRoot = false
     @EnvironmentObject private var appState: AppState
     
     var body: some View {
@@ -87,6 +86,7 @@ struct AdminProfileView: View {
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
                         }
+                        
                     } else {
                         ProfileInfoRow(title: "Full Name", value: profile.fullName)
                         ProfileInfoRow(title: "Date of Birth", value: profile.dateOfBirth)
@@ -117,8 +117,6 @@ struct AdminProfileView: View {
                     Text("Preferences")
                         .textCase(.none)
                 }
-                
-              
                 
                 // Logout Section
                 Section {
@@ -154,8 +152,8 @@ struct AdminProfileView: View {
                 Button("Cancel", role: .cancel) { }
                 Button("Logout", role: .destructive) {
                     // Clear authentication state
-                    adminIsLoggedIn = false
-                    adminEmail = ""
+                    librarianIsLoggedIn = false
+                    librarianEmail = ""
                     // Reset app state to go back to the first screen
                     appState.resetToFirstScreen()
                     dismiss()
@@ -167,80 +165,6 @@ struct AdminProfileView: View {
     }
 }
 
-struct ProfileInfoRow: View {
-    let title: String
-    let value: String
-    
-    var body: some View {
-        HStack {
-            Text(title)
-                .foregroundColor(.secondary)
-            Spacer()
-            Text(value)
-                .foregroundColor(.primary)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title): \(value)")
-    }
-}
-
-struct NotificationsView: View {
-    var body: some View {
-        List {
-            Section {
-                Toggle("Push Notifications", isOn: .constant(true))
-                Toggle("Email Notifications", isOn: .constant(true))
-            }
-            
-            Section {
-                Toggle("New Books", isOn: .constant(true))
-                Toggle("Due Date Reminders", isOn: .constant(true))
-                Toggle("System Updates", isOn: .constant(true))
-            } header: {
-                Text("Notification Types")
-            } footer: {
-                Text("Choose which notifications you'd like to receive")
-            }
-        }
-        .navigationTitle("Notifications")
-    }
-}
-
-//struct SupportView: View {
-//    @State private var subject = ""
-//    @State private var message = ""
-//    
-//    var body: some View {
-//        Form {
-//            Section {
-//                TextField("Subject", text: $subject)
-//                TextEditor(text: $message)
-//                    .frame(height: 100)
-//            } header: {
-//                Text("Message")
-//            }
-//            
-//            Section {
-//                Button("Send Message") {
-//                    // Handle sending support message
-//                }
-//            }
-//            
-//            Section {
-//                Link(destination: URL(string: "tel:+1234567890")!) {
-//                    Label("Call Support", systemImage: "phone.fill")
-//                }
-//                Link(destination: URL(string: "mailto:support@samplelms.com")!) {
-//                    Label("Email Support", systemImage: "envelope.fill")
-//                }
-//            } header: {
-//                Text("Other Ways to Contact Us")
-//            }
-//        }
-//        .navigationTitle("Contact Support")
-//    }
-//}
-
 #Preview {
-    AdminProfileView()
+    LibrarianProfileView()
 } 

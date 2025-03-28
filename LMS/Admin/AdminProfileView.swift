@@ -7,7 +7,7 @@ struct AdminProfile: Codable {
     var email: String
 }
 
-struct AdminHomeView: View {
+struct AdminProfileView: View {
     @State private var profile = AdminProfile(
         fullName: "John Doe",
         dateOfBirth: "20 Mar 2025",
@@ -16,8 +16,11 @@ struct AdminHomeView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isEditing = false
     @State private var showingImagePicker = false
-    @AppStorage("isLoggedIn") private var isLoggedIn = true
+    @AppStorage("adminIsLoggedIn") private var adminIsLoggedIn = true
+    @AppStorage("adminEmail") private var adminEmail = ""
     @State private var showingLogoutAlert = false
+    @State private var shouldDismissToRoot = false
+    @EnvironmentObject private var appState: AppState
     
     var body: some View {
         NavigationView {
@@ -115,38 +118,7 @@ struct AdminHomeView: View {
                         .textCase(.none)
                 }
                 
-                // Help & Support Section
-                Section {
-                    NavigationLink(destination: SupportView()) {
-                        Label {
-                            Text("Contact Support")
-                        } icon: {
-                            Image(systemName: "questionmark.circle.fill")
-                                .foregroundColor(.accentColor)
-                        }
-                    }
-                    
-                    Link(destination: URL(string: "https://www.samplelms.com/help")!) {
-                        Label {
-                            Text("Help Center")
-                        } icon: {
-                            Image(systemName: "book.fill")
-                                .foregroundColor(.accentColor)
-                        }
-                    }
-                    
-                    Link(destination: URL(string: "https://www.samplelms.com/privacy")!) {
-                        Label {
-                            Text("Privacy Policy")
-                        } icon: {
-                            Image(systemName: "hand.raised.fill")
-                                .foregroundColor(.accentColor)
-                        }
-                    }
-                } header: {
-                    Text("Help & Support")
-                        .textCase(.none)
-                }
+              
                 
                 // Logout Section
                 Section {
@@ -181,7 +153,11 @@ struct AdminHomeView: View {
             .alert("Logout", isPresented: $showingLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Logout", role: .destructive) {
-                    isLoggedIn = false
+                    // Clear authentication state
+                    adminIsLoggedIn = false
+                    adminEmail = ""
+                    // Reset app state to go back to the first screen
+                    appState.resetToFirstScreen()
                     dismiss()
                 }
             } message: {
@@ -230,41 +206,41 @@ struct NotificationsView: View {
     }
 }
 
-struct SupportView: View {
-    @State private var subject = ""
-    @State private var message = ""
-    
-    var body: some View {
-        Form {
-            Section {
-                TextField("Subject", text: $subject)
-                TextEditor(text: $message)
-                    .frame(height: 100)
-            } header: {
-                Text("Message")
-            }
-            
-            Section {
-                Button("Send Message") {
-                    // Handle sending support message
-                }
-            }
-            
-            Section {
-                Link(destination: URL(string: "tel:+1234567890")!) {
-                    Label("Call Support", systemImage: "phone.fill")
-                }
-                Link(destination: URL(string: "mailto:support@samplelms.com")!) {
-                    Label("Email Support", systemImage: "envelope.fill")
-                }
-            } header: {
-                Text("Other Ways to Contact Us")
-            }
-        }
-        .navigationTitle("Contact Support")
-    }
-}
+//struct SupportView: View {
+//    @State private var subject = ""
+//    @State private var message = ""
+//    
+//    var body: some View {
+//        Form {
+//            Section {
+//                TextField("Subject", text: $subject)
+//                TextEditor(text: $message)
+//                    .frame(height: 100)
+//            } header: {
+//                Text("Message")
+//            }
+//            
+//            Section {
+//                Button("Send Message") {
+//                    // Handle sending support message
+//                }
+//            }
+//            
+//            Section {
+//                Link(destination: URL(string: "tel:+1234567890")!) {
+//                    Label("Call Support", systemImage: "phone.fill")
+//                }
+//                Link(destination: URL(string: "mailto:support@samplelms.com")!) {
+//                    Label("Email Support", systemImage: "envelope.fill")
+//                }
+//            } header: {
+//                Text("Other Ways to Contact Us")
+//            }
+//        }
+//        .navigationTitle("Contact Support")
+//    }
+//}
 
 #Preview {
-    AdminHomeView()
+    AdminProfileView()
 } 

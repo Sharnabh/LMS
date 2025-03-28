@@ -71,147 +71,192 @@ struct HomeLibrarianView: View {
                 Color.appBackground.ignoresSafeArea()
 
                 // Content area
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack {
-                        Text("Recently Added")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary)
-                        
-                        Button(action: {
-                            withAnimation(.spring()) {
-                                showingCardView.toggle()
-                            }
-                        }) {
-                            Image(systemName: "arrow.up.arrow.down")
-                                .foregroundColor(.blue)
-                                .imageScale(.medium)
-                                .rotationEffect(showingCardView ? .degrees(180) : .degrees(0))
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        // Quick Stats Cards
+                        LazyVGrid(columns: [
+                            GridItem(.flexible(), spacing: 16),
+                            GridItem(.flexible(), spacing: 16)
+                        ], spacing: 16) {
+                            // Total Books Card
+                            HomeCard(
+                                title: "Total Books",
+                                value: "\(bookStore.books.count)",
+                                icon: "book.fill",
+                                color: .blue
+                            )
+                            
+                            // Total Members Card
+                            HomeCard(
+                                title: "Total Members",
+                                value: "\(bookStore.books.filter { $0.availableCopies > 0 }.count)",
+                                icon: "person.3.fill",
+                                color: .green
+                            )
+                            
+                            // Issued Books Card
+                            HomeCard(
+                                title: "Issued Books",
+                                value: "\(booksWithEmptyShelfLocation.count)",
+                                icon: "book.closed.fill",
+                                color: .orange
+                            )
+                            
+                            // Due Collected Card
+                            HomeCard(
+                                title: "Due Collected",
+                                value: "\(recentBooks.count)",
+                                icon: "indianrupeesign",
+                                color: .purple
+                            )
                         }
+                        .padding(.horizontal)
                         
-                        Spacer()
+                        // Divider with more spacing
+                        Divider()
+                            .padding(.vertical, 20)
                         
-                        // Add See All button
-                        NavigationLink(destination: AllBooksView()) {
-                            Text("See all")
-                                .font(.subheadline)
-                                .foregroundColor(.blue)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 8)
-
-                    if showingCardView {
-                        // Horizontal scrolling BookCardView list
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            LazyHStack(spacing: 16) {
-                                ForEach(recentBooks) { book in
-                                    NavigationLink(destination: BookDetailedView(bookId: book.id)) {
-                                        BookCardView(book: book)
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
+                        HStack {
+                            Text("Recently Added")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                            
+                            Button(action: {
+                                withAnimation(.spring()) {
+                                    showingCardView.toggle()
                                 }
+                            }) {
+                                Image(systemName: "arrow.up.arrow.down")
+                                    .foregroundColor(.blue)
+                                    .imageScale(.medium)
+                                    .rotationEffect(showingCardView ? .degrees(180) : .degrees(0))
                             }
-                            .padding(.horizontal, 16)
+                            
+                            Spacer()
+                            
+                            // Add See All button
+                            NavigationLink(destination: AllBooksView()) {
+                                Text("See all")
+                                    .font(.subheadline)
+                                    .foregroundColor(.blue)
+                            }
                         }
-                        .padding(.top, 4)
-                        .frame(height: 250)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                    } else {
-                        // Book card with swipe functionality
-                        if !recentBooks.isEmpty {
-                            tinderCardStack()
-                                .padding(.horizontal, 20)
-                                .padding(.top, 4)
-                                .frame(height: 240)
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
-                        } else {
-                            // Empty state when no books are available
-                            Text("Add your first book to see it here")
-                                .foregroundColor(.secondary)
-                                .italic()
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .frame(height: 200)
-                                .padding(.horizontal, 20)
-                                .padding(.top, 4)
-                        }
-                    }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        .padding(.bottom, 8)
 
-                   // Tiny spacer to create visual separation
-                   Spacer().frame(height: 5)
-                   
-                   // Books with Empty Shelf Location Section
-                   if !booksWithEmptyShelfLocation.isEmpty {
-                       VStack(alignment: .leading, spacing: 0) {
-                           HStack {
-                               Text("Needs Shelf Location")
-                                   .font(.title2)
-                                   .fontWeight(.bold)
-                                   .foregroundColor(.primary)
-                               
-                               Button(action: {
-                                   withAnimation(.spring()) {
-                                       showingCardView.toggle()
-                                   }
-                               }) {
-                                   Image(systemName: "arrow.up.arrow.down")
-                                       .foregroundColor(.blue)
-                                       .imageScale(.medium)
-                                       .rotationEffect(showingCardView ? .degrees(180) : .degrees(0))
-                               }
-                               
-                               Spacer()
-                               
-                               NavigationLink(destination: AllBooksWithoutShelfLocationView()) {
-                                   Text("See all")
-                                       .font(.subheadline)
-                                       .foregroundColor(.blue)
-                               }
-                           }
-                           .frame(maxWidth: .infinity, alignment: .leading)
-                           .padding(.horizontal, 16)
-                           .padding(.top, 20)
-                           .padding(.bottom, 8)
-                           
-                           if showingCardView {
-                               // Horizontal scrolling list of books without shelf location
-                               ScrollView(.horizontal, showsIndicators: false) {
-                                   LazyHStack(spacing: 16) {
-                                       ForEach(booksWithEmptyShelfLocation.prefix(10)) { book in
-                                           NavigationLink(destination: BookDetailedView(bookId: book.id)) {
-                                               BookCardView(book: book)
-                                           }
-                                           .buttonStyle(PlainButtonStyle())
+                        if showingCardView {
+                            // Horizontal scrolling BookCardView list
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                LazyHStack(spacing: 16) {
+                                    ForEach(recentBooks) { book in
+                                        NavigationLink(destination: BookDetailedView(bookId: book.id)) {
+                                            BookCardView(book: book)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                            }
+                            .padding(.top, 4)
+                            .frame(height: 250)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                        } else {
+                            // Book card with swipe functionality
+                            if !recentBooks.isEmpty {
+                                tinderCardStack()
+                                    .padding(.horizontal, 20)
+                                    .padding(.top, 4)
+                                    .frame(height: 240)
+                                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                            } else {
+                                // Empty state when no books are available
+                                Text("Add your first book to see it here")
+                                    .foregroundColor(.secondary)
+                                    .italic()
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .frame(height: 200)
+                                    .padding(.horizontal, 20)
+                                    .padding(.top, 4)
+                            }
+                        }
+
+                       // Tiny spacer to create visual separation
+                       Spacer().frame(height: 5)
+                       
+                       // Books with Empty Shelf Location Section
+                       if !booksWithEmptyShelfLocation.isEmpty {
+                           VStack(alignment: .leading, spacing: 0) {
+                               HStack {
+                                   Text("Needs Shelf Location")
+                                       .font(.title2)
+                                       .fontWeight(.bold)
+                                       .foregroundColor(.primary)
+                                   
+                                   Button(action: {
+                                       withAnimation(.spring()) {
+                                           showingCardView.toggle()
                                        }
+                                   }) {
+                                       Image(systemName: "arrow.up.arrow.down")
+                                           .foregroundColor(.blue)
+                                           .imageScale(.medium)
+                                           .rotationEffect(showingCardView ? .degrees(180) : .degrees(0))
                                    }
-                                   .padding(.horizontal, 16)
+                                   
+                                   Spacer()
+                                   
+                                   NavigationLink(destination: AllBooksWithoutShelfLocationView()) {
+                                       Text("See all")
+                                           .font(.subheadline)
+                                           .foregroundColor(.blue)
+                                   }
                                }
-                               .padding(.top, 8)
-                               .frame(height: 240)
-                               .transition(.move(edge: .top).combined(with: .opacity))
-                           } else {
-                               // Use Tinder-style card stack for empty shelf location books
-                               if !booksWithEmptyShelfLocation.isEmpty {
-                                   needsLocationTinderCardStack()
-                                       .padding(.horizontal, 20)
-                                       .padding(.top, 8)
-                                       .frame(height: 240)
-                                       .transition(.move(edge: .bottom).combined(with: .opacity))
+                               .frame(maxWidth: .infinity, alignment: .leading)
+                               .padding(.horizontal, 16)
+                               .padding(.top, 20)
+                               .padding(.bottom, 8)
+                               
+                               if showingCardView {
+                                   // Horizontal scrolling list of books without shelf location
+                                   ScrollView(.horizontal, showsIndicators: false) {
+                                       LazyHStack(spacing: 16) {
+                                           ForEach(booksWithEmptyShelfLocation.prefix(10)) { book in
+                                               NavigationLink(destination: BookDetailedView(bookId: book.id)) {
+                                                   BookCardView(book: book)
+                                               }
+                                               .buttonStyle(PlainButtonStyle())
+                                           }
+                                       }
+                                       .padding(.horizontal, 16)
+                                   }
+                                   .padding(.top, 8)
+                                   .frame(height: 240)
+                                   .transition(.move(edge: .top).combined(with: .opacity))
                                } else {
-                                   // Empty state 
-                                   Text("No books need a shelf location")
-                                       .foregroundColor(.secondary)
-                                       .italic()
-                                       .frame(maxWidth: .infinity, alignment: .center)
-                                       .frame(height: 200)
-                                       .padding(.horizontal, 20)
-                                       .padding(.top, 8)
+                                   // Use Tinder-style card stack for empty shelf location books
+                                   if !booksWithEmptyShelfLocation.isEmpty {
+                                       needsLocationTinderCardStack()
+                                           .padding(.horizontal, 20)
+                                           .padding(.top, 8)
+                                           .frame(height: 240)
+                                           .transition(.move(edge: .bottom).combined(with: .opacity))
+                                   } else {
+                                       // Empty state 
+                                       Text("No books need a shelf location")
+                                           .foregroundColor(.secondary)
+                                           .italic()
+                                           .frame(maxWidth: .infinity, alignment: .center)
+                                           .frame(height: 200)
+                                           .padding(.horizontal, 20)
+                                           .padding(.top, 8)
+                                   }
                                }
                            }
                        }
-                   }
+                    }
                 }
                 .padding(.bottom, 16)
             }
@@ -219,9 +264,24 @@ struct HomeLibrarianView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: ShelfLocationsView()) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .imageScale(.large)
+                    HStack(spacing: 16) {
+                        NavigationLink(destination: NotificationView()) {
+                            UnreadAnnouncementIcon()
+                                .simultaneousGesture(TapGesture().onEnded {
+                                    // Mark announcements as seen when navigating to the view
+                                    // This ensures the badge updates immediately
+                                    let activeAnnouncements = getActiveLibrarianAnnouncements()
+                                    AnnouncementTracker.shared.markAllAsSeen(activeAnnouncements)
+                                })
+                        }
+                        
+                        NavigationLink {
+                            LibrarianProfileView()
+                        } label: {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 22))
+                                .foregroundColor(.blue)
+                        }
                     }
                 }
             }
@@ -245,6 +305,26 @@ struct HomeLibrarianView: View {
         .onReceive(bookStore.objectWillChange) { _ in
             // Reset to show newest book when books array changes
             currentBookIndex = 0
+        }
+    }
+
+    // Helper method to get active librarian announcements
+    private func getActiveLibrarianAnnouncements() -> [AnnouncementModel] {
+        let announcementStore = AnnouncementStore()
+        let now = Date()
+        
+        // Load announcements synchronously (this is just for the badge)
+        Task {
+            await announcementStore.loadAnnouncements()
+        }
+        
+        // Filter to get only relevant, active announcements for librarians
+        return announcementStore.activeAnnouncements.filter { announcement in
+            (announcement.type == .librarian || announcement.type == .all) &&
+            announcement.isActive &&
+            !announcement.isArchived &&
+            announcement.startDate <= now &&
+            announcement.expiryDate > now
         }
     }
 

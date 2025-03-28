@@ -7,25 +7,39 @@
 
 import SwiftUI
 struct ContentView: View {
-    @State private var selectedRole: UserRole?
-    @State private var showMainApp = false
-    @State private var showAdminLogin = false
+    @StateObject private var appState = AppState()
+    @AppStorage("adminIsLoggedIn") private var adminIsLoggedIn = false
+    @AppStorage("adminEmail") private var adminEmail = ""
+    @AppStorage("librarianIsLoggedIn") private var librarianIsLoggedIn = false
+    @AppStorage("librarianEmail") private var librarianEmail = ""
     
     var body: some View {
-        if showMainApp {
-            MainAppView(userRole: selectedRole ?? .member, initialTab: 0)
-        } else if showAdminLogin {
-            AdminLoginView(showMainApp: $showMainApp)
+        if adminIsLoggedIn {
+            MainAppView(userRole: .admin, initialTab: 0)
+                .environmentObject(appState)
+        } else if librarianIsLoggedIn {
+            LibrarianInitialView()
+                .environmentObject(appState)
+        } else if appState.showMainApp {
+            MainAppView(userRole: appState.selectedRole ?? .member, initialTab: 0)
+                .environmentObject(appState)
+        } else if appState.showAdminLogin {
+            AdminLoginView(showMainApp: $appState.showMainApp)
+                .environmentObject(appState)
+        } else if appState.showLibrarianApp {
+            LibrarianInitialView()
+                .environmentObject(appState)
         } else {
-            OnboardingView(selectedRole: $selectedRole, showMainApp: $showMainApp, showAdminLogin: $showAdminLogin)
+            OnboardingView(showMainApp: $appState.showMainApp, showAdminLogin: $appState.showAdminLogin)
+                .environmentObject(appState)
         }
     }
 }
 
 struct OnboardingView: View {
-    @Binding var selectedRole: UserRole?
     @Binding var showMainApp: Bool
     @Binding var showAdminLogin: Bool
+    @EnvironmentObject private var appState: AppState
     @State private var animateHeader = false
     @State private var animateCards = false
     @State private var animateButton = false
@@ -95,11 +109,11 @@ struct OnboardingView: View {
                             description: "Manage the entire\nlibrary system",
                             iconName: "person.badge.shield.checkmark",
                             color: .purple,
-                            isSelected: selectedRole == .admin,
+                            isSelected: appState.selectedRole == .admin,
                             delay: 0.2
                         ) {
                             withAnimation(.easeOut(duration: 0.2)) {
-                                selectedRole = .admin
+                                appState.selectedRole = .admin
                             }
                         }
                         
@@ -108,11 +122,11 @@ struct OnboardingView: View {
                             description: "Manage books and\nmember borrowings",
                             iconName: "person.text.rectangle",
                             color: .blue,
-                            isSelected: selectedRole == .librarian,
+                            isSelected: appState.selectedRole == .librarian,
                             delay: 0.3
                         ) {
                             withAnimation(.easeOut(duration: 0.2)) {
-                                selectedRole = .librarian
+                                appState.selectedRole = .librarian
                             }
                         }
                     }
@@ -129,10 +143,12 @@ struct OnboardingView: View {
                     
                     // Continue button with subtle animation
                     NavigationLink(destination: {
-                        if selectedRole == .admin {
+                        if appState.selectedRole == .admin {
                             AdminLoginView(showMainApp: $showMainApp)
-                        } else if selectedRole == .librarian {
-                            LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $selectedRole)
+                                .environmentObject(appState)
+                        } else if appState.selectedRole == .librarian {
+                            LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $appState.selectedRole)
+                                .environmentObject(appState)
                         } else {
                             EmptyView()
                         }
@@ -144,14 +160,14 @@ struct OnboardingView: View {
                             .padding(.vertical, 16)
                             .padding(.horizontal, 24)
                             .background(
-                                selectedRole != nil ?
+                                appState.selectedRole != nil ?
                                 LinearGradient(colors: [.blue, .blue.opacity(0.8)], startPoint: .leading, endPoint: .trailing) :
                                 LinearGradient(colors: [.gray, .gray.opacity(0.8)], startPoint: .leading, endPoint: .trailing)
                             )
                             .cornerRadius(12)
-                            .shadow(color: selectedRole != nil ? .blue.opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
+                            .shadow(color: appState.selectedRole != nil ? .blue.opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
                     }
-                    .disabled(selectedRole == nil)
+                    .disabled(appState.selectedRole == nil)
                     .padding(.horizontal, 30)
                     .padding(.bottom, 40)
                     .opacity(animateButton ? 1 : 0)
@@ -272,7 +288,11 @@ struct RoleCard: View {
 struct MainAppView: View {
     let userRole: UserRole
     @State private var selectedTab: Int
+
     @StateObject private var adminBookStore = AdminBookStore()
+
+    @EnvironmentObject private var appState: AppState
+
     
     init(userRole: UserRole, initialTab: Int = 0) {
         self.userRole = userRole
@@ -280,9 +300,9 @@ struct MainAppView: View {
     }
     
     var body: some View {
-        NavigationView {
             TabView(selection: $selectedTab) {
                 HomeView()
+                    .environmentObject(appState)
                     .tabItem {
                         Image(systemName: "house.fill")
                         Text("Home")
@@ -322,13 +342,6 @@ struct MainAppView: View {
             }
             .toolbar(selectedTab == 0 ? .visible : .hidden, for: .navigationBar)
         }
-    }
-}
-
-enum UserRole: String {
-    case admin = "Admin"
-    case librarian = "Librarian"
-    case member = "Member"
 }
 
 // The rest of the file remains the same

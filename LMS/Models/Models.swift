@@ -31,6 +31,17 @@ struct LibrarianModel: Codable {
     let password: String
     let created_at: String?
     let isFirstLogin: Bool
+    let isDisabled: Bool?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case email
+        case username
+        case password
+        case created_at
+        case isFirstLogin
+        case isDisabled = "librarian_is_disabled"
+    }
 }
 
 //struct MemberModel: Codable {
@@ -295,20 +306,16 @@ struct LibraryPolicy: Codable, Identifiable {
     let id: UUID
     var borrowingLimit: Int
     var returnPeriod: Int
-    var reissuePeriod: Int
+//    var reissuePeriod: Int
     var fineAmount: Int
-    var gracePeriod: Int
-    var maxFine: Int
     var lastUpdated: Date
     
     enum CodingKeys: String, CodingKey {
         case id
         case borrowingLimit = "borrowing_limit"
         case returnPeriod = "return_period"
-        case reissuePeriod = "reissue_period"
+//        case reissuePeriod = "reissue_period"
         case fineAmount = "fine_amount"
-        case gracePeriod = "grace_period"
-        case maxFine = "max_fine"
         case lastUpdated = "last_updated"
     }
 }
@@ -329,6 +336,90 @@ struct LibraryTiming: Codable, Identifiable {
         case sundayClosingTime = "sunday_closing_time"
         case lastUpdated = "last_updated"
     }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        lastUpdated = try container.decode(Date.self, forKey: .lastUpdated)
+        
+        // Parse time strings for time fields
+        let weekdayOpeningTimeString = try container.decode(String.self, forKey: .weekdayOpeningTime)
+        let weekdayClosingTimeString = try container.decode(String.self, forKey: .weekdayClosingTime)
+        let sundayOpeningTimeString = try container.decode(String.self, forKey: .sundayOpeningTime)
+        let sundayClosingTimeString = try container.decode(String.self, forKey: .sundayClosingTime)
+        
+        // Convert Supabase time format (HH:MM:SS) to Date
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        formatter.timeZone = TimeZone.current  // Use local timezone instead of GMT
+        
+        // Set default times in case parsing fails
+        let calendar = Calendar.current
+        var defaultDate = calendar.startOfDay(for: Date())
+        
+        if let date = formatter.date(from: weekdayOpeningTimeString) {
+            weekdayOpeningTime = date
+        } else {
+            weekdayOpeningTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: defaultDate) ?? defaultDate
+        }
+        
+        if let date = formatter.date(from: weekdayClosingTimeString) {
+            weekdayClosingTime = date
+        } else {
+            weekdayClosingTime = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: defaultDate) ?? defaultDate
+        }
+        
+        if let date = formatter.date(from: sundayOpeningTimeString) {
+            sundayOpeningTime = date
+        } else {
+            sundayOpeningTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: defaultDate) ?? defaultDate
+        }
+        
+        if let date = formatter.date(from: sundayClosingTimeString) {
+            sundayClosingTime = date
+        } else {
+            sundayClosingTime = calendar.date(bySettingHour: 16, minute: 0, second: 0, of: defaultDate) ?? defaultDate
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(lastUpdated, forKey: .lastUpdated)
+        
+        // Convert Date to Supabase time format (HH:MM:SS)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        formatter.timeZone = TimeZone.current  // Use local timezone instead of GMT
+        
+        let weekdayOpeningTimeString = formatter.string(from: weekdayOpeningTime)
+        let weekdayClosingTimeString = formatter.string(from: weekdayClosingTime)
+        let sundayOpeningTimeString = formatter.string(from: sundayOpeningTime)
+        let sundayClosingTimeString = formatter.string(from: sundayClosingTime)
+        
+        try container.encode(weekdayOpeningTimeString, forKey: .weekdayOpeningTime)
+        try container.encode(weekdayClosingTimeString, forKey: .weekdayClosingTime)
+        try container.encode(sundayOpeningTimeString, forKey: .sundayOpeningTime)
+        try container.encode(sundayClosingTimeString, forKey: .sundayClosingTime)
+    }
+    
+    init(id: UUID = UUID(),
+         weekdayOpeningTime: Date? = nil,
+         weekdayClosingTime: Date? = nil,
+         sundayOpeningTime: Date? = nil,
+         sundayClosingTime: Date? = nil,
+         lastUpdated: Date = Date()) {
+        self.id = id
+        self.lastUpdated = lastUpdated
+        
+        let calendar = Calendar.current
+        let defaultDate = calendar.startOfDay(for: Date())
+        
+        self.weekdayOpeningTime = weekdayOpeningTime ?? calendar.date(bySettingHour: 9, minute: 0, second: 0, of: defaultDate)!
+        self.weekdayClosingTime = weekdayClosingTime ?? calendar.date(bySettingHour: 20, minute: 0, second: 0, of: defaultDate)!
+        self.sundayOpeningTime = sundayOpeningTime ?? calendar.date(bySettingHour: 10, minute: 0, second: 0, of: defaultDate)!
+        self.sundayClosingTime = sundayClosingTime ?? calendar.date(bySettingHour: 16, minute: 0, second: 0, of: defaultDate)!
+    }
 }
 
 struct BookManagementPolicy: Codable, Identifiable {
@@ -346,6 +437,7 @@ struct BookManagementPolicy: Codable, Identifiable {
         case lastUpdated = "last_updated"
     }
 }
+
 
 // MARK: - Deletion Request Model
 struct BookDeletionRequest: Codable, Identifiable {
@@ -382,4 +474,119 @@ struct BookDeletionRequest: Codable, Identifiable {
         self.adminResponse = adminResponse
         self.responseDate = responseDate
     }
+}
+
+// MARK: - Announcement Models
+struct AnnouncementModel: Codable, Identifiable {
+    let id: UUID
+    var title: String
+    var content: String
+    var type: AnnouncementType
+    var startDate: Date
+    var expiryDate: Date
+    var createdAt: Date
+    var isActive: Bool
+    var isArchived: Bool
+    var lastModified: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case content
+        case type
+        case startDate = "start_date"
+        case expiryDate = "expiry_date"
+        case createdAt = "created_at"
+        case isActive = "is_active"
+        case isArchived = "is_archived"
+        case lastModified = "last_modified"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        content = try container.decode(String.self, forKey: .content)
+        type = try container.decode(AnnouncementType.self, forKey: .type)
+        
+        let startDateString = try container.decode(String.self, forKey: .startDate)
+        startDate = dateFormatter.date(from: startDateString) ?? Date()
+        
+        let expiryDateString = try container.decode(String.self, forKey: .expiryDate)
+        expiryDate = dateFormatter.date(from: expiryDateString) ?? Date()
+        
+        let createdAtString = try container.decode(String.self, forKey: .createdAt)
+        createdAt = dateFormatter.date(from: createdAtString) ?? Date()
+        
+        let lastModifiedString = try container.decode(String.self, forKey: .lastModified)
+        lastModified = dateFormatter.date(from: lastModifiedString) ?? Date()
+        
+        isActive = try container.decode(Bool.self, forKey: .isActive)
+        isArchived = try container.decode(Bool.self, forKey: .isArchived)
+    }
+    
+    init(id: UUID = UUID(), title: String, content: String, type: AnnouncementType, startDate: Date, expiryDate: Date, createdAt: Date = Date(), isActive: Bool = true, isArchived: Bool = false, lastModified: Date = Date()) {
+        self.id = id
+        self.title = title
+        self.content = content
+        self.type = type
+        self.startDate = startDate
+        self.expiryDate = expiryDate
+        self.createdAt = createdAt
+        self.isActive = isActive
+        self.isArchived = isArchived
+        self.lastModified = lastModified
+    }
+}
+
+//// Manager to track seen announcements
+//class AnnouncementTracker: ObservableObject {
+//    static let shared = AnnouncementTracker()
+//    
+//    private let seenAnnouncementsKey = "seen_announcements"
+//    @Published private(set) var seenAnnouncementIds: Set<String> = []
+//    
+//    private init() {
+//        // Load saved seen announcement IDs from UserDefaults
+//        if let savedIdsData = UserDefaults.standard.data(forKey: seenAnnouncementsKey),
+//           let savedIds = try? JSONDecoder().decode([String].self, from: savedIdsData) {
+//            seenAnnouncementIds = Set(savedIds)
+//        }
+//    }
+//    
+//    func markAsSeen(_ announcement: AnnouncementModel) {
+//        seenAnnouncementIds.insert(announcement.id.uuidString)
+//        saveSeenAnnouncements()
+//    }
+//    
+//    func markAllAsSeen(_ announcements: [AnnouncementModel]) {
+//        for announcement in announcements {
+//            seenAnnouncementIds.insert(announcement.id.uuidString)
+//        }
+//        saveSeenAnnouncements()
+//    }
+//    
+//    func hasSeenAnnouncement(_ announcement: AnnouncementModel) -> Bool {
+//        return seenAnnouncementIds.contains(announcement.id.uuidString)
+//    }
+//    
+//    func getUnseenCount(from announcements: [AnnouncementModel]) -> Int {
+//        return announcements.filter { !hasSeenAnnouncement($0) }.count
+//    }
+//    
+//    private func saveSeenAnnouncements() {
+//        if let encodedData = try? JSONEncoder().encode(Array(seenAnnouncementIds)) {
+//            UserDefaults.standard.set(encodedData, forKey: seenAnnouncementsKey)
+//        }
+//    }
+//}
+
+enum AnnouncementType: String, Codable, CaseIterable {
+    case member = "member"
+    case librarian = "librarian"
+    case all = "all"
 }

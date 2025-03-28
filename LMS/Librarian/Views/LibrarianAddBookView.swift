@@ -242,6 +242,15 @@ struct LibrarianAddBookView: View {
                     
                     let bookWasAdded = bookStore.books.contains { $0.ISBN == isbn }
                     
+                    // Update the shelf location with the book ID
+                    if let bookID = newBook.id {
+                        let shelfUpdateSuccess = await shelfLocationStore.addBookToShelf(bookID: bookID, shelfNo: shelfLocation)
+                        
+                        if !shelfUpdateSuccess {
+                            print("Warning: Book was added but shelf location update failed")
+                        }
+                    }
+                    
                     await MainActor.run {
                         if bookWasAdded {
                             isSuccess = true

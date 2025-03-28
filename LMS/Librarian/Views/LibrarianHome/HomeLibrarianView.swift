@@ -264,12 +264,16 @@ struct HomeLibrarianView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-//                    HStack(spacing: 16) {
-//                        NavigationLink(destination: ShelfLocationsView()) {
-//                            Image(systemName: "mappin.and.ellipse")
-//                                .imageScale(.large)
-//                                .foregroundColor(.blue)
-//                        }
+                    HStack(spacing: 16) {
+                        NavigationLink(destination: NotificationView()) {
+                            UnreadAnnouncementIcon()
+                                .simultaneousGesture(TapGesture().onEnded {
+                                    // Mark announcements as seen when navigating to the view
+                                    // This ensures the badge updates immediately
+                                    let activeAnnouncements = getActiveLibrarianAnnouncements()
+                                    AnnouncementTracker.shared.markAllAsSeen(activeAnnouncements)
+                                })
+                        }
                         
                         NavigationLink {
                             LibrarianProfileView()
@@ -278,7 +282,7 @@ struct HomeLibrarianView: View {
                                 .font(.system(size: 22))
                                 .foregroundColor(.blue)
                         }
-//                    }
+                    }
                 }
             }
         }
@@ -301,6 +305,26 @@ struct HomeLibrarianView: View {
         .onReceive(bookStore.objectWillChange) { _ in
             // Reset to show newest book when books array changes
             currentBookIndex = 0
+        }
+    }
+
+    // Helper method to get active librarian announcements
+    private func getActiveLibrarianAnnouncements() -> [AnnouncementModel] {
+        let announcementStore = AnnouncementStore()
+        let now = Date()
+        
+        // Load announcements synchronously (this is just for the badge)
+        Task {
+            await announcementStore.loadAnnouncements()
+        }
+        
+        // Filter to get only relevant, active announcements for librarians
+        return announcementStore.activeAnnouncements.filter { announcement in
+            (announcement.type == .librarian || announcement.type == .all) &&
+            announcement.isActive &&
+            !announcement.isArchived &&
+            announcement.startDate <= now &&
+            announcement.expiryDate > now
         }
     }
 

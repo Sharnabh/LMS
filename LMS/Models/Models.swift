@@ -468,7 +468,7 @@ struct AnnouncementModel: Codable, Identifiable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds, .withTimeZone]
         
         id = try container.decode(UUID.self, forKey: .id)
         title = try container.decode(String.self, forKey: .title)
@@ -476,16 +476,40 @@ struct AnnouncementModel: Codable, Identifiable {
         type = try container.decode(AnnouncementType.self, forKey: .type)
         
         let startDateString = try container.decode(String.self, forKey: .startDate)
-        startDate = dateFormatter.date(from: startDateString) ?? Date()
+        if let date = dateFormatter.date(from: startDateString) {
+            startDate = date
+        } else {
+            // Try without fractional seconds if the first attempt fails
+            dateFormatter.formatOptions = [.withInternetDateTime, .withTimeZone]
+            startDate = dateFormatter.date(from: startDateString) ?? Date()
+        }
         
         let expiryDateString = try container.decode(String.self, forKey: .expiryDate)
-        expiryDate = dateFormatter.date(from: expiryDateString) ?? Date()
+        if let date = dateFormatter.date(from: expiryDateString) {
+            expiryDate = date
+        } else {
+            // Try without fractional seconds if the first attempt fails
+            dateFormatter.formatOptions = [.withInternetDateTime, .withTimeZone]
+            expiryDate = dateFormatter.date(from: expiryDateString) ?? Date()
+        }
         
         let createdAtString = try container.decode(String.self, forKey: .createdAt)
-        createdAt = dateFormatter.date(from: createdAtString) ?? Date()
+        if let date = dateFormatter.date(from: createdAtString) {
+            createdAt = date
+        } else {
+            // Try without fractional seconds if the first attempt fails
+            dateFormatter.formatOptions = [.withInternetDateTime, .withTimeZone]
+            createdAt = dateFormatter.date(from: createdAtString) ?? Date()
+        }
         
         let lastModifiedString = try container.decode(String.self, forKey: .lastModified)
-        lastModified = dateFormatter.date(from: lastModifiedString) ?? Date()
+        if let date = dateFormatter.date(from: lastModifiedString) {
+            lastModified = date
+        } else {
+            // Try without fractional seconds if the first attempt fails
+            dateFormatter.formatOptions = [.withInternetDateTime, .withTimeZone]
+            lastModified = dateFormatter.date(from: lastModifiedString) ?? Date()
+        }
         
         isActive = try container.decode(Bool.self, forKey: .isActive)
         isArchived = try container.decode(Bool.self, forKey: .isArchived)

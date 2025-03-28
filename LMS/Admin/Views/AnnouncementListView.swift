@@ -28,7 +28,12 @@ struct AnnouncementListView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                if announcements.isEmpty {
+                if announcementStore.isLoading {
+                    ProgressView("Loading announcements...")
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(8)
+                } else if announcements.isEmpty {
                     EmptyStateView(type: type)
                 } else {
                     List {
@@ -74,7 +79,7 @@ struct AnnouncementListView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .disabled(isLoading)
+                    .disabled(isLoading || announcementStore.isLoading)
                 }
             }
         }
@@ -182,6 +187,8 @@ struct AnnouncementRow: View {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
+        formatter.timeZone = .current
+        formatter.locale = .current
         return formatter
     }()
     
@@ -238,18 +245,21 @@ struct AnnouncementRow: View {
                     VStack(alignment: .trailing, spacing: 4) {
                         Label {
                             Text(dateFormatter.string(from: announcement.startDate))
+                                .foregroundColor(type == .active ? .green : .orange)
                         } icon: {
                             Image(systemName: "calendar.badge.plus")
+                                .foregroundColor(type == .active ? .green : .orange)
                         }
                         
                         Label {
                             Text(dateFormatter.string(from: announcement.expiryDate))
+                                .foregroundColor(type == .active ? .green : .orange)
                         } icon: {
                             Image(systemName: "calendar.badge.minus")
+                                .foregroundColor(type == .active ? .green : .orange)
                         }
                     }
                     .font(.caption)
-                    .foregroundColor(type == .active ? .green : .orange)
                 }
             }
         }

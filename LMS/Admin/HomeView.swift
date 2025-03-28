@@ -17,6 +17,11 @@ struct HomeView: View {
     @State private var isLoadingMembers: Bool = false
     @EnvironmentObject private var appState: AppState
     
+    // Add loading state for announcements
+    private var isLoadingAnnouncements: Bool {
+        announcementStore.isLoading
+    }
+    
     enum AnnouncementListType {
         case active, scheduled, archived
         
@@ -114,6 +119,8 @@ struct HomeView: View {
                         AnnouncementTypeCard(
                             type: .active,
                             count: announcementStore.activeAnnouncements.count,
+                            showCount: true,
+                            isLoading: isLoadingAnnouncements,
                             action: {
                                 selectedAnnouncementType = .active
                                 showingAnnouncementList = true
@@ -124,6 +131,8 @@ struct HomeView: View {
                         AnnouncementTypeCard(
                             type: .scheduled,
                             count: announcementStore.scheduledAnnouncements.count,
+                            showCount: true,
+                            isLoading: isLoadingAnnouncements,
                             action: {
                                 selectedAnnouncementType = .scheduled
                                 showingAnnouncementList = true
@@ -134,6 +143,7 @@ struct HomeView: View {
                         AnnouncementTypeCard(
                             type: .archived,
                             showCount: false,
+                            isLoading: isLoadingAnnouncements,
                             action: {
                                 selectedAnnouncementType = .archived
                                 showingAnnouncementList = true
@@ -222,6 +232,7 @@ struct AnnouncementTypeCard: View {
     let type: HomeView.AnnouncementListType
     var count: Int = 0
     var showCount: Bool = true
+    var isLoading: Bool = false
     var action: () -> Void
     
     private var icon: String {
@@ -242,13 +253,18 @@ struct AnnouncementTypeCard: View {
                     
                     if showCount {
                         Spacer()
-                        Text("\(count)")
-                            .font(.footnote)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(type.color.opacity(0.2))
-                            .foregroundColor(type.color)
-                            .cornerRadius(6)
+                        if isLoading {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        } else {
+                            Text("\(count)")
+                                .font(.footnote)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(type.color.opacity(0.2))
+                                .foregroundColor(type.color)
+                                .cornerRadius(6)
+                        }
                     }
                 }
                 
@@ -267,7 +283,9 @@ struct AnnouncementTypeCard: View {
                             .stroke(type.color.opacity(0.2), lineWidth: 1)
                     )
             )
+            .opacity(isLoading ? 0.7 : 1)
         }
+        .disabled(isLoading)
     }
 }
 

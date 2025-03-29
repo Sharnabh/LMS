@@ -156,12 +156,16 @@ class AdminBookStore: ObservableObject {
     func fetchDeletionRequests() {
         Task {
             do {
+                print("📋 Starting to fetch deletion requests...")
                 let requests = try await dataController.fetchDeletionRequests()
+                print("📋 Received \(requests.count) total deletion requests")
+                
                 await MainActor.run {
                     self.deletionRequests = requests.filter { $0.status == "pending" }
+                    print("📋 Filtered to \(self.deletionRequests.count) pending deletion requests")
                 }
             } catch {
-                print("Error fetching deletion requests: \(error)")
+                print("📋 Error fetching deletion requests: \(error)")
             }
         }
     }

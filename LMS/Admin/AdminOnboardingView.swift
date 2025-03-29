@@ -717,6 +717,14 @@ struct AdminOnboardingView: View {
     @State private var librarianEmail = ""
     @State private var hasAddedBooks = false
     
+    // Add an optional completion handler
+    var onComplete: (() -> Void)?
+    
+    // Initialize with optional completion handler
+    init(onComplete: (() -> Void)? = nil) {
+        self.onComplete = onComplete
+    }
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -907,7 +915,11 @@ struct AdminOnboardingView: View {
                             alertMessage = "Are you sure you want to continue without adding any books? You can add them later from the Resources tab."
                             showAlert = true
                         } else {
-                            showMainApp = true
+                            if let onComplete = onComplete {
+                                onComplete()
+                            } else {
+                                showMainApp = true
+                            }
                         }
                     }) {
                         Text("Finish Setup")
@@ -929,7 +941,11 @@ struct AdminOnboardingView: View {
                     message: Text(alertMessage),
                     dismissButton: .default(Text("OK")) {
                         if alertMessage.contains("Are you sure you want to continue without adding any books?") {
-                            showMainApp = true
+                            if let onComplete = onComplete {
+                                onComplete()
+                            } else {
+                                showMainApp = true
+                            }
                         }
                     }
                 )
@@ -980,9 +996,21 @@ struct AdminOnboardingView: View {
         }
     }
     
+    private func isValidEmail(_ email: String) -> Bool {
+        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+        let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
+        return emailPredicate.evaluate(with: email)
+    }
+    
     private func addLibrarian() async {
         if librarianName.isEmpty || librarianEmail.isEmpty {
             alertMessage = "Please fill in all librarian details."
+            showAlert = true
+            return
+        }
+        
+        if !isValidEmail(librarianEmail) {
+            alertMessage = "Please enter a valid email address."
             showAlert = true
             return
         }

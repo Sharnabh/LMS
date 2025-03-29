@@ -616,6 +616,7 @@ class SupabaseDataController: ObservableObject {
     }
     
     func fetchDeletionRequests() async throws -> [BookDeletionRequest] {
+        print("📋 SupabaseDataController: Fetching deletion requests from the database...")
         let query = client.from("book_requests")
             .select()
         
@@ -631,12 +632,14 @@ class SupabaseDataController: ObservableObject {
                 let response_date: String?
             }
             
+            print("📋 SupabaseDataController: Executing query to fetch deletion requests...")
             let rawRequests: [RawRequest] = try await query.execute().value
+            print("📋 SupabaseDataController: Received \(rawRequests.count) raw deletion requests")
             
             // Convert the raw data to our app model
             let formatter = ISO8601DateFormatter()
             
-            return rawRequests.map { raw in
+            let result = rawRequests.map { raw in
                 let bookIDs = raw.book_ids.compactMap { UUID(uuidString: $0) }
                 let requestDate = formatter.date(from: raw.request_date) ?? Date()
                 let responseDate = raw.response_date.flatMap { formatter.date(from: $0) }
@@ -651,8 +654,11 @@ class SupabaseDataController: ObservableObject {
                     responseDate: responseDate
                 )
             }
+            
+            print("📋 SupabaseDataController: Successfully mapped \(result.count) deletion requests")
+            return result
         } catch let error {
-            print("Error fetching deletion requests: \(error)")
+            print("📋 SupabaseDataController: Error fetching deletion requests: \(error)")
             throw error
         }
     }

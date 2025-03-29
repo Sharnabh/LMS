@@ -12,29 +12,82 @@ struct BookDeletionRequestsView: View {
     @State private var alertMessage = ""
     @State private var selectedRequestForDetails: BookDeletionRequest?
     @State private var showingBookDetails = false
-    @State private var selectedSegment = 0
+    @State private var selectedFilter: FilterType = .pending
+    
+    enum FilterType: String, CaseIterable {
+        case pending = "Pending"
+        case approved = "Approved" 
+        case rejected = "Rejected"
+        
+        var statusFilter: String {
+            switch self {
+            case .pending: return "pending"
+            case .approved: return "approved"
+            case .rejected: return "rejected"
+            }
+        }
+    }
+    
+    var filteredRequests: [BookDeletionRequest] {
+        switch selectedFilter {
+        case .pending:
+            return bookStore.deletionRequests
+        case .approved, .rejected:
+            return bookStore.deletionHistory.filter { $0.status == selectedFilter.statusFilter }
+        }
+    }
     
     var body: some View {
-        List {
-            ForEach(bookStore.deletionRequests) { request in
-                DeletionRequestCard(request: request) {
-                    // Approve action
-                    handleApproval(for: request)
-                } onReject: {
-                    // Show rejection dialog
-                    selectedRequest = request
-                    showingRejectionDialog = true
+        VStack(spacing: 0) {
+            // Filter picker
+            Picker("Filter", selection: $selectedFilter) {
+                ForEach(FilterType.allCases, id: \.self) { filter in
+                    Text(filter.rawValue).tag(filter)
                 }
-                .onTapGesture {
-                    selectedRequestForDetails = request
-                    showingBookDetails = true
-                }
-                .contentShape(Rectangle())
             }
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+            .pickerStyle(SegmentedPickerStyle())
+            .padding()
+            
+            // Request list
+            List {
+                ForEach(filteredRequests) { request in
+                    if selectedFilter == .pending {
+                        DeletionRequestCard(request: request) {
+                            // Approve action
+                            handleApproval(for: request)
+                        } onReject: {
+                            // Show rejection dialog
+                            selectedRequest = request
+                            showingRejectionDialog = true
+                        }
+                        .onTapGesture {
+                            selectedRequestForDetails = request
+                            showingBookDetails = true
+                        }
+                        .contentShape(Rectangle())
+                    } else {
+                        HistoricalRequestCard(request: request)
+                            .onTapGesture {
+                                selectedRequestForDetails = request
+                                showingBookDetails = true
+                            }
+                            .contentShape(Rectangle())
+                    }
+                }
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+            }
+            .listStyle(.plain)
+            .overlay {
+                if filteredRequests.isEmpty {
+                    ContentUnavailableView(
+                        "No \(selectedFilter.rawValue) Requests",
+                        systemImage: "tray.fill",
+                        description: Text("There are no \(selectedFilter.rawValue.lowercased()) book deletion requests to display.")
+                    )
+                }
+            }
         }
-        .listStyle(.plain)
         .navigationTitle("Deletion Requests")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -102,53 +155,9 @@ struct BookDeletionRequestsView: View {
             }
         }
         .onAppear {
+            print("📋 BookDeletionRequestsView appeared - fetching deletion requests")
             bookStore.fetchDeletionRequests()
             bookStore.fetchDeletionHistory()
-        }
-    }
-    
-    private var activeRequestsView: some View {
-        List {
-            ForEach(bookStore.deletionRequests) { request in
-                DeletionRequestCard(request: request) {
-                    // Approve action
-                    handleApproval(for: request)
-                } onReject: {
-                    // Show rejection dialog
-                    selectedRequest = request
-                    showingRejectionDialog = true
-                }
-                .onTapGesture {
-                    selectedRequestForDetails = request
-                    showingBookDetails = true
-                }
-            }
-        }
-        .overlay {
-            if bookStore.deletionRequests.isEmpty {
-                ContentUnavailableView(
-                    "No Active Requests",
-                    systemImage: "tray.fill",
-                    description: Text("There are no pending deletion requests to review.")
-                )
-            }
-        }
-    }
-    
-    private var historicalRequestsView: some View {
-        List {
-            ForEach(bookStore.deletionHistory) { request in
-                HistoricalRequestCard(request: request)
-            }
-        }
-        .overlay {
-            if bookStore.deletionHistory.isEmpty {
-                ContentUnavailableView(
-                    "No History",
-                    systemImage: "clock.fill",
-                    description: Text("No deletion request history available.")
-                )
-            }
         }
     }
     

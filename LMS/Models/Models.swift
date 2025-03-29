@@ -22,6 +22,9 @@ struct AdminModel: Codable {
     let password: String
     let is_first_login: Bool
     let created_at: String?
+    let avatar_url: String?
+    let name: String?
+    let date_of_birth: String?
 }
 
 struct LibrarianModel: Codable {
@@ -110,11 +113,13 @@ struct EmailData: Encodable {
 // MARK: - App Models
 struct Admin: Codable, Identifiable {
     let id: String
-    let name: String
+    let name: String?
     let email: String
     let password: String
     let is_first_login: Bool
     let created_at: String?
+    let avatar_url: String?
+    let date_of_birth: String?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -123,6 +128,8 @@ struct Admin: Codable, Identifiable {
         case password
         case is_first_login
         case created_at
+        case avatar_url
+        case date_of_birth
     }
 }
 

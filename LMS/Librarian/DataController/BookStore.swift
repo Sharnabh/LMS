@@ -128,6 +128,36 @@ class BookStore: ObservableObject {
         }
     }
     
+    // New method to create a deletion request instead of directly deleting books
+    func createDeletionRequest(for books: Set<LibrarianBook>) async -> Bool {
+        guard let currentLibrarianEmail = UserDefaults.standard.string(forKey: "currentLibrarianEmail") else {
+            print("Error: No librarian email found")
+            return false
+        }
+        
+        let bookIDs = books.compactMap { $0.id }
+        
+        // Create the deletion request
+        let deletionRequest = BookDeletionRequest(
+            bookIDs: bookIDs,
+            requestedBy: currentLibrarianEmail
+        )
+        
+        do {
+            let success = try await dataController.createBookDeletionRequest(deletionRequest)
+            if success {
+                print("Deletion request created successfully for \(bookIDs.count) books")
+                return true
+            } else {
+                print("Failed to create deletion request")
+                return false
+            }
+        } catch {
+            print("Error creating deletion request: \(error)")
+            return false
+        }
+    }
+    
     func getRecentlyAddedBooks(limit: Int = 10) -> [LibrarianBook] {
         let sortedBooks = books.sorted { book1, book2 in
             // Compare by addID (newer books have higher addID)

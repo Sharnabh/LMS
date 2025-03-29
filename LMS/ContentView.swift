@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-
 struct ContentView: View {
     @StateObject private var appState = AppState()
     @AppStorage("adminIsLoggedIn") private var adminIsLoggedIn = false
@@ -289,7 +288,11 @@ struct RoleCard: View {
 struct MainAppView: View {
     let userRole: UserRole
     @State private var selectedTab: Int
+
+    @StateObject private var adminBookStore = AdminBookStore()
+
     @EnvironmentObject private var appState: AppState
+
     
     init(userRole: UserRole, initialTab: Int = 0) {
         self.userRole = userRole
@@ -326,6 +329,16 @@ struct MainAppView: View {
                         Text("Policies")
                     }
                     .tag(3)
+
+                
+                BookDeletionRequestsView()
+                    .environmentObject(adminBookStore)
+                    .tabItem {
+                        Image(systemName: "trash.fill")
+                        Text("Delete")
+                    }
+                    .tag(4)
+                
             }
             .toolbar(selectedTab == 0 ? .visible : .hidden, for: .navigationBar)
         }

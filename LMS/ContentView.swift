@@ -329,15 +329,6 @@ struct MainAppView: View {
                         Text("Policies")
                     }
                     .tag(3)
-
-                
-                BookDeletionRequestsView()
-                    .environmentObject(adminBookStore)
-                    .tabItem {
-                        Image(systemName: "trash.fill")
-                        Text("Delete")
-                    }
-                    .tag(4)
                 
             }
             .toolbar(selectedTab == 0 ? .visible : .hidden, for: .navigationBar)

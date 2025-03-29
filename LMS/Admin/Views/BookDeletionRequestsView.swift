@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BookDeletionRequestsView: View {
     @EnvironmentObject private var bookStore: AdminBookStore
+    @Environment(\.dismiss) private var dismiss
     @State private var showingRejectionDialog = false
     @State private var selectedRequest: BookDeletionRequest?
     @State private var rejectionReason = ""
@@ -11,34 +12,33 @@ struct BookDeletionRequestsView: View {
     @State private var alertMessage = ""
     @State private var selectedRequestForDetails: BookDeletionRequest?
     @State private var showingBookDetails = false
+    @State private var selectedSegment = 0
     
     var body: some View {
-        List {
-            ForEach(bookStore.deletionRequests) { request in
-                DeletionRequestCard(request: request) {
-                    // Approve action
-                    handleApproval(for: request)
-                } onReject: {
-                    // Show rejection dialog
-                    selectedRequest = request
-                    showingRejectionDialog = true
-                }
-                .onTapGesture {
-                    selectedRequestForDetails = request
-                    showingBookDetails = true
-                }
+        VStack(spacing: 0) {
+            Picker("View", selection: $selectedSegment) {
+                Text("Active Requests").tag(0)
+                Text("History").tag(1)
+            }
+            .pickerStyle(.segmented)
+            .padding()
+            
+            if selectedSegment == 0 {
+                activeRequestsView
+            } else {
+                historicalRequestsView
             }
         }
         .navigationTitle("Deletion Requests")
-        .overlay {
-            if bookStore.deletionRequests.isEmpty {
-                ContentUnavailableView(
-                    "No Deletion Requests",
-                    systemImage: "tray.fill",
-                    description: Text("There are no pending deletion requests to review.")
-                )
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Done") {
+                    dismiss()
+                }
             }
-            
+        }
+        .overlay {
             if isProcessing {
                 ZStack {
                     Color.black.opacity(0.4)
@@ -93,6 +93,52 @@ struct BookDeletionRequestsView: View {
         }
         .onAppear {
             bookStore.fetchDeletionRequests()
+            bookStore.fetchDeletionHistory()
+        }
+    }
+    
+    private var activeRequestsView: some View {
+        List {
+            ForEach(bookStore.deletionRequests) { request in
+                DeletionRequestCard(request: request) {
+                    // Approve action
+                    handleApproval(for: request)
+                } onReject: {
+                    // Show rejection dialog
+                    selectedRequest = request
+                    showingRejectionDialog = true
+                }
+                .onTapGesture {
+                    selectedRequestForDetails = request
+                    showingBookDetails = true
+                }
+            }
+        }
+        .overlay {
+            if bookStore.deletionRequests.isEmpty {
+                ContentUnavailableView(
+                    "No Active Requests",
+                    systemImage: "tray.fill",
+                    description: Text("There are no pending deletion requests to review.")
+                )
+            }
+        }
+    }
+    
+    private var historicalRequestsView: some View {
+        List {
+            ForEach(bookStore.deletionHistory) { request in
+                HistoricalRequestCard(request: request)
+            }
+        }
+        .overlay {
+            if bookStore.deletionHistory.isEmpty {
+                ContentUnavailableView(
+                    "No History",
+                    systemImage: "clock.fill",
+                    description: Text("No deletion request history available.")
+                )
+            }
         }
     }
     
@@ -176,6 +222,33 @@ struct DeletionRequestCard: View {
                 }
                 .padding(.top, 8)
             }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(10)
+        .padding(.horizontal)
+    }
+}
+
+struct HistoricalRequestCard: View {
+    let request: BookDeletionRequest
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("\(request.bookIDs.count) Books")
+                    .font(.headline)
+                Spacer()
+                StatusBadge(status: request.status)
+            }
+            
+            Text("Requested by: \(request.requestedBy)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Text("Date: \(request.requestDate.formatted())")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))

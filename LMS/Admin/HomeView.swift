@@ -10,11 +10,13 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject private var announcementStore = AnnouncementStore()
+    @StateObject private var bookStore = AdminBookStore()
     @State private var showingAddAnnouncementSheet = false
     @State private var selectedAnnouncementType: AnnouncementListType = .active
     @State private var showingAnnouncementList = false
     @State private var totalMembersCount: Int = 0
     @State private var isLoadingMembers: Bool = false
+    @State private var showingNotifications = false
     @EnvironmentObject private var appState: AppState
     
     enum AnnouncementListType {
@@ -147,13 +149,33 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.automatic)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink {
-                        AdminProfileView()
-                            .environmentObject(appState)
-                    } label: {
-                        Image(systemName: "person.crop.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(.blue)
+                    HStack {
+                        Button(action: {
+                            showingNotifications = true
+                        }) {
+                            ZStack {
+                                Image(systemName: "bell.fill")
+                                    .foregroundColor(.primary)
+                                
+                                if !bookStore.deletionRequests.isEmpty {
+                                    Text("\(bookStore.deletionRequests.count)")
+                                        .font(.caption2)
+                                        .padding(5)
+                                        .background(Color.red)
+                                        .foregroundColor(.white)
+                                        .clipShape(Circle())
+                                        .offset(x: 10, y: -10)
+                                }
+                            }
+                        }
+                        
+                        NavigationLink {
+                            AdminProfileView()
+                                .environmentObject(appState)
+                        } label: {
+                            Image(systemName: "person.circle.fill")
+                                .foregroundColor(.primary)
+                        }
                     }
                 }
             }
@@ -166,8 +188,15 @@ struct HomeView: View {
                     announcementStore: announcementStore
                 )
             }
+            .sheet(isPresented: $showingNotifications) {
+                NavigationView {
+                    BookDeletionRequestsView()
+                        .environmentObject(bookStore)
+                }
+            }
             .task {
                 await loadMembersCount()
+                bookStore.fetchDeletionRequests()
             }
         }
     }

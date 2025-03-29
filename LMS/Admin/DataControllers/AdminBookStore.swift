@@ -7,6 +7,7 @@ class AdminBookStore: ObservableObject {
     
     // MARK: - Book Deletion Request Handling
     @Published var deletionRequests: [BookDeletionRequest] = []
+    @Published var deletionHistory: [BookDeletionRequest] = []
     
     init() {
         Task(priority: .userInitiated) {
@@ -157,10 +158,25 @@ class AdminBookStore: ObservableObject {
             do {
                 let requests = try await dataController.fetchDeletionRequests()
                 await MainActor.run {
-                    self.deletionRequests = requests
+                    self.deletionRequests = requests.filter { $0.status == "pending" }
                 }
             } catch {
                 print("Error fetching deletion requests: \(error)")
+            }
+        }
+    }
+    
+    func fetchDeletionHistory() {
+        Task {
+            do {
+                let requests = try await dataController.fetchDeletionRequests()
+                await MainActor.run {
+                    self.deletionHistory = requests
+                        .filter { $0.status != "pending" }
+                        .sorted { $0.requestDate > $1.requestDate } // Sort by date in descending order
+                }
+            } catch {
+                print("Error fetching deletion history: \(error)")
             }
         }
     }

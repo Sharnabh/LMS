@@ -23,7 +23,7 @@ struct AdminProfileView: View {
     @EnvironmentObject private var appState: AppState
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 // Profile Photo Section
                 Section {

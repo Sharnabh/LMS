@@ -5,6 +5,9 @@ class AdminBookStore: ObservableObject {
     @Published var books: [LibrarianBook] = []
     let dataController = SupabaseDataController()
     
+    // MARK: - Book Deletion Request Handling
+    @Published var deletionRequests: [BookDeletionRequest] = []
+    
     init() {
         Task(priority: .userInitiated) {
             do {
@@ -90,17 +93,6 @@ class AdminBookStore: ObservableObject {
         }
     }
     
-    func deleteBook(_ book: LibrarianBook) {
-        Task {
-            do {
-                let _ = try await dataController.deleteBook(book)
-                await loadBooks()
-            } catch {
-                print("Error deleting book: \(error)")
-            }
-        }
-    }
-    
     func getRecentlyAddedBooks(limit: Int = 10) -> [LibrarianBook] {
         let sortedBooks = books.sorted { book1, book2 in
             // Compare by addID first (higher addID means more recently added)
@@ -158,5 +150,99 @@ class AdminBookStore: ObservableObject {
             }
         }
         return false
+    }
+    
+    func fetchDeletionRequests() {
+        Task {
+            do {
+                let requests = try await dataController.fetchDeletionRequests()
+                await MainActor.run {
+                    self.deletionRequests = requests
+                }
+            } catch {
+                print("Error fetching deletion requests: \(error)")
+            }
+        }
+    }
+    
+    @MainActor
+    func approveDeletionRequest(_ request: BookDeletionRequest) async -> Bool {
+        do {
+            print("Starting deletion request approval process...")
+            var allBooksDeleted = true
+            var deletedBooks: [UUID] = []
+            
+            // First try to delete all books
+            for bookId in request.bookIDs {
+                if let book = try await dataController.fetchBook(by: bookId) {
+                    print("Attempting to delete book: \(book.title) (ID: \(bookId))")
+                    let deleteSuccess = try await dataController.deleteBook(book)
+                    
+                    if deleteSuccess {
+                        print("Successfully deleted book: \(book.title)")
+                        deletedBooks.append(bookId)
+                    } else {
+                        print("Failed to delete book: \(book.title)")
+                        allBooksDeleted = false
+                        break // Stop if any deletion fails
+                    }
+                } else {
+                    print("Book not found: \(bookId)")
+                    allBooksDeleted = false
+                    break // Stop if any book is not found
+                }
+            }
+            
+            if allBooksDeleted {
+                // Only update request status if all books were successfully deleted
+                let success = try await dataController.updateDeletionRequestStatus(
+                    requestId: request.id!,
+                    status: "approved",
+                    adminResponse: nil
+                )
+                
+                if success {
+                    print("Deletion request marked as approved after successful book deletions")
+                    // Refresh both the deletion requests and books lists
+                    fetchDeletionRequests()
+                    await loadBooks()
+                    return true
+                } else {
+                    print("Failed to update deletion request status")
+                    // Try to rollback deleted books (in a real production environment)
+                    // For now, just log the error
+                    print("Warning: Books were deleted but request status update failed")
+                    return false
+                }
+            } else {
+                print("Not all books could be deleted, request will remain pending")
+                return false
+            }
+        } catch {
+            print("Error in approveDeletionRequest: \(error)")
+            return false
+        }
+    }
+
+    
+    func rejectDeletionRequest(_ request: BookDeletionRequest, reason: String) async -> Bool {
+        do {
+            let success = try await dataController.updateDeletionRequestStatus(
+                requestId: request.id!,
+                status: "rejected",
+                adminResponse: reason
+            )
+            
+            if success {
+                await MainActor.run {
+                    fetchDeletionRequests()
+                }
+                return true
+            }
+            return false
+        } catch {
+            print("Error rejecting deletion request: \(error)")
+            return false
+        }
     }
 } 

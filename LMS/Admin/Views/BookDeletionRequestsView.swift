@@ -27,8 +27,12 @@ struct BookDeletionRequestsView: View {
                     selectedRequestForDetails = request
                     showingBookDetails = true
                 }
+                .contentShape(Rectangle())
             }
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
         }
+        .listStyle(.plain)
         .navigationTitle("Deletion Requests")
         .overlay {
             if bookStore.deletionRequests.isEmpty {
@@ -86,9 +90,13 @@ struct BookDeletionRequestsView: View {
             }
             .presentationDetents([.medium])
         }
-        .fullScreenCover(isPresented: $showingBookDetails) {
+        .sheet(isPresented: $showingBookDetails) {
             if let request = selectedRequestForDetails {
                 BookDeletionDetailsView(request: request)
+                    .environmentObject(bookStore)
+                    .interactiveDismissDisabled()
+                    .presentationDetents([.large, .medium])
+                    .presentationDragIndicator(.visible)
             }
         }
         .onAppear {
@@ -161,6 +169,16 @@ struct DeletionRequestCard: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
+            HStack {
+                Text("Tap to view book details")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.top, 4)
+            
             if request.status == "pending" {
                 HStack(spacing: 12) {
                     Button(action: onApprove) {
@@ -193,14 +211,31 @@ struct BookDeletionDetailsView: View {
     @State private var errorMessage: String?
     
     var body: some View {
-        NavigationView {
-            Group {
+        NavigationStack {
+            VStack {
                 if isLoading {
-                    ProgressView("Loading book details...")
+                    VStack(spacing: 20) {
+                        ProgressView("Loading book details...")
+                            .padding()
+                        Text("Request ID: \(request.id?.uuidString ?? "unknown")")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 } else if let error = errorMessage {
-                    VStack {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 50))
+                            .foregroundColor(.orange)
+                        
+                        Text("Error Loading Books")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        
                         Text(error)
                             .foregroundColor(.red)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        
                         Button("Retry") {
                             Task {
                                 await loadBooks()
@@ -208,19 +243,25 @@ struct BookDeletionDetailsView: View {
                         }
                         .buttonStyle(.bordered)
                     }
+                    .padding()
                 } else if books.isEmpty {
                     ContentUnavailableView(
                         "No Books Found",
                         systemImage: "book.closed",
-                        description: Text("Could not find details for the requested books.")
+                        description: Text("Could not find details for the books in this deletion request.")
                     )
                 } else {
-                    List(books) { book in
-                        BookDetailCard(book: book)
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            ForEach(books) { book in
+                                BookDetailCard(book: book)
+                            }
+                        }
+                        .padding(.vertical)
                     }
                 }
             }
-            .navigationTitle("Books to Delete")
+            .navigationTitle("Books to Mark as Deleted")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -228,10 +269,20 @@ struct BookDeletionDetailsView: View {
                         dismiss()
                     }
                 }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Text("\(books.count) Books")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .onAppear {
+                print("📚 BookDeletionDetailsView appeared for request: \(request.id?.uuidString ?? "unknown")")
+                print("📚 Request contains \(request.bookIDs.count) book IDs")
             }
         }
-        .interactiveDismissDisabled()
-        .task(id: request.id) {
+        .task {
+            print("📚 Starting task to load books")
             await loadBooks()
         }
     }
@@ -242,18 +293,32 @@ struct BookDeletionDetailsView: View {
         books = []
         
         do {
+            print("📚 Loading books for deletion request: \(request.id?.uuidString ?? "unknown")")
+            print("📚 Book IDs to load: \(request.bookIDs)")
+            
             var loadedBooks: [LibrarianBook] = []
             for bookId in request.bookIDs {
-                if let book = try await bookStore.dataController.fetchBook(by: bookId) {
-                    loadedBooks.append(book)
+                print("📚 Attempting to load book with ID: \(bookId)")
+                do {
+                    if let book = try await bookStore.dataController.fetchBook(by: bookId) {
+                        print("📚 Successfully loaded book: \(book.title)")
+                        loadedBooks.append(book)
+                    } else {
+                        print("📚 Book not found with ID: \(bookId)")
+                    }
+                } catch {
+                    print("📚 Error loading book \(bookId): \(error.localizedDescription)")
+                    // Continue loading other books even if one fails
                 }
             }
             
             await MainActor.run {
                 self.books = loadedBooks
+                print("📚 Total books loaded: \(loadedBooks.count)")
                 self.isLoading = false
             }
         } catch {
+            print("📚 Error in loadBooks: \(error.localizedDescription)")
             await MainActor.run {
                 self.errorMessage = "Failed to load book details: \(error.localizedDescription)"
                 self.isLoading = false
@@ -267,9 +332,23 @@ struct BookDetailCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(book.title)
-                    .font(.headline)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(book.title)
+                        .font(.headline)
+                        .lineLimit(2)
+                    
+                    Text("To be marked as deleted")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.red.opacity(0.1))
+                        )
+                }
+                
                 Spacer()
                 if let imageLink = book.imageLink {
                     AsyncImage(url: URL(string: imageLink)) { image in
@@ -281,6 +360,13 @@ struct BookDetailCard: View {
                     }
                     .frame(width: 60, height: 80)
                     .cornerRadius(4)
+                } else {
+                    Image(systemName: "book.closed")
+                        .font(.system(size: 40))
+                        .frame(width: 60, height: 80)
+                        .foregroundColor(.gray)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(4)
                 }
             }
             
@@ -295,7 +381,7 @@ struct BookDetailCard: View {
             .font(.subheadline)
             .foregroundColor(.secondary)
             
-            if let description = book.Description {
+            if let description = book.Description, !description.isEmpty {
                 Text(description)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -314,6 +400,7 @@ struct BookDetailCard: View {
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(10)
         .padding(.horizontal)
+        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 2)
     }
 }
 

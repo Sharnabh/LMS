@@ -35,6 +35,8 @@ struct LibrarianModel: Codable {
     let created_at: String?
     let isFirstLogin: Bool
     let isDisabled: Bool?
+    let date_of_birth: String?
+    let avatar_url: String?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -44,6 +46,8 @@ struct LibrarianModel: Codable {
         case created_at
         case isFirstLogin
         case isDisabled = "librarian_is_disabled"
+        case date_of_birth
+        case avatar_url
     }
 }
 

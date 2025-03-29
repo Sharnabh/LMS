@@ -144,7 +144,9 @@ class SupabaseDataController: ObservableObject {
             password: password,
             created_at: nil,
             isFirstLogin: true,
-            isDisabled: false   // Set to true for new librarians
+            isDisabled: false,   // Set to true for new librarians
+            date_of_birth: nil,
+            avatar_url: nil
         )
         
         do {
@@ -604,6 +606,7 @@ class SupabaseDataController: ObservableObject {
         let query = client.from("Books")
             .select()
             .eq("id", value: id.uuidString)
+            .eq("is_deleted", value: false)
             .single()
         
         do {

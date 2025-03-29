@@ -67,6 +67,7 @@ extension SupabaseDataController {
     func fetchBooks() async throws -> [LibrarianBook] {
         let query = client.from("Books")
             .select()
+            .eq("is_deleted", value: false)
         
         do {
             let books: [LibrarianBook] = try await query.execute().value

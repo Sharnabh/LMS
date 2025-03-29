@@ -418,44 +418,44 @@ struct AdminProfileView: View {
     }
 }
 
-struct ProfileInfoRow: View {
-    let title: String
-    let value: String
-    
-    var body: some View {
-        HStack {
-            Text(title)
-                .foregroundColor(.secondary)
-            Spacer()
-            Text(value)
-                .foregroundColor(.primary)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title): \(value)")
-    }
-}
-
-struct NotificationsView: View {
-    var body: some View {
-        List {
-            Section {
-                Toggle("Push Notifications", isOn: .constant(true))
-                Toggle("Email Notifications", isOn: .constant(true))
-            }
-            
-            Section {
-                Toggle("New Books", isOn: .constant(true))
-                Toggle("Due Date Reminders", isOn: .constant(true))
-                Toggle("System Updates", isOn: .constant(true))
-            } header: {
-                Text("Notification Types")
-            } footer: {
-                Text("Choose which notifications you'd like to receive")
-            }
-        }
-        .navigationTitle("Notifications")
-    }
-}
+//struct ProfileInfoRow: View {
+//    let title: String
+//    let value: String
+//    
+//    var body: some View {
+//        HStack {
+//            Text(title)
+//                .foregroundColor(.secondary)
+//            Spacer()
+//            Text(value)
+//                .foregroundColor(.primary)
+//        }
+//        .accessibilityElement(children: .combine)
+//        .accessibilityLabel("\(title): \(value)")
+//    }
+//}
+//
+//struct NotificationsView: View {
+//    var body: some View {
+//        List {
+//            Section {
+//                Toggle("Push Notifications", isOn: .constant(true))
+//                Toggle("Email Notifications", isOn: .constant(true))
+//            }
+//            
+//            Section {
+//                Toggle("New Books", isOn: .constant(true))
+//                Toggle("Due Date Reminders", isOn: .constant(true))
+//                Toggle("System Updates", isOn: .constant(true))
+//            } header: {
+//                Text("Notification Types")
+//            } footer: {
+//                Text("Choose which notifications you'd like to receive")
+//            }
+//        }
+//        .navigationTitle("Notifications")
+//    }
+//}
 
 //struct SupportView: View {
 //    @State private var subject = ""

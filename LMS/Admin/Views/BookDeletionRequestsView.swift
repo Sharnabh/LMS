@@ -90,13 +90,6 @@ struct BookDeletionRequestsView: View {
         }
         .navigationTitle("Deletion Requests")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("Done") {
-                    dismiss()
-                }
-            }
-        }
         .overlay {
             if isProcessing {
                 ZStack {

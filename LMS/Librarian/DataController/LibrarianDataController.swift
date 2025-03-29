@@ -286,50 +286,11 @@ extension SupabaseDataController {
             .select("librarian_is_disabled")
             .eq("id", value: librarianId)
             .single()
-            return librarian.isDisabled ?? false
-        } catch {
-            throw error
-        }
-    }
-    
-    func fetchDeletionRequests() async throws -> [BookDeletionRequest] {
-        let query = client.from("book_requests")
-            .select()
         
         do {
-            // Define a decoder type for the Supabase response
-            struct RawRequest: Codable {
-                let id: String
-                let book_ids: [String]
-                let requested_by: String
-                let request_date: String
-                let status: String
-                let admin_response: String?
-                let response_date: String?
-            }
-            
-            let rawRequests: [RawRequest] = try await query.execute().value
-            
-            // Convert the raw data to our app model
-            let formatter = ISO8601DateFormatter()
-            
-            return rawRequests.map { raw in
-                let bookIDs = raw.book_ids.compactMap { UUID(uuidString: $0) }
-                let requestDate = formatter.date(from: raw.request_date) ?? Date()
-                let responseDate = raw.response_date.flatMap { formatter.date(from: $0) }
-                
-                return BookDeletionRequest(
-                    id: UUID(uuidString: raw.id),
-                    bookIDs: bookIDs,
-                    requestedBy: raw.requested_by,
-                    requestDate: requestDate,
-                    status: raw.status,
-                    adminResponse: raw.admin_response,
-                    responseDate: responseDate
-                )
-            }
-        } catch let error {
-            print("Error fetching deletion requests: \(error)")
+            let librarian: LibrarianModel = try await query.execute().value
+            return librarian.isDisabled ?? false
+        } catch {
             throw error
         }
     }

@@ -615,6 +615,48 @@ class SupabaseDataController: ObservableObject {
         }
     }
     
+    func fetchDeletionRequests() async throws -> [BookDeletionRequest] {
+        let query = client.from("book_requests")
+            .select()
+        
+        do {
+            // Define a decoder type for the Supabase response
+            struct RawRequest: Codable {
+                let id: String
+                let book_ids: [String]
+                let requested_by: String
+                let request_date: String
+                let status: String
+                let admin_response: String?
+                let response_date: String?
+            }
+            
+            let rawRequests: [RawRequest] = try await query.execute().value
+            
+            // Convert the raw data to our app model
+            let formatter = ISO8601DateFormatter()
+            
+            return rawRequests.map { raw in
+                let bookIDs = raw.book_ids.compactMap { UUID(uuidString: $0) }
+                let requestDate = formatter.date(from: raw.request_date) ?? Date()
+                let responseDate = raw.response_date.flatMap { formatter.date(from: $0) }
+                
+                return BookDeletionRequest(
+                    id: UUID(uuidString: raw.id),
+                    bookIDs: bookIDs,
+                    requestedBy: raw.requested_by,
+                    requestDate: requestDate,
+                    status: raw.status,
+                    adminResponse: raw.admin_response,
+                    responseDate: responseDate
+                )
+            }
+        } catch let error {
+            print("Error fetching deletion requests: \(error)")
+            throw error
+        }
+    }
+    
     // MARK: - Book Operations
     
     func deleteBook(_ book: LibrarianBook) async throws -> Bool {
@@ -624,18 +666,18 @@ class SupabaseDataController: ObservableObject {
         }
         
         do {
-            print("Attempting to delete book with ID: \(bookId)")
+            print("Attempting to mark book as deleted with ID: \(bookId)")
             
-            // Delete the book from the Books table
+            // Instead of deleting, update the is_deleted flag to true
             try await client.from("Books")
-                .delete()
+                .update(["is_deleted": true])
                 .eq("id", value: bookId.uuidString)
                 .execute()
             
-            print("Book deleted successfully from database")
+            print("Book marked as deleted successfully")
             return true
         } catch {
-            print("Error deleting book from database: \(error)")
+            print("Error marking book as deleted: \(error)")
             throw error
         }
     }

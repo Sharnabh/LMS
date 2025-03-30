@@ -275,7 +275,9 @@ struct AdminLoginView: View {
             })
         }
         .fullScreenCover(isPresented: $showOnboarding) {
-            AdminOnboardingView()
+            AdminOnboardingView(onComplete: {
+                showMainApp = true
+            })
         }
         .fullScreenCover(isPresented: $showForgotPassword) {
             AdminForgotPasswordView(onComplete: {

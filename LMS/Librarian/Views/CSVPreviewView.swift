@@ -72,7 +72,7 @@ struct CSVPreviewView: View {
                 leading: Button("Cancel") {
                     dismiss()
                 },
-                trailing: Button("Import All") {
+                trailing: Button("Import") {
                     importBooks()
                 }
                 .disabled(booksToImport.isEmpty)

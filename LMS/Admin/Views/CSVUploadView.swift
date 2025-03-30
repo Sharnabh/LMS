@@ -21,15 +21,41 @@ struct CSVUploadView: View {
                 
                 // Required format section
                 GroupBox(label: Text("Required CSV Format").font(.headline)) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("• title")
-                        Text("• author (use ; for multiple authors)")
-                        Text("• genre")
-                        Text("• ISBN")
-                        Text("• publicationDate")
-                        Text("• totalCopies")
+                    VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("• title")
+                            Text("• author (use ; for multiple authors)")
+                            Text("• genre")
+                            Text("• ISBN")
+                            Text("• publicationDate")
+                            Text("• totalCopies")
+                        }
+                        .font(.system(.body, design: .monospaced))
+                        
+                        // Download Template Button
+                        ShareLink(
+                            item: createTemplate(),
+                            preview: SharePreview(
+                                "Book Upload Template",
+                                image: Image(systemName: "doc.text")
+                            )
+                        ) {
+                            HStack {
+                                Image(systemName: "arrow.down.doc")
+                                    .font(.system(size: 16))
+                                Text("Download Template")
+                                    .font(.subheadline)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.blue)
+                            )
+                            .foregroundColor(.white)
+                        }
+                        .buttonStyle(ScaleButtonStyle())
                     }
-                    .font(.system(.body, design: .monospaced))
                 }
                 .padding(.horizontal)
                 
@@ -45,41 +71,31 @@ struct CSVUploadView: View {
                 }
                 .padding(.horizontal)
                 
-                HStack(spacing: 15) {
-                    Button(action: {
-                        showFilePicker = true
-                    }) {
-                        HStack {
-                            Image(systemName: "doc.badge.plus")
-                            Text("Select CSV File")
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+                // Select CSV File Button
+                Button(action: {
+                    showFilePicker = true
+                }) {
+                    HStack {
+                        Image(systemName: "doc.badge.plus")
+                            .font(.system(size: 20))
+                        Text("Select CSV File")
+                            .font(.headline)
                     }
-                    
-                    ShareLink(
-                        item: createTemplate(),
-                        preview: SharePreview(
-                            "Book Upload Template",
-                            image: Image(systemName: "doc.text")
-                        )
-                    ) {
-                        HStack {
-                            Image(systemName: "arrow.down.doc")
-                            Text("Download Template")
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.accentColor)
+                            .shadow(color: Color.accentColor.opacity(0.3), radius: 8, x: 0, y: 4)
+                    )
+                    .foregroundColor(.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    )
                 }
+                .buttonStyle(ScaleButtonStyle())
                 .padding(.horizontal)
-                .padding(.top)
                 
                 if isLoading {
                     ProgressView("Processing CSV...")
@@ -230,4 +246,16 @@ struct CSVUploadView: View {
         
         return parsedBooks
     }
-} 
+}
+
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.95 : 1)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+#Preview {
+    CSVUploadView()
+}

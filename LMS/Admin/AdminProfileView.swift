@@ -115,6 +115,7 @@ struct AdminProfileView: View {
                     Spacer()
                 }
             }
+            .listRowBackground(Color.clear)
             
             // Personal Information Section
             Section {
@@ -270,10 +271,16 @@ struct AdminProfileView: View {
             do {
                 // First get the admin ID from the email
                 let dataController = SupabaseDataController()
-                let (exists, adminId, _) = try await dataController.verifyAdminEmail(email: adminEmail)
+                let (exists, adminId, isFirstLogin) = try await dataController.verifyAdminEmail(email: adminEmail)
                 
                 guard exists, let adminId = adminId else {
                     throw NSError(domain: "", code: 404, userInfo: [NSLocalizedDescriptionKey: "Admin account not found"])
+                }
+                
+                // Check if the admin is in first-time login mode
+                if isFirstLogin {
+                    // Admin exists but hasn't completed initial setup
+                    throw NSError(domain: "", code: 403, userInfo: [NSLocalizedDescriptionKey: "Please complete the initial setup before accessing your profile"])
                 }
                 
                 // Then fetch the full profile

@@ -28,7 +28,12 @@ struct AnnouncementListView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                if announcements.isEmpty {
+                if announcementStore.isLoading {
+                    ProgressView("Loading announcements...")
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(8)
+                } else if announcements.isEmpty {
                     EmptyStateView(type: type)
                 } else {
                     List {
@@ -42,6 +47,9 @@ struct AnnouncementListView: View {
                                 handleAction(action, for: announcement)
                             }
                         }
+                    }
+                    .refreshable {
+                        await announcementStore.loadAnnouncements()
                     }
                 }
                 
@@ -74,7 +82,13 @@ struct AnnouncementListView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .disabled(isLoading)
+                    .disabled(isLoading || announcementStore.isLoading)
+                }
+            }
+            .onAppear {
+                // Force a refresh when the view appears
+                Task {
+                    await announcementStore.loadAnnouncements()
                 }
             }
         }
@@ -89,6 +103,8 @@ struct AnnouncementListView: View {
                 switch action {
                 case .archive:
                     try await announcementStore.archiveAnnouncement(id: announcement.id)
+                    // Force refresh after archiving
+                    await announcementStore.loadAnnouncements()
                 case .restore(let updatedAnnouncement):
                     // Validate dates before restoring
                     let now = Date()
@@ -99,8 +115,12 @@ struct AnnouncementListView: View {
                     }
                     
                     try await announcementStore.restoreAnnouncement(updatedAnnouncement)
+                    // Force refresh after restoring
+                    await announcementStore.loadAnnouncements()
                 case .edit(let updatedAnnouncement):
                     try await announcementStore.updateAnnouncement(updatedAnnouncement)
+                    // Force refresh after editing
+                    await announcementStore.loadAnnouncements()
                 }
             } catch {
                 errorMessage = error.localizedDescription
@@ -182,6 +202,8 @@ struct AnnouncementRow: View {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
+        formatter.timeZone = .current
+        formatter.locale = .current
         return formatter
     }()
     
@@ -238,18 +260,21 @@ struct AnnouncementRow: View {
                     VStack(alignment: .trailing, spacing: 4) {
                         Label {
                             Text(dateFormatter.string(from: announcement.startDate))
+                                .foregroundColor(type == .active ? .green : .orange)
                         } icon: {
                             Image(systemName: "calendar.badge.plus")
+                                .foregroundColor(type == .active ? .green : .orange)
                         }
                         
                         Label {
                             Text(dateFormatter.string(from: announcement.expiryDate))
+                                .foregroundColor(type == .active ? .green : .orange)
                         } icon: {
                             Image(systemName: "calendar.badge.minus")
+                                .foregroundColor(type == .active ? .green : .orange)
                         }
                     }
                     .font(.caption)
-                    .foregroundColor(type == .active ? .green : .orange)
                 }
             }
         }

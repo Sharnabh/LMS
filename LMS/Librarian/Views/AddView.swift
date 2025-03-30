@@ -12,6 +12,9 @@ struct AddView: View {
     @State private var showAddBookSheet = false
     @State private var showCSVUploadSheet = false
     @State private var scannedCode: String = ""
+
+    @State private var showingAddSection = false // Toggle between add and view sections
+
     @State private var showingAddSection = true
     @State private var isEditing = false
     @State private var selectedBooks: Set<LibrarianBook> = []
@@ -24,6 +27,7 @@ struct AddView: View {
     @State private var showDeletionSuccess = false
     @State private var showDeletionError = false
     @State private var isProcessingDeletion = false
+
     
     var body: some View {
         NavigationView {
@@ -33,8 +37,8 @@ struct AddView: View {
                 VStack(spacing: 0) {
                     // Segmented Control
                     Picker("View Mode", selection: $showingAddSection) {
-                        Text("Add Books").tag(true)
                         Text("View Books").tag(false)
+                        Text("Add Books").tag(true)
                     }
                     .pickerStyle(.segmented)
                     .padding()

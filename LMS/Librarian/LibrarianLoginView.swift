@@ -25,6 +25,7 @@ struct LibrarianLoginView: View {
     @AppStorage("librarianIsLoggedIn") private var librarianIsLoggedIn = false
     @AppStorage("librarianEmail") private var librarianEmail = ""
     @EnvironmentObject private var appState: AppState
+    @State private var showProfileSetup = false
     
     var body: some View {
         ZStack {
@@ -277,7 +278,15 @@ struct LibrarianLoginView: View {
         // Common modifiers for both states
         .navigationBarBackButtonHidden(false)
         .fullScreenCover(isPresented: $showPasswordReset) {
-            LibrarianPasswordResetView(showMainApp: $showMainApp, showLibrarianInitialView: $showLibrarianInitialView)
+            LibrarianPasswordResetView(showMainApp: $showMainApp, showLibrarianInitialView: $showLibrarianInitialView, showProfileSetup: $showProfileSetup)
+        }
+        .fullScreenCover(isPresented: $showProfileSetup) {
+            if let librarianId = currentLibrarianId {
+                LibrarianProfileSetupView(librarianId: librarianId, onComplete: {
+                    showProfileSetup = false
+                    showLibrarianInitialView = true
+                })
+            }
         }
         .alert(isPresented: $showAlert) {
             Alert(
@@ -331,6 +340,15 @@ struct LibrarianLoginView: View {
                 alertMessage = "Invalid credentials. Please try again."
                 showAlert = true
             }
+        } catch let error as NSError {
+            isLoading = false
+            alertTitle = "Error"
+            if error.code == 403 {
+                alertMessage = error.userInfo[NSLocalizedDescriptionKey] as? String ?? "Your account has been disabled. Please contact the administrator for assistance."
+            } else {
+                alertMessage = "Invalid credentials. Please try again."
+            }
+            showAlert = true
         } catch {
             isLoading = false
             alertTitle = "Error"
@@ -446,6 +464,7 @@ struct LibrarianPasswordResetView: View {
     @State private var showPassword = false
     @State private var showNewPassword = false
     @State private var showConfirmPassword = false
+    @Binding var showProfileSetup: Bool
     
     private var passwordRequirements: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -650,7 +669,8 @@ struct LibrarianPasswordResetView: View {
                 isLoading = false
                 if success {
                     dismiss()
-                    showLibrarianInitialView = true
+                    // Instead of directly showing the initial view, show profile setup first
+                    showProfileSetup = true
                 }
             } catch {
                 isLoading = false
@@ -702,5 +722,5 @@ struct LibrarianPasswordResetView: View {
 }
 
 #Preview {
-    LibrarianPasswordResetView(showMainApp: .constant(false), showLibrarianInitialView: .constant(false))
+    LibrarianPasswordResetView(showMainApp: .constant(false), showLibrarianInitialView: .constant(false), showProfileSetup: .constant(false))
 }

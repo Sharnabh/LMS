@@ -10,6 +10,7 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject private var announcementStore = AnnouncementStore()
+    @StateObject private var bookStore = AdminBookStore()
     @State private var showingAddAnnouncementSheet = false
     @State private var selectedAnnouncementType: AnnouncementListType = .active
     @State private var showingAnnouncementList = false
@@ -22,6 +23,11 @@ struct HomeView: View {
     @State private var totalBooksCount: Int = 0
     @State private var isLoadingBooks: Bool = false
     @State private var bookError: String? = nil
+    
+    // Add loading state for announcements
+    private var isLoadingAnnouncements: Bool {
+        announcementStore.isLoading
+    }
     
     enum AnnouncementListType {
         case active, scheduled, archived
@@ -152,6 +158,8 @@ struct HomeView: View {
                         AnnouncementTypeCard(
                             type: .active,
                             count: announcementStore.activeAnnouncements.count,
+                            showCount: true,
+                            isLoading: isLoadingAnnouncements,
                             action: {
                                 selectedAnnouncementType = .active
                                 showingAnnouncementList = true
@@ -162,6 +170,8 @@ struct HomeView: View {
                         AnnouncementTypeCard(
                             type: .scheduled,
                             count: announcementStore.scheduledAnnouncements.count,
+                            showCount: true,
+                            isLoading: isLoadingAnnouncements,
                             action: {
                                 selectedAnnouncementType = .scheduled
                                 showingAnnouncementList = true
@@ -172,6 +182,7 @@ struct HomeView: View {
                         AnnouncementTypeCard(
                             type: .archived,
                             showCount: false,
+                            isLoading: isLoadingAnnouncements,
                             action: {
                                 selectedAnnouncementType = .archived
                                 showingAnnouncementList = true
@@ -185,13 +196,34 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.automatic)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink {
-                        AdminProfileView()
-                            .environmentObject(appState)
-                    } label: {
-                        Image(systemName: "person.crop.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(.blue)
+                    HStack {
+                        NavigationLink {
+                            BookDeletionRequestsView()
+                                .environmentObject(bookStore)
+                        } label: {
+                            ZStack {
+                                Image(systemName: "bell.fill")
+                                    .foregroundColor(.primary)
+                                
+                                if !bookStore.deletionRequests.isEmpty {
+                                    Text("\(bookStore.deletionRequests.count)")
+                                        .font(.caption2)
+                                        .padding(5)
+                                        .background(Color.red)
+                                        .foregroundColor(.white)
+                                        .clipShape(Circle())
+                                        .offset(x: 10, y: -10)
+                                }
+                            }
+                        }
+                        
+                        NavigationLink {
+                            AdminProfileView()
+                                .environmentObject(appState)
+                        } label: {
+                            Image(systemName: "person.circle.fill")
+                                .foregroundColor(.primary)
+                        }
                     }
                 }
             }
@@ -205,7 +237,10 @@ struct HomeView: View {
                 )
             }
             .task {
-                await loadInitialData()
+                print("🏠 HomeView task started - loading data")
+                await loadMembersCount()
+                bookStore.fetchDeletionRequests()
+                print("🏠 HomeView - Fetched deletion requests and member count")
             }
         }
     }
@@ -305,6 +340,7 @@ struct AnnouncementTypeCard: View {
     let type: HomeView.AnnouncementListType
     var count: Int = 0
     var showCount: Bool = true
+    var isLoading: Bool = false
     var action: () -> Void
     
     private var icon: String {
@@ -325,13 +361,18 @@ struct AnnouncementTypeCard: View {
                     
                     if showCount {
                         Spacer()
-                        Text("\(count)")
-                            .font(.footnote)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(type.color.opacity(0.2))
-                            .foregroundColor(type.color)
-                            .cornerRadius(6)
+                        if isLoading {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        } else {
+                            Text("\(count)")
+                                .font(.footnote)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(type.color.opacity(0.2))
+                                .foregroundColor(type.color)
+                                .cornerRadius(6)
+                        }
                     }
                 }
                 
@@ -350,12 +391,15 @@ struct AnnouncementTypeCard: View {
                             .stroke(type.color.opacity(0.2), lineWidth: 1)
                     )
             )
+            .opacity(isLoading ? 0.7 : 1)
         }
+        .disabled(isLoading)
     }
 }
 
 struct HomeView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()
+            .environmentObject(AppState())
     }
 }

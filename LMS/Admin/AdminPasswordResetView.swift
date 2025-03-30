@@ -181,7 +181,7 @@ struct AdminPasswordResetView: View {
             })
         }
         .fullScreenCover(isPresented: $showAdminOnboarding) {
-            AdminOnboardingView()
+            AdminOnboardingView(onComplete: onComplete)
         }
         .onAppear {
             withAnimation(.easeOut(duration: 0.6)) {

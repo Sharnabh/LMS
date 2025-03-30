@@ -90,11 +90,6 @@ struct AdminProfileSetupView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text("Please provide your details to complete the setup")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
                     }
                     .padding(.top, 20)
                     
@@ -185,7 +180,7 @@ struct AdminProfileSetupView: View {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             } else {
-                                Image(systemName: "arrow.right.circle.fill")
+                              
                                 Text("Next")
                             }
                         }

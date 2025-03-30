@@ -61,7 +61,7 @@ struct AdminLoginView: View {
                             .opacity(animateContent ? 1 : 0)
                             .offset(y: animateContent ? 0 : 20)
                         
-                        Text(showOTPVerification ? "Enter the verification code sent to your email" : "Enter your credentials to access the admin dashboard")
+                        Text(showOTPVerification ? "Enter the verification code sent to your email" : "")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)

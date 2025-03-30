@@ -17,6 +17,12 @@ struct HomeView: View {
     @State private var totalMembersCount: Int = 0
     @State private var isLoadingMembers: Bool = false
     @EnvironmentObject private var appState: AppState
+    @State private var memberError: String? = nil
+    
+    // Add states for books
+    @State private var totalBooksCount: Int = 0
+    @State private var isLoadingBooks: Bool = false
+    @State private var bookError: String? = nil
     
     // Add loading state for announcements
     private var isLoadingAnnouncements: Bool {
@@ -44,7 +50,7 @@ struct HomeView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Analytics Header
@@ -61,17 +67,49 @@ struct HomeView: View {
                         // Card 1
                         HomeCard(
                             title: "Total Books",
-                            value: "1,234",
+                            value: bookCountDisplay,
                             icon: "book.fill",
                             color: .blue
+                        )
+                        .overlay(
+                            Group {
+                                if bookError != nil {
+                                    Button(action: {
+                                        Task {
+                                            await loadBooksCount()
+                                        }
+                                    }) {
+                                        Image(systemName: "arrow.clockwise")
+                                            .foregroundColor(.blue)
+                                    }
+                                    .padding(8)
+                                }
+                            },
+                            alignment: .topTrailing
                         )
                         
                         // Card 2
                         HomeCard(
                             title: "All Members",
-                            value: isLoadingMembers ? "..." : "\(totalMembersCount)",
+                            value: memberCountDisplay,
                             icon: "person.2.fill",
                             color: .green
+                        )
+                        .overlay(
+                            Group {
+                                if memberError != nil {
+                                    Button(action: {
+                                        Task {
+                                            await loadMembersCount()
+                                        }
+                                    }) {
+                                        Image(systemName: "arrow.clockwise")
+                                            .foregroundColor(.green)
+                                    }
+                                    .padding(8)
+                                }
+                            },
+                            alignment: .topTrailing
                         )
                         
                         // Card 3
@@ -207,14 +245,59 @@ struct HomeView: View {
         }
     }
     
+    private func loadInitialData() async {
+        await loadMembersCount()
+        await loadBooksCount()
+    }
+    
+    private func loadBooksCount() async {
+        isLoadingBooks = true
+        bookError = nil
+        
+        do {
+            totalBooksCount = try await BookService.shared.getTotalBooksCount()
+            print("Successfully loaded book count: \(totalBooksCount)")
+        } catch {
+            print("Error loading books count: \(error)")
+            bookError = error.localizedDescription
+        }
+        
+        isLoadingBooks = false
+    }
+    
     private func loadMembersCount() async {
         isLoadingMembers = true
+        memberError = nil
+        
         do {
             totalMembersCount = try await MemberService.shared.getTotalMembersCount()
+            print("Successfully loaded member count: \(totalMembersCount)")
         } catch {
             print("Error loading members count: \(error)")
+            memberError = error.localizedDescription
         }
+        
         isLoadingMembers = false
+    }
+    
+    var bookCountDisplay: String {
+        if isLoadingBooks {
+            return "Loading..."
+        }
+        if bookError != nil {
+            return "Tap to retry"
+        }
+        return "\(totalBooksCount)"
+    }
+    
+    var memberCountDisplay: String {
+        if isLoadingMembers {
+            return "Loading..."
+        }
+        if memberError != nil {
+            return "Tap to retry"
+        }
+        return "\(totalMembersCount)"
     }
 }
 

@@ -19,6 +19,12 @@ extension SupabaseDataController {
         
         do {
             let librarian: LibrarianModel = try await query.execute().value
+            
+            // Check if librarian is disabled
+            if librarian.isDisabled == true {
+                throw NSError(domain: "", code: 403, userInfo: [NSLocalizedDescriptionKey: "Your account has been disabled. Please contact the administrator for assistance."])
+            }
+            
             // Store librarian email and id for future use
             UserDefaults.standard.set(librarian.id, forKey: "currentLibrarianID")
             UserDefaults.standard.set(librarian.email, forKey: "currentLibrarianEmail")
@@ -61,6 +67,7 @@ extension SupabaseDataController {
     func fetchBooks() async throws -> [LibrarianBook] {
         let query = client.from("Books")
             .select()
+            .eq("is_deleted", value: false)
         
         do {
             let books: [LibrarianBook] = try await query.execute().value
@@ -182,17 +189,7 @@ extension SupabaseDataController {
         }
     }
     
-    func deleteBook(_ book: LibrarianBook) async throws -> Bool {
-        do {
-            try await client.from("Books")
-                .delete()
-                .eq("id", value: book.id)
-                .execute()
-            return true
-        } catch {
-            throw error
-        }
-    }
+
     
     // MARK: - Shelf Location Methods
     
@@ -243,6 +240,58 @@ extension SupabaseDataController {
             return true
         } catch let error {
             print("Error deleting shelf location: \(error)")
+            throw error
+        }
+    }
+    
+    // MARK: - Book Deletion Requests
+    
+    func createBookDeletionRequest(_ request: BookDeletionRequest) async throws -> Bool {
+        // Create a Codable structure for the request data
+        struct RequestInsert: Codable {
+            let id: String
+            let book_ids: [String]
+            let requested_by: String
+            let request_date: String
+            let status: String
+        }
+        
+        // Format the date for Supabase
+        let formatter = ISO8601DateFormatter()
+        let dateString = formatter.string(from: request.requestDate)
+        
+        // Convert UUID arrays to string arrays for Supabase
+        let bookIDStrings = request.bookIDs.map { $0.uuidString }
+        
+        let requestData = RequestInsert(
+            id: request.id?.uuidString ?? UUID().uuidString,
+            book_ids: bookIDStrings,
+            requested_by: request.requestedBy,
+            request_date: dateString,
+            status: "pending"
+        )
+        
+        do {
+            try await client.from("book_requests")
+                .insert(requestData)
+                .execute()
+            return true
+        } catch let error {
+            print("Error creating deletion request: \(error)")
+            throw error
+        }
+    }
+    
+    func checkLibrarianStatus(librarianId: String) async throws -> Bool {
+        let query = client.from("Librarian")
+            .select("librarian_is_disabled")
+            .eq("id", value: librarianId)
+            .single()
+        
+        do {
+            let librarian: LibrarianModel = try await query.execute().value
+            return librarian.isDisabled ?? false
+        } catch {
             throw error
         }
     }

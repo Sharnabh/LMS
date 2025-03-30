@@ -15,7 +15,7 @@ struct AddView: View {
 
     @State private var showingAddSection = false // Toggle between add and view sections
 
-    //@State private var showingAddSection = true
+//    @State private var showingAddSection = true
     @State private var isEditing = false
     @State private var selectedBooks: Set<LibrarianBook> = []
     @State private var showSearchBar = false

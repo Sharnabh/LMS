@@ -176,8 +176,7 @@ struct AdminPasswordResetView: View {
         }
         .fullScreenCover(isPresented: $showProfileSetup) {
             AdminProfileSetupView(adminId: adminId, onComplete: {
-                showProfileSetup = false
-                showAdminOnboarding = true
+                onComplete()
             })
         }
         .fullScreenCover(isPresented: $showAdminOnboarding) {
@@ -240,10 +239,15 @@ struct AdminPasswordResetView: View {
         isLoading = true
         
         do {
-            try await dataController.resetAdminPassword(adminId: adminId, newPassword: newPassword)
+            let admin = try await dataController.resetAdminPassword(adminId: adminId, newPassword: newPassword)
             
             DispatchQueue.main.async {
                 isLoading = false
+                
+                // Store admin email in UserDefaults for session persistence
+                // But don't set adminIsLoggedIn yet - wait until completing the full onboarding flow
+                UserDefaults.standard.set(admin.email, forKey: "adminEmail")
+                
                 alertMessage = "Password has been updated successfully."
                 showAlert = true
             }

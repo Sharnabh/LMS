@@ -28,7 +28,7 @@ struct LibrarianInitialView: View {
 
             AddView()
                 .tabItem {
-                    Image(systemName: "plus.app")
+                    Image(systemName: "book")
                         .imageScale(.large)
                     Text("Add Books")
                         

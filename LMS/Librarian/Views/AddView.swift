@@ -11,7 +11,7 @@ struct AddView: View {
     @State private var showAddBookSheet = false
     @State private var showCSVUploadSheet = false
     @State private var scannedCode: String = ""
-    @State private var showingAddSection = true // Toggle between add and view sections
+    @State private var showingAddSection = false // Toggle between add and view sections
     
     var body: some View {
         NavigationView {
@@ -22,8 +22,8 @@ struct AddView: View {
                 VStack(spacing: 0) {
                     // Toggle between Add and View sections
                     Picker("View Mode", selection: $showingAddSection) {
-                        Text("Add Books").tag(true)
                         Text("View Books").tag(false)
+                        Text("Add Books").tag(true)
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     .padding(.horizontal, 16)

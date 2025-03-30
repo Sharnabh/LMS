@@ -1,3 +1,10 @@
+//
+//  MemberService.swift
+//  LMS
+//
+//  Created by Utkarsh Raj Saxena on 19/03/25.
+//
+
 import Foundation
 import Supabase
 

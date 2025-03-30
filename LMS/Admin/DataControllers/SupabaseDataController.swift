@@ -97,8 +97,21 @@ class SupabaseDataController: ObservableObject {
         }
     }
     
-    func resetAdminPassword(adminId: String, newPassword: String) async throws {
+    func resetAdminPassword(adminId: String, newPassword: String) async throws -> AdminModel {
         try await updateAdminPassword(adminId: adminId, newPassword: newPassword)
+        
+        // Fetch the updated admin record
+        let response: [AdminModel] = try await client.from("Admin")
+            .select("*")
+            .eq("id", value: adminId)
+            .execute()
+            .value
+        
+        guard let admin = response.first else {
+            throw NSError(domain: "", code: 404, userInfo: [NSLocalizedDescriptionKey: "Admin not found after password reset"])
+        }
+        
+        return admin
     }
     
     func authenticateAdmin(email: String, password: String) async throws -> (isAuthenticated: Bool, isFirstLogin: Bool, adminId: String?, requiresOTP: Bool) {
@@ -614,6 +627,22 @@ class SupabaseDataController: ObservableObject {
             return book
         } catch {
             print("Error fetching book by ID: \(error)")
+            return nil
+        }
+    }
+    
+    // Special method for fetching books for deletion requests that includes deleted books
+    func fetchBookForDeletionRequest(by id: UUID) async throws -> LibrarianBook? {
+        let query = client.from("Books")
+            .select()
+            .eq("id", value: id.uuidString)
+            .single()
+        
+        do {
+            let book: LibrarianBook = try await query.execute().value
+            return book
+        } catch {
+            print("Error fetching book by ID for deletion request: \(error)")
             return nil
         }
     }

@@ -16,7 +16,6 @@ struct HomeView: View {
     @State private var showingAnnouncementList = false
     @State private var totalMembersCount: Int = 0
     @State private var isLoadingMembers: Bool = false
-    @State private var showingNotifications = false
     @EnvironmentObject private var appState: AppState
     
     enum AnnouncementListType {
@@ -150,9 +149,10 @@ struct HomeView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack {
-                        Button(action: {
-                            showingNotifications = true
-                        }) {
+                        NavigationLink {
+                            BookDeletionRequestsView()
+                                .environmentObject(bookStore)
+                        } label: {
                             ZStack {
                                 Image(systemName: "bell.fill")
                                     .foregroundColor(.primary)
@@ -188,15 +188,11 @@ struct HomeView: View {
                     announcementStore: announcementStore
                 )
             }
-            .sheet(isPresented: $showingNotifications) {
-                NavigationView {
-                    BookDeletionRequestsView()
-                        .environmentObject(bookStore)
-                }
-            }
             .task {
+                print("🏠 HomeView task started - loading data")
                 await loadMembersCount()
                 bookStore.fetchDeletionRequests()
+                print("🏠 HomeView - Fetched deletion requests and member count")
             }
         }
     }

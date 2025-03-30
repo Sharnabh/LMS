@@ -132,9 +132,21 @@ struct AddLibrarianView: View {
         }
     }
     
+    private func isValidEmail(_ email: String) -> Bool {
+        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+        let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
+        return emailPredicate.evaluate(with: email)
+    }
+    
     private func addLibrarian() async {
         if librarianName.isEmpty || librarianEmail.isEmpty {
             alertMessage = "Please fill in all librarian details."
+            showAlert = true
+            return
+        }
+        
+        if !isValidEmail(librarianEmail) {
+            alertMessage = "Please enter a valid email address."
             showAlert = true
             return
         }

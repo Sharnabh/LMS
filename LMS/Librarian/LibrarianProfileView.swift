@@ -1,5 +1,6 @@
 import SwiftUI
 import Supabase
+import PhotosUI
 
 struct LibrarianProfile: Codable {
     var fullName: String
@@ -8,11 +9,10 @@ struct LibrarianProfile: Codable {
 }
 
 struct LibrarianProfileView: View {
-    @State private var profile = LibrarianProfile(
-        fullName: "Jane Smith",
-        dateOfBirth: "15 Apr 1990",
-        email: "jane.smith@example.com"
-    )
+    @State private var fullName = ""
+    @State private var dateOfBirth = ""
+    @State private var email = ""
+    @State private var avatarUrl: String?
     @Environment(\.dismiss) private var dismiss
     @State private var isEditing = false
     @State private var showingImagePicker = false
@@ -20,27 +20,87 @@ struct LibrarianProfileView: View {
     @AppStorage("librarianEmail") private var librarianEmail = ""
     @State private var showingLogoutAlert = false
     @EnvironmentObject private var appState: AppState
+    @State private var isLoading = false
+    @State private var showAlert = false
+    @State private var alertTitle = "Error"
+    @State private var alertMessage = ""
+    @State private var profileImage: UIImage?
+    @State private var imageSelection: PhotosPickerItem?
     
     var body: some View {
-        NavigationView {
             List {
                 // Profile Photo Section
                 Section {
                     HStack {
                         Spacer()
                         VStack(spacing: 8) {
-                            Image(systemName: "person.crop.circle.fill")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 100, height: 100)
-                                .foregroundColor(.accentColor)
-                                .accessibilityLabel("Profile photo")
+                            if let profileImage = profileImage {
+                                Image(uiImage: profileImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 100, height: 100)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color.blue, lineWidth: 2))
+                            } else if let avatarUrl = avatarUrl, avatarUrl.starts(with: "data:image") {
+                                // Handle base64 data URI
+                                if let imageData = extractBase64Data(from: avatarUrl),
+                                   let uiImage = UIImage(data: imageData) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 100, height: 100)
+                                        .clipShape(Circle())
+                                        .overlay(Circle().stroke(Color.blue, lineWidth: 2))
+                                } else {
+                                    // Fallback if we can't load the base64 image
+                                    Image(systemName: "person.crop.circle.fill")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 100, height: 100)
+                                        .foregroundColor(.blue)
+                                }
+                            } else if let avatarUrl = avatarUrl, !avatarUrl.isEmpty {
+                                // Handle remote URL
+                                AsyncImage(url: URL(string: avatarUrl)) { phase in
+                                    switch phase {
+                                    case .empty:
+                                        ProgressView()
+                                            .frame(width: 100, height: 100)
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 100, height: 100)
+                                            .clipShape(Circle())
+                                            .overlay(Circle().stroke(Color.blue, lineWidth: 2))
+                                    case .failure:
+                                        Image(systemName: "person.crop.circle.fill")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 100, height: 100)
+                                            .foregroundColor(.blue)
+                                    @unknown default:
+                                        Image(systemName: "person.crop.circle.fill")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 100, height: 100)
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                            } else {
+                                // Default image if no avatar URL
+                                Image(systemName: "person.crop.circle.fill")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 100, height: 100)
+                                    .foregroundColor(.blue)
+                            }
                             
                             if isEditing {
-                                Button(action: { showingImagePicker = true }) {
+                                PhotosPicker(selection: $imageSelection, matching: .images) {
                                     Text("Change Photo")
                                         .font(.subheadline)
-                                        .foregroundColor(.accentColor)
+                                        .foregroundColor(.blue)
                                 }
                                 .accessibilityLabel("Change profile photo")
                             }
@@ -57,47 +117,59 @@ struct LibrarianProfileView: View {
                             Text("Full Name")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
-                            TextField("Enter your full name", text: .init(
-                                get: { profile.fullName },
-                                set: { profile.fullName = $0 }
-                            ))
-                            .textContentType(.name)
+                            TextField("Enter your full name", text: $fullName)
+                                .textContentType(.name)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                                )
                         }
                         
+                        // Non-editable fields (display only)
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Date of Birth")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
-                            TextField("Enter date of birth", text: .init(
-                                get: { profile.dateOfBirth },
-                                set: { profile.dateOfBirth = $0 }
-                            ))
+                            Text(dateOfBirth)
+                                .padding()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                                )
                         }
                         
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Email")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
-                            TextField("Enter your email", text: .init(
-                                get: { profile.email },
-                                set: { profile.email = $0 }
-                            ))
-                            .textContentType(.emailAddress)
-                            .keyboardType(.emailAddress)
-                            .autocapitalization(.none)
+                            Text(email)
+                                .padding()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                                )
                         }
                         
                     } else {
-                        ProfileInfoRow(title: "Full Name", value: profile.fullName)
-                        ProfileInfoRow(title: "Date of Birth", value: profile.dateOfBirth)
-                        ProfileInfoRow(title: "Email", value: profile.email)
+                        ProfileInfoRow(title: "Full Name", value: fullName)
+                        ProfileInfoRow(title: "Date of Birth", value: dateOfBirth)
+                        ProfileInfoRow(title: "Email", value: email)
                     }
                 } header: {
                     Text("Personal Information")
                         .textCase(.none)
                 } footer: {
                     if isEditing {
-                        Text("Your information will be used to personalize your experience")
+                        Text("Only your full name can be changed")
                             .font(.footnote)
                             .foregroundColor(.secondary)
                     }
@@ -110,7 +182,7 @@ struct LibrarianProfileView: View {
                             Text("Notifications")
                         } icon: {
                             Image(systemName: "bell.fill")
-                                .foregroundColor(.accentColor)
+                                .foregroundColor(.blue)
                         }
                     }
                 } header: {
@@ -136,17 +208,33 @@ struct LibrarianProfileView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(isEditing ? "Done" : "Edit") {
-                        withAnimation {
-                            isEditing.toggle()
+                    Button {
+                        handleDoneButtonTap()
+                    } label: {
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                        } else {
+                            Text(isEditing ? "Done" : "Edit")
                         }
                     }
-                    .accessibilityLabel(isEditing ? "Done editing profile" : "Edit profile")
+                    .disabled(isLoading)
                 }
             }
-            .sheet(isPresented: $showingImagePicker) {
-                // Image picker implementation would go here
-                Text("Image Picker")
+            .onChange(of: imageSelection) { item in
+                Task {
+                    if let data = try? await item?.loadTransferable(type: Data.self),
+                       let uiImage = UIImage(data: data) {
+                        profileImage = uiImage
+                    }
+                }
+            }
+            .alert(isPresented: $showAlert) {
+                Alert(
+                    title: Text(alertTitle),
+                    message: Text(alertMessage),
+                    dismissButton: .default(Text("OK"))
+                )
             }
             .alert("Logout", isPresented: $showingLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
@@ -161,7 +249,306 @@ struct LibrarianProfileView: View {
             } message: {
                 Text("Are you sure you want to logout?")
             }
+            .onAppear {
+                fetchLibrarianProfile()
+            }
         }
+    
+    // Extract base64 data from a data URI
+    private func extractBase64Data(from dataURI: String) -> Data? {
+        guard dataURI.starts(with: "data:image") else { return nil }
+        
+        let components = dataURI.components(separatedBy: ",")
+        guard components.count > 1, let base64String = components.last else { return nil }
+        
+        return Data(base64Encoded: base64String)
+    }
+    
+    // Fetch librarian profile
+    private func fetchLibrarianProfile() {
+        guard let librarianId = UserDefaults.standard.string(forKey: "currentLibrarianID") else {
+            alertTitle = "Error"
+            alertMessage = "Librarian ID not found"
+            showAlert = true
+            return
+        }
+        
+        isLoading = true
+        
+        Task {
+            do {
+                let librarianModel = try await LibrarianService.shared.fetchLibrarianProfile(librarianId: librarianId)
+                
+                // Debug: Print all properties to see what we're working with
+                let mirror = Mirror(reflecting: librarianModel)
+                print("Librarian model properties:")
+                for (label, value) in mirror.children {
+                    print("Property: \(label ?? "unknown"), Value: \(value), Type: \(type(of: value))")
+                }
+                
+                await MainActor.run {
+                    // Update UI with fetched data
+                    fullName = librarianModel.username
+                    email = librarianModel.email
+                    
+                    // Format date of birth if available
+                    if let dobString = librarianModel.date_of_birth {
+                        print("Raw date of birth from model: \(dobString)")
+                        dateOfBirth = formatDateString(dobString)
+                        print("Formatted date of birth: \(dateOfBirth)")
+                    } else {
+                        print("Date of birth is nil in the model")
+                        dateOfBirth = "Not set"
+                    }
+                    
+                    // Set avatar URL if available
+                    if let url = librarianModel.avatar_url {
+                        if url.starts(with: "data:image") {
+                            // It's a base64 data URI
+                            avatarUrl = url
+                        } else if !url.isEmpty && !url.starts(with: "http") {
+                            // It's a relative path, add the base URL
+                            avatarUrl = "https://iswzgemgctojcdnbxvjv.supabase.co/storage/v1/object/public/librarianavatar/\(url)"
+                        } else {
+                            // It's already a full URL
+                            avatarUrl = url
+                        }
+                        print("Avatar URL set to: \(avatarUrl ?? "nil")")
+                    } else {
+                        print("Avatar URL is nil in the model")
+                        avatarUrl = nil
+                    }
+                    
+                    isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    alertTitle = "Error"
+                    alertMessage = "Failed to load profile: \(error.localizedDescription)"
+                    showAlert = true
+                    print("Error fetching profile: \(error)")
+                }
+            }
+        }
+    }
+    
+    // Helper function to format any date value
+    private func formatDateValue(_ value: Any) -> String {
+        // If it's already a string, try to parse it
+        if let dateString = value as? String {
+            return formatDateString(dateString)
+        }
+        
+        // If it's a Date object
+        if let date = value as? Date {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            return formatter.string(from: date)
+        }
+        
+        // If it's a TimeInterval (timestamp)
+        if let timeInterval = value as? TimeInterval {
+            let date = Date(timeIntervalSince1970: timeInterval)
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            return formatter.string(from: date)
+        }
+        
+        // If it's a dictionary with a timestamp
+        if let dict = value as? [String: Any], let timestamp = dict["$date"] as? TimeInterval {
+            let date = Date(timeIntervalSince1970: timestamp / 1000) // Convert from milliseconds
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            return formatter.string(from: date)
+        }
+        
+        // If all else fails, return a string representation
+        return "\(value)"
+    }
+    
+    // Format ISO date string to a more readable format
+    private func formatDateString(_ isoString: String) -> String {
+        // First try ISO8601 with timezone
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime]
+        
+        if let date = isoFormatter.date(from: isoString) {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            return formatter.string(from: date)
+        }
+        
+        // If that fails, try with different format options
+        isoFormatter.formatOptions = [.withFullDate, .withFullTime, .withTimeZone]
+        if let date = isoFormatter.date(from: isoString) {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            return formatter.string(from: date)
+        }
+        
+        // If ISO8601 fails, try standard date formatter with timestamp format
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+        if let date = dateFormatter.date(from: isoString) {
+            dateFormatter.dateFormat = "MMM d, yyyy"
+            return dateFormatter.string(from: date)
+        }
+        
+        // If all else fails, return the original string
+        return isoString
+    }
+    
+    // Handle Done button tap
+    private func handleDoneButtonTap() {
+        if isEditing {
+            // If we're in edit mode, save changes
+            updateProfile()
+        } else {
+            // If we're in view mode, enter edit mode
+            withAnimation {
+                isEditing = true
+            }
+        }
+    }
+    
+    // Cancel edit mode and reset changes
+    private func cancelEditMode() {
+        withAnimation {
+            isEditing = false
+            // Reset any changes
+            fetchLibrarianProfile()
+        }
+    }
+    
+    // Update profile
+    private func updateProfile() {
+        guard let librarianId = UserDefaults.standard.string(forKey: "currentLibrarianID") else {
+            alertTitle = "Error"
+            alertMessage = "Librarian ID not found"
+            showAlert = true
+            return
+        }
+        
+        isLoading = true
+        
+        Task {
+            do {
+                var avatarUrlToUpdate: String? = avatarUrl
+                
+                // Upload new image if selected
+                if let profileImage = profileImage {
+                    let resizedImage = resizeImage(image: profileImage, targetSize: CGSize(width: 300, height: 300))
+                    
+                    guard let imageData = resizedImage.jpegData(compressionQuality: 0.7) else {
+                        throw NSError(domain: "Image processing failed", code: 1001)
+                    }
+                    
+                    let timestamp = Int(Date().timeIntervalSince1970)
+                    let filename = "\(librarianId)_\(timestamp).jpg"
+                    
+                    avatarUrlToUpdate = try await LibrarianStorageService.shared.uploadLibrarianAvatar(
+                        data: imageData,
+                        filename: filename
+                    )
+                }
+                
+                // Create an encodable struct for the update data
+                struct LibrarianProfileUpdate: Encodable {
+                    let username: String
+                    let avatar_url: String?
+                }
+                
+                // Create the update data
+                let updateData = LibrarianProfileUpdate(
+                    username: fullName,
+                    avatar_url: avatarUrlToUpdate
+                )
+                
+                // Update profile
+                let dataController = SupabaseDataController()
+                try await dataController.client.from("Librarian")
+                    .update(updateData)
+                    .eq("id", value: librarianId)
+                    .execute()
+                
+                await MainActor.run {
+                    isLoading = false
+                    isEditing = false
+                    alertTitle = "Success"
+                    alertMessage = "Profile updated successfully"
+                    showAlert = true
+                    
+                    // Refresh profile data
+                    fetchLibrarianProfile()
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    alertTitle = "Error"
+                    alertMessage = "Failed to update profile: \(error.localizedDescription)"
+                    showAlert = true
+                }
+            }
+        }
+    }
+    
+    // Helper method to resize images
+    private func resizeImage(image: UIImage, targetSize: CGSize) -> UIImage {
+        let size = image.size
+        
+        let widthRatio  = targetSize.width  / size.width
+        let heightRatio = targetSize.height / size.height
+        
+        // Figure out what our orientation is, and use that to form the rectangle
+        var newSize: CGSize
+        if(widthRatio > heightRatio) {
+            newSize = CGSize(width: size.width * heightRatio, height: size.height * heightRatio)
+        } else {
+            newSize = CGSize(width: size.width * widthRatio, height: size.height * widthRatio)
+        }
+        
+        // This is the rect that we've calculated out and this is what is actually used below
+        let rect = CGRect(x: 0, y: 0, width: newSize.width, height: newSize.height)
+        
+        // Actually do the resizing to the rect using the ImageContext stuff
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+        image.draw(in: rect)
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return newImage!
+    }
+}
+
+struct ProfileInfoRow: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        HStack(alignment: .top) {
+            Text(title)
+                .foregroundColor(.secondary)
+                .frame(width: 120, alignment: .leading)
+            
+            Spacer()
+            
+            Text(value)
+                .multilineTextAlignment(.trailing)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct NotificationsView: View {
+    var body: some View {
+        Text("Notifications settings would go here")
+            .navigationTitle("Notifications")
     }
 }
 

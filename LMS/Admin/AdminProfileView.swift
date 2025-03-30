@@ -115,6 +115,7 @@ struct AdminProfileView: View {
                     Spacer()
                 }
             }
+            .listRowBackground(Color.clear)
             
             // Personal Information Section
             Section {

@@ -631,6 +631,22 @@ class SupabaseDataController: ObservableObject {
         }
     }
     
+    // Special method for fetching books for deletion requests that includes deleted books
+    func fetchBookForDeletionRequest(by id: UUID) async throws -> LibrarianBook? {
+        let query = client.from("Books")
+            .select()
+            .eq("id", value: id.uuidString)
+            .single()
+        
+        do {
+            let book: LibrarianBook = try await query.execute().value
+            return book
+        } catch {
+            print("Error fetching book by ID for deletion request: \(error)")
+            return nil
+        }
+    }
+    
     func fetchDeletionRequests() async throws -> [BookDeletionRequest] {
         print("📋 SupabaseDataController: Fetching deletion requests from the database...")
         let query = client.from("book_requests")

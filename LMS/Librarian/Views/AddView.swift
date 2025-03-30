@@ -13,7 +13,7 @@ struct AddView: View {
     @State private var showCSVUploadSheet = false
     @State private var scannedCode: String = ""
 
-    //@State private var showingAddSection = false // Toggle between add and view sections
+    @State private var showingAddSection = false // Toggle between add and view sections
 
 //    @State private var showingAddSection = true
     @State private var isEditing = false

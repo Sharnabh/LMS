@@ -377,7 +377,7 @@ struct BookDeletionDetailsView: View {
             for bookId in request.bookIDs {
                 print("📚 Attempting to load book with ID: \(bookId)")
                 do {
-                    if let book = try await bookStore.dataController.fetchBook(by: bookId) {
+                    if let book = try await bookStore.dataController.fetchBookForDeletionRequest(by: bookId) {
                         print("📚 Successfully loaded book: \(book.title)")
                         loadedBooks.append(book)
                     } else {
@@ -415,15 +415,27 @@ struct BookDetailCard: View {
                         .font(.headline)
                         .lineLimit(2)
                     
-                    Text("To be marked as deleted")
-                        .font(.caption)
-                        .foregroundColor(.red)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.red.opacity(0.1))
-                        )
+                    if let isDeleted = book.isDeleted, isDeleted {
+                        Text("Already marked as deleted")
+                            .font(.caption)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.gray)
+                            )
+                    } else {
+                        Text("To be marked as deleted")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.red.opacity(0.1))
+                            )
+                    }
                 }
                 
                 Spacer()

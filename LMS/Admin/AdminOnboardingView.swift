@@ -915,11 +915,7 @@ struct AdminOnboardingView: View {
                             alertMessage = "Are you sure you want to continue without adding any books? You can add them later from the Resources tab."
                             showAlert = true
                         } else {
-                            if let onComplete = onComplete {
-                                onComplete()
-                            } else {
-                                showMainApp = true
-                            }
+                            finishOnboarding()
                         }
                     }) {
                         Text("Finish Setup")
@@ -941,11 +937,7 @@ struct AdminOnboardingView: View {
                     message: Text(alertMessage),
                     dismissButton: .default(Text("OK")) {
                         if alertMessage.contains("Are you sure you want to continue without adding any books?") {
-                            if let onComplete = onComplete {
-                                onComplete()
-                            } else {
-                                showMainApp = true
-                            }
+                            finishOnboarding()
                         }
                     }
                 )
@@ -1043,6 +1035,34 @@ struct AdminOnboardingView: View {
                 alertMessage = "Error adding librarian: \(error.localizedDescription)"
                 showAlert = true
             }
+        }
+    }
+    
+    // New helper function to handle navigation completion
+    private func finishOnboarding() {
+        // Set admin as logged in
+        UserDefaults.standard.set(true, forKey: "adminIsLoggedIn")
+        
+        // Ensure admin email is set (in case it wasn't already set earlier in the flow)
+        if UserDefaults.standard.string(forKey: "adminEmail")?.isEmpty ?? true {
+            // If for some reason the email isn't set, we need to fix that
+            // This is a fallback and shouldn't typically be needed if earlier steps worked properly
+            print("Warning: Admin email was not set in UserDefaults. This may cause authentication issues.")
+            // We can't set it here because we don't have the email, but we can log a warning
+        }
+        
+        // First dismiss this view
+        dismiss()
+        
+        // Then call the completion handler to handle navigation
+        if let onComplete = onComplete {
+            // Small delay to ensure proper dismissal sequence
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                onComplete()
+            }
+        } else {
+            // Show MainAppView directly if no completion handler
+            showMainApp = true
         }
     }
 }

@@ -262,7 +262,15 @@ struct AdminProfileSetupView: View {
                 }
             }
             .fullScreenCover(isPresented: $showAdminOnboarding) {
-                AdminOnboardingView(onComplete: onComplete)
+                AdminOnboardingView(onComplete: {
+                    // Dismiss this view and call onComplete
+                    dismiss()
+                    
+                    // Small delay to ensure proper dismissal sequence
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        onComplete()
+                    }
+                })
             }
             .onChange(of: imageSelection) { item in
                 Task {
@@ -537,7 +545,7 @@ class AdminService {
             // Update the admin record
             try await dataController.client.from("Admin")
                 .update(updateData)
-                .eq("id", value: adminId) // Removed column: label
+                .eq("id", value: adminId)
                 .execute()
             
         } catch {

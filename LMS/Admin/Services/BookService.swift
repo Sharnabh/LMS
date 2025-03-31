@@ -244,6 +244,7 @@ class BookService {
         let response = try await supabase
             .from("Books")
             .select("*", head: true, count: .exact)
+            .eq("is_deleted", value: false)
             .execute()
         
         // Print response for debugging

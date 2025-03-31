@@ -196,6 +196,7 @@ struct LibrarianBook: Identifiable, Codable, Hashable {
     var publisher: String?
     var imageLink: String?
     var addID: Int? // New field for sequential book addition tracking
+    var isDeleted: Bool? // Flag to indicate if a book is marked as deleted
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -212,6 +213,7 @@ struct LibrarianBook: Identifiable, Codable, Hashable {
         case publisher
         case imageLink
         case addID
+        case isDeleted = "is_deleted"
     }
     
     init(from decoder: Decoder) throws {
@@ -230,6 +232,7 @@ struct LibrarianBook: Identifiable, Codable, Hashable {
         publisher = try container.decodeIfPresent(String.self, forKey: .publisher)
         imageLink = try container.decodeIfPresent(String.self, forKey: .imageLink)
         addID = try container.decodeIfPresent(Int.self, forKey: .addID)
+        isDeleted = try container.decodeIfPresent(Bool.self, forKey: .isDeleted)
         
         // Handle dateAdded decoding
         if let dateString = try container.decodeIfPresent(String.self, forKey: .dateAdded) {
@@ -254,7 +257,8 @@ struct LibrarianBook: Identifiable, Codable, Hashable {
          dateAdded: Date? = Date(),
          publisher: String? = nil,
          imageLink: String? = nil,
-         addID: Int? = nil) {
+         addID: Int? = nil,
+         isDeleted: Bool? = nil) {
         self.id = id
         self.title = title
         self.author = author
@@ -269,6 +273,7 @@ struct LibrarianBook: Identifiable, Codable, Hashable {
         self.publisher = publisher
         self.imageLink = imageLink
         self.addID = addID
+        self.isDeleted = isDeleted
     }
 }
 

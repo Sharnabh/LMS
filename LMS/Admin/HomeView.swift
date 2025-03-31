@@ -19,10 +19,19 @@ struct HomeView: View {
     @EnvironmentObject private var appState: AppState
     @State private var memberError: String? = nil
     
-    // Add states for books
+    // Analytics states
     @State private var totalBooksCount: Int = 0
+    @State private var issuedBooksCount: Int = 0
+    @State private var overdueBooksCount: Int = 0
+    @State private var booksDueToday: Int = 0
+    @State private var totalRevenue: Double = 0
+    @State private var activeMembersCount: Int = 0
+    @State private var membersWithOverdueBooks: Int = 0
+    
     @State private var isLoadingBooks: Bool = false
+    @State private var isLoadingAnalytics: Bool = false
     @State private var bookError: String? = nil
+    @State private var analyticsError: String? = nil
     
     // Add loading state for announcements
     private var isLoadingAnnouncements: Bool {
@@ -64,7 +73,7 @@ struct HomeView: View {
                         GridItem(.flexible(), spacing: 16),
                         GridItem(.flexible(), spacing: 16)
                     ], spacing: 16) {
-                        // Card 1
+                        // Card 1: Total Books
                         HomeCard(
                             title: "Total Books",
                             value: bookCountDisplay,
@@ -88,19 +97,19 @@ struct HomeView: View {
                             alignment: .topTrailing
                         )
                         
-                        // Card 2
+                        // Card 2: Active Members
                         HomeCard(
-                            title: "All Members",
-                            value: memberCountDisplay,
+                            title: "Active Members",
+                            value: activeMembersDisplay,
                             icon: "person.2.fill",
                             color: .green
                         )
                         .overlay(
                             Group {
-                                if memberError != nil {
+                                if analyticsError != nil {
                                     Button(action: {
                                         Task {
-                                            await loadMembersCount()
+                                            await loadAnalytics()
                                         }
                                     }) {
                                         Image(systemName: "arrow.clockwise")
@@ -112,23 +121,53 @@ struct HomeView: View {
                             alignment: .topTrailing
                         )
                         
-                        // Card 3
+                        // Card 3: Revenue
                         HomeCard(
-                            title: "Revenue Collected",
-                            value: "120",
+                            title: "Revenue",
+                            value: revenueDisplay,
                             icon: "indianrupeesign",
                             color: .red
                         )
                         
-                        // Card 4
+                        // Card 4: Today's Returns
                         HomeCard(
                             title: "Today's Returns",
-                            value: "45",
+                            value: booksDueTodayDisplay,
                             icon: "return",
                             color: .orange
                         )
                     }
                     .padding(.horizontal)
+                    
+                    // Additional Analytics Section
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Additional Stats")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .padding(.horizontal)
+                        
+                        LazyVGrid(columns: [
+                            GridItem(.flexible(), spacing: 16),
+                            GridItem(.flexible(), spacing: 16)
+                        ], spacing: 16) {
+                            // Issued Books
+                            HomeCard(
+                                title: "Issued Books",
+                                value: issuedBooksDisplay,
+                                icon: "book.closed.fill",
+                                color: .purple
+                            )
+                            
+                            // Overdue Books
+                            HomeCard(
+                                title: "Overdue Books",
+                                value: overdueBooksDisplay,
+                                icon: "exclamationmark.triangle.fill",
+                                color: .red
+                            )
+                        }
+                        .padding(.horizontal)
+                    }
                     
                     // Announcements Header
                     HStack {
@@ -238,16 +277,16 @@ struct HomeView: View {
             }
             .task {
                 print("🏠 HomeView task started - loading data")
-                await loadMembersCount()
-                bookStore.fetchDeletionRequests()
-                print("🏠 HomeView - Fetched deletion requests and member count")
+                await loadInitialData()
+                print("🏠 HomeView - Fetched all data")
             }
         }
     }
     
     private func loadInitialData() async {
-        await loadMembersCount()
         await loadBooksCount()
+        await loadAnalytics()
+        bookStore.fetchDeletionRequests()
     }
     
     private func loadBooksCount() async {
@@ -265,19 +304,34 @@ struct HomeView: View {
         isLoadingBooks = false
     }
     
-    private func loadMembersCount() async {
-        isLoadingMembers = true
-        memberError = nil
+    private func loadAnalytics() async {
+        isLoadingAnalytics = true
+        analyticsError = nil
         
         do {
-            totalMembersCount = try await MemberService.shared.getTotalMembersCount()
-            print("Successfully loaded member count: \(totalMembersCount)")
+            async let issuedBooks = AnalyticsService.shared.getIssuedBooksCount()
+            async let overdueBooks = AnalyticsService.shared.getOverdueBooksCount()
+            async let dueToday = AnalyticsService.shared.getBooksDueToday()
+            async let revenue = AnalyticsService.shared.getTotalRevenue()
+            async let activeMembers = AnalyticsService.shared.getActiveMembersCount()
+            async let membersOverdue = AnalyticsService.shared.getMembersWithOverdueBooks()
+            
+            let (issued, overdue, due, rev, active, overdueMembers) = try await (issuedBooks, overdueBooks, dueToday, revenue, activeMembers, membersOverdue)
+            
+            await MainActor.run {
+                self.issuedBooksCount = issued
+                self.overdueBooksCount = overdue
+                self.booksDueToday = due
+                self.totalRevenue = rev
+                self.activeMembersCount = active
+                self.membersWithOverdueBooks = overdueMembers
+                self.isLoadingAnalytics = false
+            }
         } catch {
-            print("Error loading members count: \(error)")
-            memberError = error.localizedDescription
+            print("Error loading analytics: \(error)")
+            analyticsError = error.localizedDescription
+            isLoadingAnalytics = false
         }
-        
-        isLoadingMembers = false
     }
     
     var bookCountDisplay: String {
@@ -290,14 +344,54 @@ struct HomeView: View {
         return "\(totalBooksCount)"
     }
     
-    var memberCountDisplay: String {
-        if isLoadingMembers {
+    var activeMembersDisplay: String {
+        if isLoadingAnalytics {
             return "Loading..."
         }
-        if memberError != nil {
+        if analyticsError != nil {
             return "Tap to retry"
         }
-        return "\(totalMembersCount)"
+        return "\(activeMembersCount)"
+    }
+    
+    var revenueDisplay: String {
+        if isLoadingAnalytics {
+            return "Loading..."
+        }
+        if analyticsError != nil {
+            return "Tap to retry"
+        }
+        return "₹\(String(format: "%.2f", totalRevenue))"
+    }
+    
+    var booksDueTodayDisplay: String {
+        if isLoadingAnalytics {
+            return "Loading..."
+        }
+        if analyticsError != nil {
+            return "Tap to retry"
+        }
+        return "\(booksDueToday)"
+    }
+    
+    var issuedBooksDisplay: String {
+        if isLoadingAnalytics {
+            return "Loading..."
+        }
+        if analyticsError != nil {
+            return "Tap to retry"
+        }
+        return "\(issuedBooksCount)"
+    }
+    
+    var overdueBooksDisplay: String {
+        if isLoadingAnalytics {
+            return "Loading..."
+        }
+        if analyticsError != nil {
+            return "Tap to retry"
+        }
+        return "\(overdueBooksCount)"
     }
 }
 

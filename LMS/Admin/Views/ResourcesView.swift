@@ -300,7 +300,7 @@ struct AddBookView: View {
     @State private var isSuccess = false
     @State private var isLoading = false
     
-    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
+    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference", "Fiction", "Non-Fiction", "Literature"]
     
     private var isValid: Bool {
         !title.isEmpty &&

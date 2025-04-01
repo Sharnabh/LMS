@@ -727,12 +727,12 @@ extension SupabaseDataController {
     func fetchLibraryPolicies() async throws -> (borrowingLimit: Int, returnPeriod: Int, fineAmount: Int, lostBookFine: Int) {
         do {
             // Create a decodable struct to match the database columns
-            struct PolicyResponse: Decodable {
-                let borrowing_limit: Int
-                let return_period: Int
-                let fine_amount: Int
-                let lost_book_fine: Int
-            }
+//            struct PolicyResponse: Decodable {
+//                let borrowing_limit: Int
+//                let return_period: Int
+//                let fine_amount: Int
+//                let lost_book_fine: Int
+//            }
             
             let response: [PolicyResponse] = try await client
                 .from("library_policies")

@@ -6,6 +6,7 @@ struct MemberDetailView: View {
     @State private var issuedBooks: [IssuedBook] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var totalFine: Double = 0.0  // Add state for total fine
     
     struct IssuedBook: Identifiable {
         let id: String
@@ -42,6 +43,14 @@ struct MemberDetailView: View {
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
+                            
+                            // Display total fine
+                            if totalFine > 0 {
+                                Text("Total Fine: ₹\(String(format: "%.2f", totalFine))")
+                                    .font(.headline)
+                                    .foregroundColor(.red)
+                                    .padding(.top, 4)
+                            }
                         }
                     }
                     .padding()
@@ -50,6 +59,7 @@ struct MemberDetailView: View {
                     .shadow(radius: 2)
                 }
                 
+                // Rest of the view remains the same
                 // Issued Books Section
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Issued Books")
@@ -74,6 +84,22 @@ struct MemberDetailView: View {
                         }
                     }
                 }
+                
+                // Add button at the bottom
+                Button(action: {
+                    // Action to be performed when button is tapped
+                    print("Button tapped for member: \(member.firstName ?? "") \(member.lastName ?? "")")
+                }) {
+                    Text("Fine Collected")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                }
+                .padding(.top, 20)
+                .padding(.horizontal)
             }
             .padding()
         }
@@ -113,6 +139,9 @@ struct MemberDetailView: View {
             
             let bookIssues = try decoder.decode([BookIssue].self, from: response.data)
             
+            // Calculate total fine
+            var totalFineAmount: Double = 0.0
+            
             // Fetch book details for each issued book
             var books: [IssuedBook] = []
             for issue in bookIssues {
@@ -122,6 +151,9 @@ struct MemberDetailView: View {
                 
                 let bookResponse = try await bookQuery.execute()
                 let book = try? decoder.decode([LibrarianBook].self, from: bookResponse.data).first
+                
+                // Add fine to total
+                totalFineAmount += issue.fine
                 
                 books.append(IssuedBook(
                     id: issue.id,
@@ -137,6 +169,7 @@ struct MemberDetailView: View {
             
             await MainActor.run {
                 self.issuedBooks = books
+                self.totalFine = totalFineAmount  // Update the total fine
                 isLoading = false
             }
             
@@ -218,4 +251,4 @@ struct IssuedBookRow: View {
             enrollmentNumber: "ENR001"
         ))
     }
-} 
+}

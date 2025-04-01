@@ -647,6 +647,43 @@ class SupabaseDataController: ObservableObject {
         }
     }
     
+    func checkIssuedBooks(bookIds: [UUID]) async throws -> [UUID] {
+        print("Checking if any books are currently issued...")
+        var issuedBookIds: [UUID] = []
+        
+        do {
+            for bookId in bookIds {
+                let query = client.from("BookIssue")
+                    .select()
+                    .eq("bookId", value: bookId.uuidString)
+                    .eq("status", value: "Issued")
+                
+                struct BookIssueRecord: Codable {
+                    let id: String
+                    let bookId: String
+                }
+                
+                do {
+                    let response = try await query.execute()
+                    let records = try JSONDecoder().decode([BookIssueRecord].self, from: response.data)
+                    
+                    if !records.isEmpty {
+                        print("Book with ID \(bookId) is currently issued")
+                        issuedBookIds.append(bookId)
+                    }
+                } catch {
+                    print("Error checking if book \(bookId) is issued: \(error)")
+                    continue
+                }
+            }
+            
+            return issuedBookIds
+        } catch {
+            print("Error checking issued books: \(error)")
+            throw error
+        }
+    }
+    
     func fetchDeletionRequests() async throws -> [BookDeletionRequest] {
         print("📋 SupabaseDataController: Fetching deletion requests from the database...")
         let query = client.from("book_requests")

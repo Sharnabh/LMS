@@ -186,65 +186,82 @@ class AdminBookStore: ObservableObject {
     }
     
     @MainActor
-    func approveDeletionRequest(_ request: BookDeletionRequest) async -> Bool {
-        do {
-            print("Starting deletion request approval process...")
-            var allBooksDeleted = true
-            var deletedBooks: [UUID] = []
-            
-            // First try to delete all books
-            for bookId in request.bookIDs {
-                if let book = try await dataController.fetchBook(by: bookId) {
-                    print("Attempting to delete book: \(book.title) (ID: \(bookId))")
-                    let deleteSuccess = try await dataController.deleteBook(book)
-                    
-                    if deleteSuccess {
-                        print("Successfully deleted book: \(book.title)")
-                        deletedBooks.append(bookId)
-                    } else {
-                        print("Failed to delete book: \(book.title)")
-                        allBooksDeleted = false
-                        break // Stop if any deletion fails
-                    }
-                } else {
-                    print("Book not found: \(bookId)")
-                    allBooksDeleted = false
-                    break // Stop if any book is not found
-                }
-            }
-            
-            if allBooksDeleted {
-                // Only update request status if all books were successfully deleted
-                let success = try await dataController.updateDeletionRequestStatus(
-                    requestId: request.id!,
-                    status: "approved",
-                    adminResponse: nil
-                )
+    func approveDeletionRequest(_ request: BookDeletionRequest) async throws -> Bool {
+        print("Starting deletion request approval process...")
+        
+        // First, check if any books are currently issued
+        let issuedBookIds = try await dataController.checkIssuedBooks(bookIds: request.bookIDs)
+        
+        if !issuedBookIds.isEmpty {
+            print("Found \(issuedBookIds.count) books that are currently issued!")
+            // Return this information so we can show a warning to the user
+            // We will handle this in the view
+            throw BookDeletionError.booksCurrentlyIssued(issuedBookIds)
+        }
+        
+        var allBooksDeleted = true
+        var deletedBooks: [UUID] = []
+        
+        // First try to delete all books
+        for bookId in request.bookIDs {
+            if let book = try await dataController.fetchBook(by: bookId) {
+                print("Attempting to delete book: \(book.title) (ID: \(bookId))")
+                let deleteSuccess = try await dataController.deleteBook(book)
                 
-                if success {
-                    print("Deletion request marked as approved after successful book deletions")
-                    // Refresh both the deletion requests and books lists
-                    fetchDeletionRequests()
-                    await loadBooks()
-                    return true
+                if deleteSuccess {
+                    print("Successfully deleted book: \(book.title)")
+                    deletedBooks.append(bookId)
                 } else {
-                    print("Failed to update deletion request status")
-                    // Try to rollback deleted books (in a real production environment)
-                    // For now, just log the error
-                    print("Warning: Books were deleted but request status update failed")
-                    return false
+                    print("Failed to delete book: \(book.title)")
+                    allBooksDeleted = false
+                    break // Stop if any deletion fails
                 }
             } else {
-                print("Not all books could be deleted, request will remain pending")
+                print("Book not found: \(bookId)")
+                allBooksDeleted = false
+                break // Stop if any book is not found
+            }
+        }
+        
+        if allBooksDeleted {
+            // Only update request status if all books were successfully deleted
+            let success = try await dataController.updateDeletionRequestStatus(
+                requestId: request.id!,
+                status: "approved",
+                adminResponse: nil
+            )
+            
+            if success {
+                print("Deletion request marked as approved after successful book deletions")
+                // Refresh both the deletion requests and books lists
+                fetchDeletionRequests()
+                await loadBooks()
+                return true
+            } else {
+                print("Failed to update deletion request status")
+                // Try to rollback deleted books (in a real production environment)
+                // For now, just log the error
+                print("Warning: Books were deleted but request status update failed")
                 return false
             }
-        } catch {
-            print("Error in approveDeletionRequest: \(error)")
+        } else {
+            print("Not all books could be deleted, request will remain pending")
             return false
         }
     }
 
-    
+    // Add error enum for issued books
+    enum BookDeletionError: Error {
+        case booksCurrentlyIssued([UUID])
+        
+        var localizedDescription: String {
+            switch self {
+            case .booksCurrentlyIssued(let bookIds):
+                return "Cannot delete \(bookIds.count) books that are currently issued."
+            }
+        }
+    }
+
     func rejectDeletionRequest(_ request: BookDeletionRequest, reason: String) async -> Bool {
         do {
             let success = try await dataController.updateDeletionRequestStatus(

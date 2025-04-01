@@ -62,9 +62,16 @@ struct ResourcesView: View {
                         }
                     } else {
                         // Search bar
-                        TextField("Search books...", text: $searchText)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .padding()
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.gray)
+                            TextField("Search books...", text: $searchText)
+                                .textFieldStyle(.plain)
+                        }
+                        .padding(8)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(10)
+                        .padding(.horizontal)
                         
                         // Books grid
                         ScrollView {
@@ -145,13 +152,18 @@ struct ResourcesView: View {
                 }
         }
         .sheet(item: $selectedBook) { book in
-            BookDetailView(book: book, showAddToCollectionButton: false)
-                .environmentObject(bookStore)
-                .onDisappear {
-                    Task {
-                        await bookStore.loadBooks()
-                    }
+            NavigationView {
+                BookDetailView(book: book, showAddToCollectionButton: false)
+                    .environmentObject(bookStore)
+                    .navigationBarItems(leading: Button("Cancel") {
+                        selectedBook = nil
+                    })
+            }
+            .onDisappear {
+                Task {
+                    await bookStore.loadBooks()
                 }
+            }
         }
         .onAppear {
             checkConnection()

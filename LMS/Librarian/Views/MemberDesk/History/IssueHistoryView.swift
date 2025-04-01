@@ -17,6 +17,7 @@ struct IssueHistoryView: View {
     @State private var searchText = ""
     @State private var selectedFilter = "All"
     @State private var memberFines: [String: Double] = [:] // Add this to store member fines
+    @State private var memberDefaultCounts: [String: Int] = [:] // Add this to store defaulter counts
     
     // Filtered members based on search text with prioritized exact matches
     private var filteredMembers: [MemberModel] {
@@ -29,6 +30,14 @@ struct IssueHistoryView: View {
             filteredByOption = members.filter { member in
                 if let memberId = member.id {
                     return (memberFines[memberId] ?? 0) > 0
+                }
+                return false
+            }
+        } else if selectedFilter == "Frequent Defaulters" {
+            // Filter members who have 3 or more defaults
+            filteredByOption = members.filter { member in
+                if let memberId = member.id {
+                    return (memberDefaultCounts[memberId] ?? 0) >= 3
                 }
                 return false
             }
@@ -137,11 +146,23 @@ struct IssueHistoryView: View {
                                     }
                                 }
                             }
+                            
+                            Button(action: {
+                                selectedFilter = "Frequent Defaulters"
+                            }) {
+                                HStack {
+                                    Text("Frequent Defaulters")
+                                    if selectedFilter == "Frequent Defaulters" {
+                                        Spacer()
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
                         } label: {
                             // Replace text and chevron with filter icon
                             Image(systemName: "line.3.horizontal.decrease.circle")
                                 .font(.system(size: 22))
-                                .foregroundColor(selectedFilter == "All" ? .primary : .blue)
+                                .foregroundColor(selectedFilter == "All" ? .primary : selectedFilter == "Fines" ? .blue : .purple)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .background(Color.white)
@@ -252,7 +273,8 @@ struct IssueHistoryView: View {
                                         member: member,
                                         supabaseController: supabaseController,
                                         isEditing: isEditing,
-                                        fine: memberFines[member.id ?? ""] ?? 0.0
+                                        fine: memberFines[member.id ?? ""] ?? 0.0,
+                                        defaultCount: memberDefaultCounts[member.id ?? ""] ?? 0
                                     )
                                     .listRowBackground(Color.appBackground)
                                     .listRowSeparator(.hidden)
@@ -318,7 +340,7 @@ struct IssueHistoryView: View {
         errorMessage = nil
         
         do {
-            // Query all members from the Member table without the inner join
+            // Query all members from the Member table including the fine column
             let query = supabaseController.client.from("Member")
                 .select("""
                     id,
@@ -330,7 +352,8 @@ struct IssueHistoryView: View {
                     created_at,
                     favourites,
                     myBag,
-                    shelves
+                    shelves,
+                    fine
                 """)
             
             let response = try await query.execute()
@@ -345,8 +368,17 @@ struct IssueHistoryView: View {
                 self.members = try decoder.decode([MemberModel].self, from: response.data)
                 print("Successfully decoded \(self.members.count) members")
                 
-                // After fetching members, fetch all fines
-                await fetchAllMemberFines()
+                // Update memberFines dictionary with fines from Member table
+                var newFines: [String: Double] = [:]
+                for member in self.members {
+                    if let memberId = member.id {
+                        newFines[memberId] = member.fine ?? 0.0
+                    }
+                }
+                self.memberFines = newFines
+                
+                // After fetching members, fetch default counts
+                await fetchDefaultCounts()
             } catch {
                 errorMessage = "Failed to decode member data: \(error.localizedDescription)"
             }
@@ -358,8 +390,8 @@ struct IssueHistoryView: View {
         isLoading = false
     }
     
-    // Add a new function to fetch fines for all members at once
-    private func fetchAllMemberFines() async {
+    // Rename and modify the function to only fetch default counts
+    private func fetchDefaultCounts() async {
         do {
             // Fetch all book issues
             let query = supabaseController.client.from("BookIssue")
@@ -383,20 +415,23 @@ struct IssueHistoryView: View {
             
             let bookIssues = try decoder.decode([BookIssue].self, from: response.data)
             
-            // Calculate total fine for each member
-            var fines: [String: Double] = [:]
+            // Calculate default counts (instances with fine > 0)
+            var defaultCounts: [String: Int] = [:]
+            
             for issue in bookIssues {
-                let currentFine = fines[issue.memberId] ?? 0
-                fines[issue.memberId] = currentFine + issue.fine
+                if issue.fine > 0 {
+                    let currentCount = defaultCounts[issue.memberId] ?? 0
+                    defaultCounts[issue.memberId] = currentCount + 1
+                }
             }
             
-            // Update the memberFines dictionary
-            self.memberFines = fines
+            // Update the memberDefaultCounts dictionary
+            self.memberDefaultCounts = defaultCounts
             
-            print("Fetched fines for \(fines.count) members")
+            print("Identified \(defaultCounts.filter { $0.value >= 3 }.count) frequent defaulters")
             
         } catch {
-            print("Failed to fetch all fines: \(error)")
+            print("Failed to fetch default counts: \(error)")
         }
     }
 }
@@ -407,6 +442,7 @@ struct MemberCard: View {
     let supabaseController: SupabaseDataController
     let isEditing: Bool
     let fine: Double // Change this to a let property
+    let defaultCount: Int // Add defaulter count
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var isEnabled: Bool
@@ -414,11 +450,12 @@ struct MemberCard: View {
     @State private var statusErrorMessage: String?
     @State private var showingDisableAlert = false
     
-    init(member: MemberModel, supabaseController: SupabaseDataController, isEditing: Bool, fine: Double = 0.0) {
+    init(member: MemberModel, supabaseController: SupabaseDataController, isEditing: Bool, fine: Double = 0.0, defaultCount: Int = 0) {
         self.member = member
         self.supabaseController = supabaseController
         self.isEditing = isEditing
         self.fine = fine // Set the fine from the parameter
+        self.defaultCount = defaultCount // Set the defaulter count
         // Initialize isEnabled based on member's isDisabled property
         _isEnabled = State(initialValue: !(member.isDisabled == true))
     }
@@ -470,6 +507,14 @@ struct MemberCard: View {
                             Text(fine > 0 ? "Fine Due" : "No Fine")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+                                
+                            // Show defaulter count when relevant
+                            if defaultCount >= 3 {
+                                Text("\(defaultCount) defaults")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                    .padding(.top, 2)
+                            }
                         }
                     }
                 }

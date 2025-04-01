@@ -7,6 +7,7 @@ struct MemberDetailView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var totalFine: Double = 0.0
+    @State private var pendingFine: Double = 0.0
     @State private var isCollectingFine = false
     
     struct IssuedBook: Identifiable {
@@ -46,13 +47,19 @@ struct MemberDetailView: View {
                                     .foregroundColor(.secondary)
                             }
                             
-                            // Display total fine
-                            if totalFine > 0 {
-                                Text("Total Fine: ₹\(String(format: "%.2f", totalFine))")
+                            // Display total fine and pending fine
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Total Fine Collected: ₹\(String(format: "%.2f", totalFine))")
                                     .font(.headline)
-                                    .foregroundColor(.red)
-                                    .padding(.top, 4)
+                                    .foregroundColor(.green)
+                                
+                                if pendingFine > 0 {
+                                    Text("Fine Pending: ₹\(String(format: "%.2f", pendingFine))")
+                                        .font(.headline)
+                                        .foregroundColor(.red)
+                                }
                             }
+                            .padding(.top, 4)
                         }
                     }
                     .padding()
@@ -87,7 +94,7 @@ struct MemberDetailView: View {
                 }
                 
                 // Add button at the bottom - only show if there's an unpaid fine
-                if totalFine > 0 && issuedBooks.contains(where: { !$0.isPaid }) {
+                if pendingFine > 0 {
                     Button(action: {
                         Task {
                             await collectFine()
@@ -120,13 +127,13 @@ struct MemberDetailView: View {
     }
     
     private func collectFine() async {
-        guard let memberId = member.id, totalFine > 0 else { return }
+        guard let memberId = member.id, pendingFine > 0 else { return }
         
         isCollectingFine = true
         
         do {
-            // Step 1: Update each book issue to mark it as paid
-            for book in issuedBooks where book.fine > 0 {
+            // Step 1: Update each unpaid book issue to mark it as paid
+            for book in issuedBooks where book.fine > 0 && !book.isPaid {
                 let updateQuery = try supabaseController.client.from("BookIssue")
                     .update(["is_paid": true])
                     .eq("id", value: book.id)
@@ -146,10 +153,12 @@ struct MemberDetailView: View {
                 // Update issuedBooks to mark all as paid
                 self.issuedBooks = self.issuedBooks.map { book in
                     var updatedBook = book
-                    updatedBook.isPaid = true
+                    if !book.isPaid {
+                        updatedBook.isPaid = true
+                    }
                     return updatedBook
                 }
-                self.totalFine = 0
+                self.pendingFine = 0
                 isCollectingFine = false
             }
             
@@ -277,14 +286,20 @@ struct MemberDetailView: View {
             let bookIssues = try decoder.decode([BookIssue].self, from: response.data)
             print("Decoded BookIssues: \(bookIssues)")
             
-            // Calculate total fine
+            // Calculate total fine and pending fine
             var totalFineAmount: Double = 0.0
+            var pendingFineAmount: Double = 0.0
             
             // Create IssuedBook array from book issues
             let books = bookIssues.map { issue in
-                // Add fine to total if not paid
-                if !issue.isPaid {
+                // Add paid fines to total collected
+                if issue.isPaid {
                     totalFineAmount += issue.fine
+                }
+                
+                // Add unpaid fines to pending total
+                if !issue.isPaid {
+                    pendingFineAmount += issue.fine
                 }
                 
                 let issuedBook = IssuedBook(
@@ -307,6 +322,7 @@ struct MemberDetailView: View {
             await MainActor.run {
                 self.issuedBooks = books
                 self.totalFine = totalFineAmount
+                self.pendingFine = pendingFineAmount
                 isLoading = false
                 isCollectingFine = false
             }

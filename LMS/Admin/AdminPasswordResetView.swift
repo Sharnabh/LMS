@@ -21,45 +21,40 @@ struct AdminPasswordResetView: View {
     @State private var animateContent = false
     @State private var showProfileSetup = false
     @State private var showAdminOnboarding = false
+    @State private var showPasswordRequirements = false
     
     private let dataController = SupabaseDataController()
     
     var body: some View {
         ZStack {
-            // Background gradient
-            LinearGradient(
-                colors: [
-                    Color.blue.opacity(0.1),
-                    Color.purple.opacity(0.1)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            
+            Color("AccentColor") // ----------------Added
+                .ignoresSafeArea()
+            
+            VStack { // -------------------Added
+                WaveShape()
+                    .fill(Color.white)
+                    .padding(.top, -350) // Changes
+                    .frame(height: UIScreen.main.bounds.height * 0.9)
+                    .offset(y: UIScreen.main.bounds.height * 0.04)
+                Spacer()
+            }
             
             ScrollView {
                 VStack(spacing: 32) {
                     // Header
                     VStack(spacing: 16) {
-                        Image(systemName: "lock.rotation")
-                            .font(.system(size: 60))
-                            .foregroundColor(.blue)
-                            .scaleEffect(animateContent ? 1 : 0.8)
-                            .opacity(animateContent ? 1 : 0)
+
                         
                         Text("Reset Password")
                             .font(.title)
+                            .padding(10)
+                            .padding(.top, 200)
+                            .padding(.leading, -145)
                             .fontWeight(.semibold)
                             .opacity(animateContent ? 1 : 0)
                             .offset(y: animateContent ? 0 : 20)
-                        
-                        Text("Please set a new password for your account")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                            .opacity(animateContent ? 1 : 0)
-                            .offset(y: animateContent ? 0 : 20)
+                                            
                     }
                     .padding(.top, 40)
                     
@@ -92,6 +87,46 @@ struct AdminPasswordResetView: View {
                                         .padding(.trailing, 12)
                                 }
                             }
+                            
+                            // Password Requirements List
+                            if !newPassword.isEmpty {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Password Requirements")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        PasswordRequirementRow(
+                                            text: "At least 8 characters",
+                                            isValid: newPassword.count >= 8
+                                        )
+                                        
+                                        PasswordRequirementRow(
+                                            text: "One uppercase letter",
+                                            isValid: newPassword.range(of: "[A-Z]", options: .regularExpression) != nil
+                                        )
+                                        
+                                        PasswordRequirementRow(
+                                            text: "One lowercase letter",
+                                            isValid: newPassword.range(of: "[a-z]", options: .regularExpression) != nil
+                                        )
+                                        
+                                        PasswordRequirementRow(
+                                            text: "One number",
+                                            isValid: newPassword.range(of: "[0-9]", options: .regularExpression) != nil
+                                        )
+                                        
+                                        PasswordRequirementRow(
+                                            text: "One special character",
+                                            isValid: newPassword.range(of: "[!@#$%^&*(),.?\":{}|<>]", options: .regularExpression) != nil
+                                        )
+                                    }
+                                }
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(10)
+                                .transition(.opacity)
+                            }
                         }
                         .opacity(animateContent ? 1 : 0)
                         .offset(y: animateContent ? 0 : 20)
@@ -123,14 +158,19 @@ struct AdminPasswordResetView: View {
                                         .padding(.trailing, 12)
                                 }
                             }
+                            
+                            if !confirmPassword.isEmpty {
+                                PasswordRequirementRow(
+                                    text: "Passwords match",
+                                    isValid: !newPassword.isEmpty && newPassword == confirmPassword
+                                )
+                                .padding(.top, 8)
+                            }
                         }
                         .opacity(animateContent ? 1 : 0)
                         .offset(y: animateContent ? 0 : 20)
                     }
                     .padding(.horizontal, 24)
-                    
-                    // Password Requirements
-                    passwordRequirements
                     
                     // Reset Button
                     Button(action: {
@@ -151,7 +191,7 @@ struct AdminPasswordResetView: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
-                        .background(Color.blue)
+                        .background(.accent)
                         .cornerRadius(12)
                     }
                     .disabled(isLoading || newPassword.isEmpty || confirmPassword.isEmpty || !passwordsMatch)
@@ -193,36 +233,6 @@ struct AdminPasswordResetView: View {
         return newPassword == confirmPassword
     }
     
-    // Password requirements checklist
-    private var passwordRequirements: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Password Requirements:")
-                .font(.headline)
-                .foregroundColor(.secondary)
-            
-            Group {
-                requirementRow("At least 8 characters", isValid: newPassword.count >= 8)
-                requirementRow("One uppercase letter", isValid: newPassword.range(of: "[A-Z]", options: .regularExpression) != nil)
-                requirementRow("One lowercase letter", isValid: newPassword.range(of: "[a-z]", options: .regularExpression) != nil)
-                requirementRow("One number", isValid: newPassword.range(of: "[0-9]", options: .regularExpression) != nil)
-                requirementRow("One special character", isValid: newPassword.range(of: "[!@#$%^&*(),.?\":{}|<>]", options: .regularExpression) != nil)
-                requirementRow("Passwords match", isValid: !newPassword.isEmpty && newPassword == confirmPassword)
-            }
-        }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(10)
-    }
-    
-    private func requirementRow(_ text: String, isValid: Bool) -> some View {
-        HStack {
-            Image(systemName: isValid ? "checkmark.circle.fill" : "circle")
-                .foregroundColor(isValid ? .green : .gray)
-            Text(text)
-                .foregroundColor(.secondary)
-        }
-    }
-    
     private func resetPassword() async {
         guard passwordsMatch else {
             alertMessage = "Passwords do not match. Please try again."
@@ -257,6 +267,22 @@ struct AdminPasswordResetView: View {
                 alertMessage = "Error: \(error.localizedDescription)"
                 showAlert = true
             }
+        }
+    }
+}
+
+struct PasswordRequirementRow: View {
+    let text: String
+    let isValid: Bool
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: isValid ? "checkmark.circle.fill" : "circle")
+                .foregroundColor(isValid ? .green : .gray.opacity(0.5))
+                .imageScale(.small)
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
         }
     }
 }

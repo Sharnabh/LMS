@@ -25,7 +25,6 @@ struct HomeView: View {
     @State private var overdueBooksCount: Int = 0
     @State private var booksDueToday: Int = 0
     @State private var totalRevenue: Double = 0
-    @State private var activeMembersCount: Int = 0
     @State private var membersWithOverdueBooks: Int = 0
     
     @State private var isLoadingBooks: Bool = false
@@ -62,8 +61,9 @@ struct HomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    // Analytics Header
-                    Text("Analytics")
+                    Spacer()
+                    // Dashboard Header
+                    Text("Dashboard")
                         .font(.title2)
                         .fontWeight(.bold)
                         .padding(.horizontal)
@@ -97,12 +97,12 @@ struct HomeView: View {
                             alignment: .topTrailing
                         )
                         
-                        // Card 2: Active Members
+                        // Card 2: Issued Books
                         HomeCard(
-                            title: "Active Members",
-                            value: activeMembersDisplay,
-                            icon: "person.2.fill",
-                            color: .green
+                            title: "Issued Books",
+                            value: issuedBooksDisplay,
+                            icon: "book.closed.fill",
+                            color: .purple
                         )
                         .overlay(
                             Group {
@@ -113,7 +113,7 @@ struct HomeView: View {
                                         }
                                     }) {
                                         Image(systemName: "arrow.clockwise")
-                                            .foregroundColor(.green)
+                                            .foregroundColor(.purple)
                                     }
                                     .padding(8)
                                 }
@@ -129,45 +129,15 @@ struct HomeView: View {
                             color: .red
                         )
                         
-                        // Card 4: Today's Returns
                         HomeCard(
                             title: "Today's Returns",
                             value: booksDueTodayDisplay,
                             icon: "return",
                             color: .orange
                         )
+                       
                     }
                     .padding(.horizontal)
-                    
-                    // Additional Analytics Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Additional Stats")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .padding(.horizontal)
-                        
-                        LazyVGrid(columns: [
-                            GridItem(.flexible(), spacing: 16),
-                            GridItem(.flexible(), spacing: 16)
-                        ], spacing: 16) {
-                            // Issued Books
-                            HomeCard(
-                                title: "Issued Books",
-                                value: issuedBooksDisplay,
-                                icon: "book.closed.fill",
-                                color: .purple
-                            )
-                            
-                            // Overdue Books
-                            HomeCard(
-                                title: "Overdue Books",
-                                value: overdueBooksDisplay,
-                                icon: "exclamationmark.triangle.fill",
-                                color: .red
-                            )
-                        }
-                        .padding(.horizontal)
-                    }
                     
                     // Announcements Header
                     HStack {
@@ -242,7 +212,7 @@ struct HomeView: View {
                         } label: {
                             ZStack {
                                 Image(systemName: "bell.fill")
-                                    .foregroundColor(.primary)
+                                    .foregroundColor(.accentColor)
                                 
                                 if !bookStore.deletionRequests.isEmpty {
                                     Text("\(bookStore.deletionRequests.count)")
@@ -261,7 +231,7 @@ struct HomeView: View {
                                 .environmentObject(appState)
                         } label: {
                             Image(systemName: "person.circle.fill")
-                                .foregroundColor(.primary)
+                                .foregroundColor(.accentColor)
                         }
                     }
                 }
@@ -313,17 +283,15 @@ struct HomeView: View {
             async let overdueBooks = AnalyticsService.shared.getOverdueBooksCount()
             async let dueToday = AnalyticsService.shared.getBooksDueToday()
             async let revenue = AnalyticsService.shared.getTotalRevenue()
-            async let activeMembers = AnalyticsService.shared.getActiveMembersCount()
             async let membersOverdue = AnalyticsService.shared.getMembersWithOverdueBooks()
             
-            let (issued, overdue, due, rev, active, overdueMembers) = try await (issuedBooks, overdueBooks, dueToday, revenue, activeMembers, membersOverdue)
+            let (issued, overdue, due, rev, overdueMembers) = try await (issuedBooks, overdueBooks, dueToday, revenue, membersOverdue)
             
             await MainActor.run {
                 self.issuedBooksCount = issued
                 self.overdueBooksCount = overdue
                 self.booksDueToday = due
                 self.totalRevenue = rev
-                self.activeMembersCount = active
                 self.membersWithOverdueBooks = overdueMembers
                 self.isLoadingAnalytics = false
             }
@@ -344,14 +312,14 @@ struct HomeView: View {
         return "\(totalBooksCount)"
     }
     
-    var activeMembersDisplay: String {
+    var issuedBooksDisplay: String {
         if isLoadingAnalytics {
             return "Loading..."
         }
         if analyticsError != nil {
             return "Tap to retry"
         }
-        return "\(activeMembersCount)"
+        return "\(issuedBooksCount)"
     }
     
     var revenueDisplay: String {
@@ -372,16 +340,6 @@ struct HomeView: View {
             return "Tap to retry"
         }
         return "\(booksDueToday)"
-    }
-    
-    var issuedBooksDisplay: String {
-        if isLoadingAnalytics {
-            return "Loading..."
-        }
-        if analyticsError != nil {
-            return "Tap to retry"
-        }
-        return "\(issuedBooksCount)"
     }
     
     var overdueBooksDisplay: String {

@@ -34,32 +34,30 @@ struct AdminLoginView: View {
     
     var body: some View {
         ZStack {
-            // Background gradient
-            LinearGradient(
-                colors: [
-                    Color.blue.opacity(0.1),
-                    Color.purple.opacity(0.1)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            
+            Color("AccentColor") // ----------------Added
+                .ignoresSafeArea()
+            
+            VStack { // -------------------Added
+                WaveShape()
+                    .fill(Color.white)
+                    .padding(.top, -350) // Changes
+                    .frame(height: UIScreen.main.bounds.height * 0.9)
+                    .offset(y: UIScreen.main.bounds.height * 0.04)
+                Spacer()
+            }
             
             ScrollView {
                 VStack(spacing: 32) {
                     // Header
                     VStack(spacing: 16) {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(.blue)
-                            .scaleEffect(animateContent ? 1 : 0.8)
-                            .opacity(animateContent ? 1 : 0)
-                        
                         Text(showOTPVerification ? "Verify OTP" : "Admin Login")
                             .font(.title)
                             .fontWeight(.semibold)
                             .opacity(animateContent ? 1 : 0)
                             .offset(y: animateContent ? 0 : 20)
+                            .padding(.top, 190)
+                            .padding(.leading, -170)
                         
                         Text(showOTPVerification ? "Enter the verification code sent to your email" : "")
                             .font(.subheadline)
@@ -172,7 +170,7 @@ struct AdminLoginView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Email")
                                     .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.gray)
                                 
                                 TextField("Enter your email", text: $email)
                                     .textContentType(.emailAddress)
@@ -187,7 +185,7 @@ struct AdminLoginView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Password")
                                     .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.gray)
                                 
                                 ZStack(alignment: .trailing) {
                                     if showPassword {
@@ -215,6 +213,7 @@ struct AdminLoginView: View {
                             .offset(y: animateContent ? 0 : 20)
                         }
                         .padding(.horizontal, 24)
+                        .padding(.top, -30)
                         
                         // Login Button
                         Button(action: {
@@ -229,13 +228,13 @@ struct AdminLoginView: View {
                                         .padding(.trailing, 8)
                                 }
                                 
-                                Text("Sign In")
+                                Text("Log In")
                                     .font(.headline)
                             }
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
-                            .background(Color.blue)
+                            .background(.accent)
                             .cornerRadius(12)
                         }
                         .disabled(isLoading)
@@ -251,7 +250,7 @@ struct AdminLoginView: View {
                         }) {
                             Text("Forgot Password?")
                                 .font(.subheadline)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accent)
                         }
                         .padding(.top, 8)
                         .opacity(animateContent ? 1 : 0)
@@ -423,37 +422,7 @@ struct CustomTextFieldStyle: TextFieldStyle {
     }
 }
 
-// OTP Digit Box View
-//struct OTPDigitBox: View {
-//    let index: Int
-//    @Binding var otp: String
-//    var onTap: () -> Void
-//    
-//    var body: some View {
-//        ZStack {
-//            RoundedRectangle(cornerRadius: 8)
-//                .stroke(Color.gray.opacity(0.3), lineWidth: 1.5)
-//                .frame(width: 45, height: 55)
-//                .background(RoundedRectangle(cornerRadius: 8).fill(Color(.systemBackground)))
-//            
-//            if index < otp.count {
-//                let digit = String(Array(otp)[index])
-//                Text(digit)
-//                    .font(.title2.bold())
-//                    .foregroundColor(.primary)
-//                    .transition(.scale.combined(with: .opacity))
-//            }
-//        }
-//        .overlay(
-//            RoundedRectangle(cornerRadius: 8)
-//                .stroke(index < otp.count ? Color.blue : Color.clear, lineWidth: 1.5)
-//        )
-//        .animation(.spring(response: 0.2), value: otp.count)
-//        .onTapGesture {
-//            onTap()
-//        }
-//    }
-//}
+
 
 #Preview {
     AdminLoginView(showMainApp: .constant(false))

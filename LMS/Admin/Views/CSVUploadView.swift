@@ -13,128 +13,131 @@ struct CSVUploadView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView(.vertical, showsIndicators: true) {
-                VStack(spacing: 16) {
-                    // Required format section
-                    GroupBox {
-                        VStack(alignment: .leading, spacing: 12) {
-                            // Format header with download button
-                            HStack {
-                                Label("Required CSV Format", systemImage: "list.bullet.rectangle")
-                                    .font(.headline)
-                                
-                                Spacer()
-                                
-                                ShareLink(
-                                    item: createTemplate(),
-                                    preview: SharePreview("Book Upload Template", image: Image(systemName: "doc.text"))
-                                ) {
-                                    Image(systemName: "square.and.arrow.down")
+            ZStack(alignment: .bottom) {
+                ScrollView(.vertical, showsIndicators: true) {
+                    VStack(spacing: 16) {
+                        // Required format section
+                        GroupBox {
+                            VStack(alignment: .leading, spacing: 12) {
+                                // Format header with download button
+                                HStack {
+                                    Label("Required CSV Format", systemImage: "list.bullet.rectangle")
                                         .font(.headline)
-                                        .foregroundColor(.accentColor)
+                                    
+                                    Spacer()
+                                    
+                                    ShareLink(
+                                        item: createTemplate(),
+                                        preview: SharePreview("Book Upload Template", image: Image(systemName: "doc.text"))
+                                    ) {
+                                        Image(systemName: "square.and.arrow.down")
+                                            .font(.headline)
+                                            .foregroundColor(.accentColor)
+                                    }
+                                    .buttonStyle(BorderlessButtonStyle())
                                 }
-                                .buttonStyle(BorderlessButtonStyle())
-                            }
-                            
-                            // Format table - using grid with fixed widths to prevent zig-zag layout
-                            VStack(spacing: 0) {
-                                ForEach(["title", "author", "genre", "ISBN", "publicationDate", "totalCopies"], id: \.self) { field in
-                                    VStack(spacing: 0) {
-                                        HStack(alignment: .center) {
-                                            Text(field)
-                                                .font(.subheadline)
-                                                .fontWeight(.medium)
-                                                .frame(width: 150, alignment: .leading)
-                                            
-                                            Spacer(minLength: 10)
-                                            
-                                            // Description text with consistent layout
-                                            Group {
-                                                if field == "title" {
-                                                    Text("Book title")
-                                                } else if field == "author" {
-                                                    Text("Use semicolon (;) to separate multiple authors")
-                                                } else if field == "genre" {
-                                                    Text("One of the supported genres")
-                                                } else if field == "ISBN" {
-                                                    Text("ISBN-13 format (with or without hyphens)")
-                                                } else if field == "publicationDate" {
-                                                    Text("Year of publication")
-                                                } else if field == "totalCopies" {
-                                                    Text("Number of copies available")
-                                                } else {
-                                                    Text("")
+                                
+                                // Format table - using grid with fixed widths to prevent zig-zag layout
+                                VStack(spacing: 0) {
+                                    ForEach(["title", "author", "genre", "ISBN", "publicationDate", "totalCopies"], id: \.self) { field in
+                                        VStack(spacing: 0) {
+                                            HStack(alignment: .center) {
+                                                Text(field)
+                                                    .font(.subheadline)
+                                                    .fontWeight(.medium)
+                                                    .frame(width: 150, alignment: .leading)
+                                                
+                                                Spacer(minLength: 10)
+                                                
+                                                // Description text with consistent layout
+                                                Group {
+                                                    if field == "title" {
+                                                        Text("Book title")
+                                                    } else if field == "author" {
+                                                        Text("Use semicolon (;) to separate multiple authors")
+                                                    } else if field == "genre" {
+                                                        Text("One of the supported genres")
+                                                    } else if field == "ISBN" {
+                                                        Text("ISBN-13 format (with or without hyphens)")
+                                                    } else if field == "publicationDate" {
+                                                        Text("Year of publication")
+                                                    } else if field == "totalCopies" {
+                                                        Text("Number of copies available")
+                                                    } else {
+                                                        Text("")
+                                                    }
                                                 }
+                                                .font(.subheadline)
+                                                .foregroundColor(.secondary)
+                                                .frame(maxWidth: .infinity, alignment: .leading)
                                             }
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                        }
-                                        .padding(.vertical, 12)
-                                        
-                                        if field != "totalCopies" {
-                                            Divider()
+                                            .padding(.vertical, 12)
+                                            
+                                            if field != "totalCopies" {
+                                                Divider()
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
-                    .padding(.horizontal)
-                    
-                    // Example section
-                    GroupBox {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Label("Example CSV Content", systemImage: "doc.text.magnifyingglass")
-                                .font(.headline)
-                            
-                            // CSV header
-                            Text("CSV Headers:")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.top, 4)
-                            
-                            Text("Title, Author, Genre, ISBN, PublicationDate, TotalCopies")
-                                .font(.system(.caption, design: .monospaced))
-                                .padding(8)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color.secondary.opacity(0.1))
-                                .cornerRadius(4)
-                            
-                            // Example rows
-                            Text("Example Rows:")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.top, 8)
-                            
-                            VStack(spacing: 8) {
-                                Text("To Kill a Mockingbird,Harper Lee,Fiction,978-0446310789,1960,5")
-                                    .font(.system(.caption, design: .monospaced))
-                                    .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                        
+                        // Example section
+                        GroupBox {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Label("Example CSV Content", systemImage: "doc.text.magnifyingglass")
+                                    .font(.headline)
+                                
+                                // CSV header
+                                Text("CSV Headers:")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.vertical, 4)
-                                    .padding(.horizontal, 8)
-                                    .background(Color.secondary.opacity(0.05))
+                                    .padding(.top, 4)
+                                
+                                Text("Title, Author, Genre, ISBN, PublicationDate, TotalCopies")
+                                    .font(.system(.caption, design: .monospaced))
+                                    .padding(8)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Color.secondary.opacity(0.1))
                                     .cornerRadius(4)
                                 
-                                Text("Good Omens,Neil Gaiman; Terry Pratchett,Fiction,978-0060853976,1990,3")
-                                    .font(.system(.caption, design: .monospaced))
-                                    .foregroundColor(.secondary)
+                                // Example rows
+                                Text("Example Rows:")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.vertical, 4)
-                                    .padding(.horizontal, 8)
-                                    .background(Color.secondary.opacity(0.05))
-                                    .cornerRadius(4)
+                                    .padding(.top, 8)
+                                
+                                VStack(spacing: 8) {
+                                    Text("To Kill a Mockingbird,Harper Lee,Fiction,978-0446310789,1960,5")
+                                        .font(.system(.caption, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.vertical, 4)
+                                        .padding(.horizontal, 8)
+                                        .background(Color.secondary.opacity(0.05))
+                                        .cornerRadius(4)
+                                    
+                                    Text("Good Omens,Neil Gaiman; Terry Pratchett,Fiction,978-0060853976,1990,3")
+                                        .font(.system(.caption, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.vertical, 4)
+                                        .padding(.horizontal, 8)
+                                        .background(Color.secondary.opacity(0.05))
+                                        .cornerRadius(4)
+                                }
                             }
                         }
+                        .padding(.horizontal)
                     }
-                    .padding(.horizontal)
-                    
-                    Spacer(minLength: 24)
-                    
-                    // Select CSV File Button at the bottom
+                    .padding(.bottom, 80) // Add padding at the bottom to account for the fixed button
+                }
+                
+                VStack {
+                    // Fixed Select CSV File Button at the bottom
                     Button(action: {
                         showFilePicker = true
                     }) {
@@ -154,28 +157,38 @@ struct CSVUploadView: View {
                     }
                     .buttonStyle(ScaleButtonStyle())
                     .padding(.horizontal)
-                    
-                    if isLoading {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(UIColor.systemBackground))
-                                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
-                                .frame(width: 220, height: 100)
-                            
-                            VStack(spacing: 12) {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                    .scaleEffect(1.2)
-                                
-                                Text("Processing CSV...")
-                                    .font(.subheadline)
-                                    .foregroundColor(.primary)
-                            }
-                        }
-                        .transition(.opacity)
-                    }
+                    .padding(.bottom, 8)
+                    .background(
+                        Rectangle()
+                            .fill(Color(UIColor.systemGroupedBackground))
+                            .edgesIgnoringSafeArea(.bottom)
+                            .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: -2)
+                    )
                 }
-                .padding(.bottom, 32)
+                
+                if isLoading {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .edgesIgnoringSafeArea(.all)
+                        
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(UIColor.systemBackground))
+                            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
+                            .frame(width: 220, height: 100)
+                        
+                        VStack(spacing: 12) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .scaleEffect(1.2)
+                            
+                            Text("Processing CSV...")
+                                .font(.subheadline)
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    .transition(.opacity)
+                    .zIndex(1) // Ensure loading overlay appears above everything else
+                }
             }
             .navigationTitle("Upload CSV")
             .navigationBarItems(leading: Button("Cancel") {

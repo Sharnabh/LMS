@@ -673,7 +673,12 @@ struct LibrarianPasswordResetView: View {
                     }
                 }
             }
+
             .navigationBarHidden(true)
+
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .navigationBarTitleDisplayMode(.inline)
+
             .alert(isPresented: $showAlert) {
                 Alert(
                     title: Text("Error"),

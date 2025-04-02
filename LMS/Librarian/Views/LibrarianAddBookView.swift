@@ -20,7 +20,7 @@ struct LibrarianAddBookView: View {
     @State private var showAddNewShelfSheet = false
     @State private var newShelfName = ""
     
-    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
+    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference", "Fiction", "Non-Fiction", "Literature"]
     
     private var isValid: Bool {
         !title.isEmpty && 

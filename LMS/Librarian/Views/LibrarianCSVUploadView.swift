@@ -172,7 +172,7 @@ struct LibrarianCSVUploadView: View {
         
         // List of allowed genres - must match the controller
         let allowedGenres = ["Science", "Humanities", "Business", "Medicine", "Law", 
-                            "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
+                            "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference", "Fiction", "Non-Fiction", "Literature"]
         
         for (index, row) in dataRows.enumerated() {
             let columns = row.components(separatedBy: ",")

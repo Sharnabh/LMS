@@ -30,7 +30,8 @@ struct QRCodeParser {
                     
                     struct BookIssueData: Codable {
                         let issueDate: String
-                        let bookId: String
+                        let bookId: String?
+                        let bookIds: [String]?
                         let id: String
                         let status: String
                         let returnDate: String
@@ -56,7 +57,8 @@ struct QRCodeParser {
                 struct IssueQRData: Codable {
                     struct BookIssueData: Codable {
                         let issueDate: String
-                        let bookId: String
+                        let bookId: String?
+                        let bookIds: [String]?
                         let id: String
                         let status: String
                         let returnDate: String
@@ -64,39 +66,117 @@ struct QRCodeParser {
                     }
                     
                     let bookIssue: BookIssueData
-                    let expirationDate: String
-                    let timestamp: String
+                    let expirationDate: AnyCodable?
+                    let timestamp: AnyCodable?
                     let isValid: Bool
                 }
                 
+                // Add AnyCodable to handle both string and numeric values
+                struct AnyCodable: Codable {
+                    let value: Any
+                    
+                    init(from decoder: Decoder) throws {
+                        let container = try decoder.singleValueContainer()
+                        if let stringValue = try? container.decode(String.self) {
+                            value = stringValue
+                        } else if let doubleValue = try? container.decode(Double.self) {
+                            value = doubleValue
+                        } else {
+                            value = ""
+                        }
+                    }
+                    
+                    func encode(to encoder: Encoder) throws {
+                        var container = encoder.singleValueContainer()
+                        if let stringValue = value as? String {
+                            try container.encode(stringValue)
+                        } else if let doubleValue = value as? Double {
+                            try container.encode(doubleValue)
+                        } else {
+                            try container.encode("")
+                        }
+                    }
+                }
+                
                 if let qrData = try? decoder.decode(IssueQRData.self, from: jsonData) {
+                    print("Successfully decoded QR data")
+                    print("Book Issue: \(qrData.bookIssue)")
+                    
+                    // Get book IDs - handle both single and multiple book IDs
+                    let bookIds: [String]
+                    if let singleBookId = qrData.bookIssue.bookId {
+                        bookIds = [singleBookId]
+                    } else if let multipleBookIds = qrData.bookIssue.bookIds {
+                        bookIds = multipleBookIds
+                    } else {
+                        print("No book IDs found")
+                        return .failure(.missingFields)
+                    }
+                    
+                    print("Found book IDs: \(bookIds)")
+                    
+                    // Handle both string and numeric timestamps
+                    let expirationDate: TimeInterval
+                    if let expDate = qrData.expirationDate?.value {
+                        if let stringValue = expDate as? String {
+                            expirationDate = TimeInterval(stringValue) ?? 0
+                        } else if let doubleValue = expDate as? Double {
+                            expirationDate = doubleValue
+                        } else {
+                            expirationDate = 0
+                        }
+                    } else {
+                        expirationDate = 0
+                    }
+                    
+                    let timestamp: TimeInterval
+                    if let ts = qrData.timestamp?.value {
+                        if let stringValue = ts as? String {
+                            timestamp = TimeInterval(stringValue) ?? 0
+                        } else if let doubleValue = ts as? Double {
+                            timestamp = doubleValue
+                        } else {
+                            timestamp = 0
+                        }
+                    } else {
+                        timestamp = 0
+                    }
+                    
+                    print("Expiration Date: \(expirationDate)")
+                    print("Timestamp: \(timestamp)")
+                    
                     // Convert BookIssue to BookInfo format
                     let bookInfo = BookInfo(
-                        bookIds: [qrData.bookIssue.bookId],
+                        bookIds: bookIds,
                         memberId: qrData.bookIssue.memberId,
                         issueStatus: qrData.bookIssue.status,
                         issueDate: qrData.bookIssue.issueDate,
                         returnDate: qrData.bookIssue.returnDate,
-                        expirationDate: TimeInterval(qrData.expirationDate) ?? 0,
-                        timestamp: TimeInterval(qrData.timestamp) ?? 0,
+                        expirationDate: expirationDate,
+                        timestamp: timestamp,
                         isValid: qrData.isValid
                     )
                     
+                    print("Created BookInfo: \(bookInfo)")
+                    
                     // Validate required fields
                     if bookInfo.bookIds.isEmpty || bookInfo.memberId.isEmpty {
+                        print("Missing required fields - Book IDs: \(bookInfo.bookIds), Member ID: \(bookInfo.memberId)")
                         return .failure(.missingFields)
                     }
                     
                     // Check if QR code is expired
                     if !bookInfo.isValid {
+                        print("QR code is not valid")
                         return .failure(.expired)
                     }
                     
                     return .success(bookInfo)
+                } else {
+                    print("Failed to decode QR data")
+                    // If JSON parsing fails, try text format
+                    return parseTextFormat(from: qrContent)
                 }
-                
-                // If JSON parsing fails, try text format
-                return parseTextFormat(from: qrContent)
                 
             } catch {
                 print("JSON parsing error: \(error)")

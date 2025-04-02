@@ -172,7 +172,7 @@ struct BookFormView: View {
     @State private var selectedImage: UIImage?
     @State private var showImagePicker = false
     
-    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
+    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference", "Fiction", "Non-Fiction", "Literature"]
     
     var body: some View {
         NavigationView {

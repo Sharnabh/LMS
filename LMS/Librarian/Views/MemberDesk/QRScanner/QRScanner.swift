@@ -241,6 +241,44 @@ struct QRScanner: View {
     // Add flag to check if this is presented as a fullScreenCover
     var isPresentedAsFullScreen: Bool = false
     
+    // Add function to check borrowing limits
+    private func checkBorrowingLimit(memberId: String, newBooksCount: Int) async throws -> Bool {
+        // 1. Fetch library policies
+        let policiesQuery = try supabaseController.client.from("library_policies")
+            .select()
+        
+        let policiesResponse = try await policiesQuery.execute()
+        let policies = try JSONDecoder().decode([PolicyResponse].self, from: policiesResponse.data)
+        
+        guard let policy = policies.first else {
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Library policies not found"])
+        }
+        
+        // 2. Count currently issued books for the member
+        let issuedBooksQuery = try supabaseController.client.from("BookIssue")
+            .select()
+            .eq("memberId", value: memberId)
+            .eq("status", value: "Issued")
+        
+        let issuedBooksResponse = try await issuedBooksQuery.execute()
+        let issuedBooks = try JSONDecoder().decode([BookIssueData].self, from: issuedBooksResponse.data)
+        
+        // 3. Check if adding new books would exceed the limit
+        let currentIssuedCount = issuedBooks.count
+        
+        print("Current issued books: \(currentIssuedCount)")
+        print("New books to be issued: \(newBooksCount)")
+        print("Borrowing limit: \(policy.borrowing_limit)")
+        
+        if (currentIssuedCount + newBooksCount) > policy.borrowing_limit {
+            throw NSError(domain: "", code: -1, userInfo: [
+                NSLocalizedDescriptionKey: "Member has \(currentIssuedCount) books issued out of \(policy.borrowing_limit) limit. Cannot issue \(newBooksCount) more books."
+            ])
+        }
+        
+        return true
+    }
+    
     var body: some View {
         let content = ZStack {
             ScannerView(scannedCode: $scannedCode, alertItem: $alertItem)
@@ -357,9 +395,28 @@ struct QRScanner: View {
                 return
             }
             
-            bookInfo = parsedInfo
-            isShowingBookInfo = true
-            // Keep isProcessing true until book info is displayed
+            // Check borrowing limit before showing book info
+            Task {
+                do {
+                    let newBooksCount = parsedInfo.bookIds.count
+                    let withinLimit = try await checkBorrowingLimit(memberId: parsedInfo.memberId, newBooksCount: newBooksCount)
+                    
+                    await MainActor.run {
+                        bookInfo = parsedInfo
+                        isShowingBookInfo = true
+                    }
+                } catch {
+                    await MainActor.run {
+                        alertItem = AlertItem(
+                            title: "Borrowing Limit Exceeded",
+                            message: error.localizedDescription,
+                            dismissButton: .default(Text("OK"))
+                        )
+                        isProcessing = false
+                    }
+                }
+            }
+            
         case .failure(let error):
             switch error {
             case .invalidFormat:
@@ -377,7 +434,7 @@ struct QRScanner: View {
                     dismissButton: .default(Text("OK"))
                 )
             }
-            // Keep isProcessing true until alert is dismissed
+            isProcessing = false
         }
     }
     

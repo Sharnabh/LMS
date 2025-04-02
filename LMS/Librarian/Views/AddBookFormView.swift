@@ -20,7 +20,7 @@ struct AddBookFormView: View {
     // List of common book genres
     private let genres = [
         "Science", "Humanities", "Business", "Medicine", "Law", 
-        "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"
+        "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference", "Fiction", "Non-Fiction", "Literature"
     ]
     
     var body: some View {

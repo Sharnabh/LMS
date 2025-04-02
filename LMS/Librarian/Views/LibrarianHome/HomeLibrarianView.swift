@@ -77,6 +77,8 @@ struct HomeLibrarianView: View {
                 // Content area
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
+                        Spacer()
+                        Spacer()
                         // Quick Stats Cards
                         LazyVGrid(columns: [
                             GridItem(.flexible(), spacing: 16),
@@ -117,7 +119,7 @@ struct HomeLibrarianView: View {
                         .padding(.horizontal)
                         
                         // Divider with more spacing
-                        Divider()
+//                        Divider()
                             .padding(.vertical, 20)
                         
                         HStack {
@@ -132,7 +134,7 @@ struct HomeLibrarianView: View {
                                 }
                             }) {
                                 Image(systemName: "arrow.up.arrow.down")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                                     .imageScale(.medium)
                                     .rotationEffect(showingCardView ? .degrees(180) : .degrees(0))
                             }
@@ -143,7 +145,7 @@ struct HomeLibrarianView: View {
                             NavigationLink(destination: AllBooksView()) {
                                 Text("See all")
                                     .font(.subheadline)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -205,7 +207,7 @@ struct HomeLibrarianView: View {
                                        }
                                    }) {
                                        Image(systemName: "arrow.up.arrow.down")
-                                           .foregroundColor(.blue)
+                                           .foregroundColor(.accentColor)
                                            .imageScale(.medium)
                                            .rotationEffect(showingCardView ? .degrees(180) : .degrees(0))
                                    }
@@ -215,7 +217,7 @@ struct HomeLibrarianView: View {
                                    NavigationLink(destination: AllBooksWithoutShelfLocationView()) {
                                        Text("See all")
                                            .font(.subheadline)
-                                           .foregroundColor(.blue)
+                                           .foregroundColor(.accentColor)
                                    }
                                }
                                .frame(maxWidth: .infinity, alignment: .leading)
@@ -284,7 +286,7 @@ struct HomeLibrarianView: View {
                         } label: {
                             Image(systemName: "person.crop.circle.fill")
                                 .font(.system(size: 22))
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                         }
                     }
                 }

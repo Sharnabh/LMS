@@ -24,6 +24,7 @@ struct AdminProfileView: View {
     @EnvironmentObject private var appState: AppState
     @State private var profileImage: UIImage?
     @State private var imageSelection: PhotosPickerItem?
+    @State private var showingExportAnalytics = false
     
     var body: some View {
         Group {
@@ -189,6 +190,24 @@ struct AdminProfileView: View {
                     .textCase(.none)
             }
             
+            // Export Analytics Section
+            Section {
+                Button(action: {
+                    showingExportAnalytics = true
+                }) {
+                    HStack {
+                        Image(systemName: "chart.bar.doc.horizontal")
+                            .foregroundColor(.accentColor)
+                        Text("Export Analytics")
+                            .foregroundColor(.black)
+                    }
+                }
+            } header: {
+                Text("Analytics")
+            } footer: {
+                Text("Export all library statistics in CSV format")
+            }
+            
             // Logout Section
             Section {
                 Button(action: {
@@ -251,6 +270,9 @@ struct AdminProfileView: View {
             }
         } message: {
             Text("Are you sure you want to logout?")
+        }
+        .sheet(isPresented: $showingExportAnalytics) {
+            ExportAnalyticsView()
         }
     }
     

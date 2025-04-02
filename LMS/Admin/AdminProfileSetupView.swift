@@ -46,187 +46,192 @@ struct AdminProfileSetupView: View {
     }
     
     var body: some View {
-        NavigationView {
-            ScrollView(.vertical, showsIndicators: true) {
-                VStack(spacing: 30) {
-                    // Header
-                    VStack(spacing: 16) {
-                        // Profile Image Selector
-                        ZStack {
-                            if let profileImage = profileImage {
-                                Image(uiImage: profileImage)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 120, height: 120)
-                                    .clipShape(Circle())
-                                    .overlay(Circle().stroke(Color.purple, lineWidth: 3))
-                            } else {
-                                Circle()
-                                    .fill(Color.purple.opacity(0.2))
-                                    .frame(width: 120, height: 120)
-                                    .overlay(
-                                        Image(systemName: "person.crop.circle.fill")
-                                            .font(.system(size: 60))
-                                            .foregroundColor(.purple)
-                                    )
-                            }
+//            ScrollView(.vertical, showsIndicators: true) {
+                ZStack {
+                    Color("AccentColor")
+                        .ignoresSafeArea()
+                    
+                    VStack {
+                        WaveShape()
+                            .fill(Color.white)
+                            .padding(.top, -350)
+                            .frame(height: UIScreen.main.bounds.height * 0.9)
+                            .offset(y: UIScreen.main.bounds.height * 0.04)
+                        Spacer()
+                    }
+                    
+                    VStack(spacing: 30) {
+                        // Header
+                        VStack(spacing: 16) {
                             
+                            
+                            // Profile Image Selector
                             PhotosPicker(selection: $imageSelection, matching: .images) {
-                                Circle()
-                                    .fill(Color.black.opacity(0.3))
-                                    .frame(width: 40, height: 40)
-                                    .overlay(
-                                        Image(systemName: "camera.fill")
-                                            .font(.system(size: 20))
-                                            .foregroundColor(.white)
-                                    )
+                                ZStack {
+                                    
+                                    
+                                    if let profileImage = profileImage {
+                                        Image(uiImage: profileImage)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 120, height: 120)
+                                            .clipShape(Circle())
+                                            .overlay(Circle().stroke(Color.accentColor, lineWidth: 3))
+                                    } else {
+                                        Circle()
+                                            .fill(Color.white)
+                                            .frame(width: 120, height: 120)
+                                            .overlay(
+                                                Image(systemName: "person.crop.circle.fill")
+                                                    .font(.system(size: 60))
+                                                    .foregroundColor(.accentColor)
+                                            )
+                                    }
+                                    
+                                    
+                                    
+                                }
+                                .overlay(
+                                    Circle()
+                                        .fill(Color.black.opacity(0.2))
+                                        .frame(width: 120, height: 120)
+                                        .opacity(0)
+                                        .overlay(
+                                            Image(systemName: "camera.fill")
+                                                .font(.system(size: 20))
+                                                .foregroundColor(.white)
+                                                .opacity(0)
+                                        )
+                                )
+                                .contentShape(Circle())
                             }
                             .buttonStyle(PlainButtonStyle())
-                            .position(x: 95, y: 95)
-                        }
-                        .padding(.bottom, 8)
-                        
-                        Text("Complete Your Profile")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                    }
-                    .padding(.top, 20)
-                    
-                    // Form Fields
-                    VStack(spacing: 25) {
-                        // Full Name Field
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "person.fill")
-                                    .foregroundColor(.purple)
-                                Text("Full Name")
-                                    .font(.headline)
-                            }
-                            .foregroundColor(.secondary)
                             
-                            TextField("Enter your full name", text: $fullName)
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
-                                )
-                        }
-                        
-                        // Email Field
-//                        VStack(alignment: .leading, spacing: 8) {
-//                            HStack {
-//                                Image(systemName: "envelope.fill")
-//                                    .foregroundColor(.purple)
-//                                Text("Email Address")
-//                                    .font(.headline)
-//                            }
-//                            .foregroundColor(.secondary)
-//                            
-//                            TextField("Enter your email", text: $email)
-//                                .padding()
-//                                .background(Color(.secondarySystemBackground))
-//                                .cornerRadius(12)
-//                                .keyboardType(.emailAddress)
-//                                .autocapitalization(.none)
-//                                .overlay(
-//                                    RoundedRectangle(cornerRadius: 12)
-//                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
-//                                )
-//                        }
-                        
-                        // Date of Birth Field
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "calendar")
-                                    .foregroundColor(.purple)
-                                Text("Date of Birth")
-                                    .font(.headline)
-                            }
-                            .foregroundColor(.secondary)
+                            Text("Complete Your Profile")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .padding(80)
+                                .padding(.top, 20)
                             
+                        }
+                        .padding(.top, 20)
+                        
+                        // Form Fields
+                        VStack(spacing: 25) {
+                            // Full Name Field
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+//                                    Image(systemName: "person.fill")
+//                                        .foregroundColor(.purple)
+                                    Text("Full Name")
+                                        .font(.headline)
+                                }
+                                .foregroundColor(.secondary)
+                                
+                                TextField("Enter your full name", text: $fullName)
+                                    .padding()
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+                            
+                            
+                                
+                                // Date of Birth Field
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        
+                                        Text("Date of Birth")
+                                            .font(.headline)
+                                    }
+                                    .foregroundColor(.secondary)
+                                    
+                                    Button(action: {
+                                        showDatePicker = true
+                                    }) {
+                                        HStack {
+                                            Text(dateFormatter.string(from: dateOfBirth))
+                                                .foregroundColor(.primary)
+                                            Spacer()
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding()
+                                        .background(Color(.secondarySystemBackground))
+                                        .cornerRadius(12)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                                        )
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, -70)
+                            
+                            Spacer()
+                            
+                            // Next Button
                             Button(action: {
-                                showDatePicker = true
+                                saveProfileAndContinue()
                             }) {
                                 HStack {
-                                    Text(dateFormatter.string(from: dateOfBirth))
-                                        .foregroundColor(.primary)
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.secondary)
+                                    if isLoading {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    } else {
+                                      
+                                        Text("Next")
+                                    }
                                 }
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                                .background(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [
+                                            isValid ? Color.accentColor : Color.accentColor.opacity(0.3),
+                                            isValid ? Color.accentColor.opacity(0.8) : Color.accentColor.opacity(0.2)
+                                        ]),
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
                                 )
+                                .cornerRadius(12)
                             }
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    Spacer()
-                    
-                    // Next Button
-                    Button(action: {
-                        saveProfileAndContinue()
-                    }) {
-                        HStack {
-                            if isLoading {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .disabled(isLoading || !isValid)
+                            .padding(.horizontal)
+                            .padding(.bottom, 5)
+                            
+                            // Validation message
+                            if !isValid {
+                                HStack {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .foregroundColor(.accentColor)
+                                    if fullName.isEmpty {
+                                        Text("Please enter your full name")
+                                            .font(.caption)
+                                            .foregroundColor(.accentColor)
+                                    } else {
+                                        Text("You must be at least 21 years old")
+                                            .font(.caption)
+                                            .foregroundColor(.orange)
+                                    }
+                                }
+                                .padding(.horizontal)
+                                .padding(.bottom, 30)
                             } else {
-                              
-                                Text("Next")
+                                // Empty spacer to maintain layout when no message is shown
+                                Spacer().frame(height: 25)
                             }
                         }
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    isValid ? Color.purple : Color.purple.opacity(0.3),
-                                    isValid ? Color.purple.opacity(0.8) : Color.purple.opacity(0.2)
-                                ]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .cornerRadius(12)
                     }
-                    .disabled(isLoading || !isValid)
-                    .padding(.horizontal)
-                    .padding(.bottom, 5)
-                    
-                    // Validation message
-                    if !isValid {
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.orange)
-                            if fullName.isEmpty {
-                                Text("Please enter your full name")
-                                    .font(.caption)
-                                    .foregroundColor(.orange)
-                            } else {
-                                Text("You must be at least 21 years old")
-                                    .font(.caption)
-                                    .foregroundColor(.orange)
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.bottom, 30)
-                    } else {
-                        // Empty spacer to maintain layout when no message is shown
-                        Spacer().frame(height: 25)
-                    }
-                }
-            }
+                
+            
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .alert(isPresented: $showAlert) {
@@ -281,7 +286,7 @@ struct AdminProfileSetupView: View {
                 }
             }
         }
-    }
+    
     
     private func saveProfileAndContinue() {
         // Validation is now handled by isValid property and button disabling
@@ -557,4 +562,5 @@ class AdminService {
 
 #Preview {
     AdminProfileSetupView(adminId: "preview_admin_id", onComplete: {})
-} 
+}
+

@@ -373,7 +373,7 @@ struct LibraryTiming: Codable, Identifiable {
         
         // Set default times in case parsing fails
         let calendar = Calendar.current
-        var defaultDate = calendar.startOfDay(for: Date())
+        let defaultDate = calendar.startOfDay(for: Date())
         
         if let date = formatter.date(from: weekdayOpeningTimeString) {
             weekdayOpeningTime = date

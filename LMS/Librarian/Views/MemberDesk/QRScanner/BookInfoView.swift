@@ -183,7 +183,7 @@ struct BookInfoView: View {
                 Spacer()
             }
         }
-        .onChange(of: accessibilityManager.commandDetected) { command in
+        .onChange(of: accessibilityManager.commandDetected) { oldValue, command in
             let lowercasedCommand = command.lowercased()
             
             // Handle voice commands

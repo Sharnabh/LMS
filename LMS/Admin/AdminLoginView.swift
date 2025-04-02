@@ -94,7 +94,7 @@ struct AdminLoginView: View {
                                     .frame(width: 0, height: 0)
                                     .opacity(0)
                                     .focused($otpFieldFocused)
-                                    .onChange(of: otp) { newValue in
+                                    .onChange(of: otp) { oldValue, newValue in
                                         // Limit to 6 digits
                                         if newValue.count > 6 {
                                             otp = String(newValue.prefix(6))
@@ -338,7 +338,7 @@ struct AdminLoginView: View {
     private func verifyOTP() async {
         isLoading = true
         
-        do {
+//        do {
             let isValid = dataController.verifyOTP(email: email, otp: otp)
             
             DispatchQueue.main.async {
@@ -355,14 +355,14 @@ struct AdminLoginView: View {
                     showAlert = true
                 }
             }
-        } catch {
-            DispatchQueue.main.async {
-                isLoading = false
-                alertTitle = "Error"
-                alertMessage = "An error occurred: \(error.localizedDescription)"
-                showAlert = true
-            }
-        }
+//        } catch {
+//            DispatchQueue.main.async {
+//                isLoading = false
+//                alertTitle = "Error"
+//                alertMessage = "An error occurred: \(error.localizedDescription)"
+//                showAlert = true
+//            }
+//        }
     }
     
     private func resendOTP() async {

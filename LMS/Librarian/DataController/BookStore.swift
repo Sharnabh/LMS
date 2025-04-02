@@ -83,7 +83,7 @@ class BookStore: ObservableObject {
             )
             
             do {
-                let success = try await dataController.updateBook(updatedBook)
+                _ = try await dataController.updateBook(updatedBook)
                 return (false, existingBook.id)
             } catch {
                 print("Error updating existing book: \(error)")
@@ -92,7 +92,7 @@ class BookStore: ObservableObject {
         } else {
             // Book doesn't exist, add it as new
             do {
-                let success = try await dataController.addBook(book)
+                _ = try await dataController.addBook(book)
                 return (true, book.id)
             } catch {
                 print("Error adding new book: \(error)")

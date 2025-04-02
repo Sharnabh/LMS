@@ -222,7 +222,7 @@ struct LibrarianProfileView: View {
                     .disabled(isLoading)
                 }
             }
-            .onChange(of: imageSelection) { item in
+            .onChange(of: imageSelection) { oldItem, item in
                 Task {
                     if let data = try? await item?.loadTransferable(type: Data.self),
                        let uiImage = UIImage(data: data) {

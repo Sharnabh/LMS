@@ -91,13 +91,13 @@ struct LibrarianInitialView: View {
             QRScanner(isPresentedAsFullScreen: false)
                 .environmentObject(accessibilityManager)
         }
-        .onChange(of: accessibilityManager.shouldScanISBN) { newValue in
+        .onChange(of: accessibilityManager.shouldScanISBN) { oldValue, newValue in
             if newValue {
                 showIsbnScanner = true
                 accessibilityManager.resetCommands()
             }
         }
-        .onChange(of: accessibilityManager.shouldIssueBook) { newValue in
+        .onChange(of: accessibilityManager.shouldIssueBook) { oldValue, newValue in
             if newValue {
                 showQRScanner = true
                 

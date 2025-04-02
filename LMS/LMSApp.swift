@@ -315,7 +315,7 @@ struct LMSApp: App {
         appState.isbnToProcess = isbn
         
         // Create a temporary BookStore to handle the book addition
-        let bookStore = BookStore()
+        _ = BookStore()
         
         do {
             // First, fetch the book details from Google Books API

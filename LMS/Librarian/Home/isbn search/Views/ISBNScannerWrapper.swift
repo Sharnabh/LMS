@@ -64,13 +64,13 @@ struct ISBNScannerWrapper: View {
             // Set up accessibility and check for voice commands
             UIAccessibility.post(notification: .announcement, argument: "ISBN Scanner ready. Say scan ISBN to scan a book.")
         }
-        .onChange(of: accessibilityManager.shouldScanISBN) { newValue in
+        .onChange(of: accessibilityManager.shouldScanISBN) { oldValue, newValue in
             if newValue {
                 isShowingScanner = true
                 accessibilityManager.resetCommands()
             }
         }
-        .onChange(of: scannedCode) { newValue in
+        .onChange(of: scannedCode) { oldValue, newValue in
             if !newValue.isEmpty {
                 // Provide audio feedback when code is scanned
                 UIAccessibility.post(notification: .announcement, argument: "ISBN code scanned")

@@ -277,7 +277,7 @@ struct AdminProfileSetupView: View {
                     }
                 })
             }
-            .onChange(of: imageSelection) { item in
+            .onChange(of: imageSelection) { oldValue, item in
                 Task {
                     if let data = try? await item?.loadTransferable(type: Data.self),
                        let uiImage = UIImage(data: data) {
@@ -438,7 +438,7 @@ class StorageService {
             do {
                 try await dataController.client.storage
                     .from("adminavatars")
-                    .upload(path: filename, file: data, options: fileOptions)
+                    .upload(filename, data: data, options: fileOptions)
                 
                 print("Upload successful - unexpected success!")
                 

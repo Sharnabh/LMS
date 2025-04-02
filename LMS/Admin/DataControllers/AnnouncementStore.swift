@@ -119,15 +119,19 @@ class AnnouncementStore: ObservableObject {
         isRefreshing = false
     }
     
-    func createAnnouncement(title: String, content: String, type: AnnouncementType, startDate: Date, expiryDate: Date) async throws {
-        try await AnnouncementService.shared.createAnnouncement(
-            title: title,
-            content: content,
-            type: type,
-            startDate: startDate,
-            expiryDate: expiryDate
-        )
-        await loadAnnouncements()
+    func createAnnouncement(title: String, content: String, type: AnnouncementType, startDate: Date, expiryDate: Date) async {
+        do {
+            let _ = try await AnnouncementService.shared.createAnnouncement(
+                title: title,
+                content: content,
+                type: type,
+                startDate: startDate,
+                expiryDate: expiryDate
+            )
+            await loadAnnouncements()
+        } catch {
+            self.error = error
+        }
     }
     
     func updateAnnouncement(_ announcement: AnnouncementModel) async throws {

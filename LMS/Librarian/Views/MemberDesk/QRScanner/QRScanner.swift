@@ -150,7 +150,7 @@ struct ReturnConfirmationView: View {
                     UIAccessibility.post(notification: .announcement, argument: message)
                 }
             }
-            .onChange(of: accessibilityManager.commandDetected) { command in
+            .onChange(of: accessibilityManager.commandDetected) { oldValue, command in
                 let lowercasedCommand = command.lowercased()
                 
                 // Handle voice commands
@@ -292,7 +292,7 @@ struct QRScanner: View {
     // Add function to check borrowing limits
     private func checkBorrowingLimit(memberId: String, newBooksCount: Int) async throws -> Bool {
         // 1. Fetch library policies
-        let policiesQuery = try supabaseController.client.from("library_policies")
+        let policiesQuery = supabaseController.client.from("library_policies")
             .select()
         
         let policiesResponse = try await policiesQuery.execute()
@@ -303,7 +303,7 @@ struct QRScanner: View {
         }
         
         // 2. Count currently issued books for the member
-        let issuedBooksQuery = try supabaseController.client.from("BookIssue")
+        let issuedBooksQuery = supabaseController.client.from("BookIssue")
             .select()
             .eq("memberId", value: memberId)
             .eq("status", value: "Issued")
@@ -367,7 +367,7 @@ struct QRScanner: View {
             }
         }
         .edgesIgnoringSafeArea(.all)
-        .onChange(of: scannedCode) { newValue in
+        .onChange(of: scannedCode) { oldValue, newValue in
             // Only process if we have a non-empty code, we're not already processing,
             // and this isn't the same code we just processed
             if !newValue.isEmpty && !isProcessing && newValue != lastProcessedCode {
@@ -409,7 +409,7 @@ struct QRScanner: View {
                 ReturnConfirmationView(issue: issue, book: book)
             }
         }
-        .onChange(of: accessibilityManager.commandDetected) { command in
+        .onChange(of: accessibilityManager.commandDetected) { oldCommand, command in
             // Process voice commands relevant to QR scanning
             let lowercasedCommand = command.lowercased()
             
@@ -488,7 +488,7 @@ struct QRScanner: View {
             Task {
                 do {
                     let newBooksCount = parsedInfo.bookIds.count
-                    let withinLimit = try await checkBorrowingLimit(memberId: parsedInfo.memberId, newBooksCount: newBooksCount)
+                    _ = try await checkBorrowingLimit(memberId: parsedInfo.memberId, newBooksCount: newBooksCount)
                     
                     await MainActor.run {
                         bookInfo = parsedInfo

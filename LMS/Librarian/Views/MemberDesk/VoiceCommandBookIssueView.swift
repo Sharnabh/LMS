@@ -129,10 +129,10 @@ struct VoiceCommandBookIssueView: View {
             .onAppear {
                 UIAccessibility.post(notification: .announcement, argument: "Voice-guided book issue process started. Say 'issue book to member' followed by the member ID to begin.")
             }
-            .onChange(of: accessibilityManager.commandDetected) { newValue in
+            .onChange(of: accessibilityManager.commandDetected) { oldValue, newValue in
                 processVoiceCommand(newValue)
             }
-            .onChange(of: accessibilityManager.shouldIssueBook) { newValue in
+            .onChange(of: accessibilityManager.shouldIssueBook) { oldValue, newValue in
                 if newValue {
                     // Reset and start the issue process
                     step = 0

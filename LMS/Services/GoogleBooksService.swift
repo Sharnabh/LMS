@@ -28,7 +28,7 @@ class GoogleBooksService {
         var imageLink: String? = nil
         if let thumbnail = bookInfo.imageLinks?.thumbnail {
             // Convert HTTP URLs to HTTPS for App Transport Security
-            var processedURL = thumbnail.replacingOccurrences(of: "http://", with: "https://")
+            let processedURL = thumbnail.replacingOccurrences(of: "http://", with: "https://")
             
             // Handle common URL encoding issues
             if let urlComponents = URLComponents(string: processedURL) {

@@ -153,7 +153,7 @@ struct ResourcesView: View {
         }
         .sheet(item: $selectedBook) { book in
             NavigationView {
-                BookDetailView(book: book, showAddToCollectionButton: false)
+                AdminBookDetailView(book: book)
                     .environmentObject(bookStore)
                     .navigationBarItems(leading: Button("Cancel") {
                         selectedBook = nil
@@ -406,6 +406,146 @@ struct AddBookView: View {
                 }
             }
         }
+    }
+}
+
+// Admin Book Detail View
+struct AdminBookDetailView: View {
+    let book: LibrarianBook
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // Book cover image with better styling
+                if let imageURL = book.imageLink {
+                    AsyncImage(url: URL(string: imageURL)) { phase in
+                        switch phase {
+                        case .empty:
+                            ProgressView()
+                                .frame(width: 150, height: 200)
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 150, height: 200)
+                                .clipped()
+                                .cornerRadius(8)
+                                .shadow(radius: 5)
+                        case .failure:
+                            Image(systemName: "book.fill")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 150, height: 200)
+                                .foregroundColor(.gray)
+                        @unknown default:
+                            EmptyView()
+                        }
+                    }
+                    .padding(.bottom, 8)
+                } else {
+                    Image(systemName: "book.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 150, height: 200)
+                        .foregroundColor(.gray)
+                        .padding(.bottom, 8)
+                }
+                
+                // Title and authors
+                Text(book.title)
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .padding(.top, 8)
+                
+                Text(book.author.joined(separator: ", "))
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+                
+                // Stats section
+                HStack {
+                    AdminStatBox(title: "Total Copies", value: "\(book.totalCopies)", icon: "books.vertical.fill", color: .blue)
+                    AdminStatBox(title: "Available", value: "\(book.availableCopies)", icon: "book.closed.fill", color: .green)
+                }
+                
+                Divider()
+                    .padding(.vertical, 8)
+                
+                // Additional details
+                Group {
+                    AdminDetailRow(label: "Genre", value: book.genre)
+                    AdminDetailRow(label: "ISBN", value: book.ISBN)
+                    AdminDetailRow(label: "Publication Date", value: book.publicationDate)
+                    
+                    if let publisher = book.publisher {
+                        AdminDetailRow(label: "Publisher", value: publisher)
+                    }
+                }
+                
+                // Description
+                if let description = book.Description, !description.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Description")
+                            .font(.headline)
+                            .padding(.bottom, 4)
+                        
+                        Text(description)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 8)
+                }
+            }
+            .padding()
+        }
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .navigationTitle("Book Details")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct AdminStatBox: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(color)
+                Text(title)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            Text(value)
+                .font(.title2)
+                .fontWeight(.semibold)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(10)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 2)
+    }
+}
+
+struct AdminDetailRow: View {
+    let label: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .foregroundColor(.secondary)
+                .frame(width: 120, alignment: .leading)
+            
+            Text(value)
+                .fontWeight(.medium)
+            
+            Spacer()
+        }
+        .padding(.vertical, 4)
     }
 }
 

@@ -415,90 +415,161 @@ struct AdminBookDetailView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                // Book cover image with better styling
-                if let imageURL = book.imageLink {
-                    AsyncImage(url: URL(string: imageURL)) { phase in
-                        switch phase {
-                        case .empty:
-                            ProgressView()
-                                .frame(width: 150, height: 200)
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 150, height: 200)
-                                .clipped()
-                                .cornerRadius(8)
-                                .shadow(radius: 5)
-                        case .failure:
-                            Image(systemName: "book.fill")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 150, height: 200)
-                                .foregroundColor(.gray)
-                        @unknown default:
-                            EmptyView()
+            VStack(alignment: .leading, spacing: 12) {
+                // Cover and basic info
+                HStack(alignment: .top, spacing: 12) {
+                    // Book cover image
+                    if let imageURL = book.imageLink {
+                        AsyncImage(url: URL(string: imageURL)) { phase in
+                            switch phase {
+                            case .empty:
+                                ProgressView()
+                                    .frame(width: 150, height: 210)
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 150, height: 210)
+                                    .clipped()
+                                    .cornerRadius(8)
+                                    .shadow(radius: 3)
+                            case .failure:
+                                Image(systemName: "book.fill")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 150, height: 210)
+                                    .foregroundColor(.gray)
+                            @unknown default:
+                                EmptyView()
+                            }
+                        }
+                    } else {
+                        Image(systemName: "book.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 150, height: 210)
+                            .foregroundColor(.gray)
+                    }
+                    
+                    // Title and basic info
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(book.title)
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .lineLimit(3)
+                        
+                        Text(book.author.joined(separator: ", "))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                        
+                        Spacer(minLength: 4)
+                        
+                        HStack(spacing: 4) {
+                            Text("Genre:")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text(book.genre)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                        }
+                        
+                        HStack(spacing: 4) {
+                            Text("Published:")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text(book.publicationDate)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                        }
+                        
+                        HStack(spacing: 4) {
+                            Text("ISBN:")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text(book.ISBN)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
                         }
                     }
-                    .padding(.bottom, 8)
-                } else {
-                    Image(systemName: "book.fill")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 150, height: 200)
-                        .foregroundColor(.gray)
-                        .padding(.bottom, 8)
+                    .padding(.leading, 4)
                 }
-                
-                // Title and authors
-                Text(book.title)
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .padding(.top, 8)
-                
-                Text(book.author.joined(separator: ", "))
-                    .font(.title3)
-                    .foregroundColor(.secondary)
+                .padding(.bottom, 4)
                 
                 // Stats section
-                HStack {
+                HStack(spacing: 10) {
                     AdminStatBox(title: "Total Copies", value: "\(book.totalCopies)", icon: "books.vertical.fill", color: .blue)
                     AdminStatBox(title: "Available", value: "\(book.availableCopies)", icon: "book.closed.fill", color: .green)
                 }
                 
-                Divider()
-                    .padding(.vertical, 8)
-                
-                // Additional details
-                Group {
-                    AdminDetailRow(label: "Genre", value: book.genre)
-                    AdminDetailRow(label: "ISBN", value: book.ISBN)
-                    AdminDetailRow(label: "Publication Date", value: book.publicationDate)
-                    
-                    if let publisher = book.publisher {
-                        AdminDetailRow(label: "Publisher", value: publisher)
-                    }
-                }
-                
-                // Description
+                // Add description section with Read More functionality
                 if let description = book.Description, !description.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Description")
-                            .font(.headline)
-                            .padding(.bottom, 4)
-                        
-                        Text(description)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.top, 8)
+                    ExpandableDescriptionCard(description: description)
                 }
             }
-            .padding()
+            .padding(12)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Book Details")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// Add expandable description card
+struct ExpandableDescriptionCard: View {
+    let description: String
+    @State private var isExpanded = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "text.quote")
+                    .foregroundColor(.blue)
+                Text("Description")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                Spacer()
+            }
+            
+            if isExpanded {
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Button(action: {
+                    withAnimation {
+                        isExpanded = false
+                    }
+                }) {
+                    Text("Show Less")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.blue)
+                }
+                .padding(.top, 4)
+            } else {
+                Text(description)
+                    .lineLimit(4)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Button(action: {
+                    withAnimation {
+                        isExpanded = true
+                    }
+                }) {
+                    Text("Read More...")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.blue)
+                }
+                .padding(.top, 4)
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(10)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 2)
     }
 }
 

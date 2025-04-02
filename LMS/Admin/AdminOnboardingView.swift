@@ -747,10 +747,7 @@ struct AdminOnboardingView: View {
                             Text("Library Setup")
                                 .font(.largeTitle)
                                 .fontWeight(.bold)
-//                                .padding(80)
-                                .padding(.top, 190)
-                                .padding(.leading, -130)
-                            Spacer()
+                                .padding(100)
                             
                             Text("Manage your library resources")
                                 .font(.headline)

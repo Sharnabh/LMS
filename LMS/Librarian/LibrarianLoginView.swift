@@ -160,19 +160,19 @@ struct LibrarianLoginView: View {
                     
                     // Header
                     VStack(spacing: 16) {
-                        Image(systemName: "person.text.rectangle")
-                            .font(.system(size: 80))
-                            .foregroundColor(.blue)
+//                        Image(systemName: "person.text.rectangle")
+//                            .font(.system(size: 80))
+//                            .foregroundColor(.blue)
                         
                         Text("Librarian Login")
                             .font(.title)
                             .fontWeight(.bold)
                         
-                        Text("Enter your credentials to access as librarian dashboard")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
+//                        Text("Enter your credentials to access as librarian dashboard")
+//                            .font(.subheadline)
+//                            .foregroundColor(.secondary)
+//                            .multilineTextAlignment(.center)
+//                            .padding(.horizontal)
                     }
                     .padding(.top, 20)
                     
@@ -180,6 +180,8 @@ struct LibrarianLoginView: View {
                     
                     // Login Form
                     VStack(spacing: 20) {
+                        
+                        
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Email")
                                 .font(.headline)
@@ -242,7 +244,7 @@ struct LibrarianLoginView: View {
                     }) {
                         Text("Forgot Password?")
                             .font(.subheadline)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                     }
                     .padding(.top, 8)
                     
@@ -261,12 +263,13 @@ struct LibrarianLoginView: View {
                             Text("Login")
                                 .font(.headline)
                                 .foregroundColor(.white)
+                                
                         }
                     }
                     .frame(minWidth: 120, maxWidth: 280)
                     .padding(.vertical, 16)
                     .padding(.horizontal, 24)
-                    .background(Color.blue)
+                    .background(Color.accentColor)
                     .cornerRadius(12)
                     .disabled(isLoading)
                     .padding(.horizontal, 30)

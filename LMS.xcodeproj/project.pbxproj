@@ -304,7 +304,11 @@
 				DEVELOPMENT_TEAM = SART644AN3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LMS/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Using camera to scan member QR Codes and Book ISBN codes";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone access to enable voice commands for library functions like book scanning and issuing.";
+				INFOPLIST_KEY_NSSiriUsageDescription = "Use Siri to scan ISBNs or issue books with voice commands without opening the app.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We use speech recognition to enable voice commands for managing books and accessibility features.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -335,7 +339,11 @@
 				DEVELOPMENT_TEAM = SART644AN3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LMS/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Using camera to scan member QR Codes and Book ISBN codes";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone access to enable voice commands for library functions like book scanning and issuing.";
+				INFOPLIST_KEY_NSSiriUsageDescription = "Use Siri to scan ISBNs or issue books with voice commands without opening the app.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We use speech recognition to enable voice commands for managing books and accessibility features.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

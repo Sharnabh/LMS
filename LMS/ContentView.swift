@@ -8,6 +8,7 @@
 import SwiftUI
 struct ContentView: View {
     @StateObject private var appState = AppState()
+    @EnvironmentObject private var accessibilityManager: AccessibilityManager
     @AppStorage("adminIsLoggedIn") private var adminIsLoggedIn = false
     @AppStorage("adminEmail") private var adminEmail = ""
     @AppStorage("librarianIsLoggedIn") private var librarianIsLoggedIn = false
@@ -17,21 +18,27 @@ struct ContentView: View {
         if adminIsLoggedIn {
             MainAppView(userRole: .admin, initialTab: 0)
                 .environmentObject(appState)
+                .environmentObject(accessibilityManager)
         } else if librarianIsLoggedIn {
             LibrarianInitialView()
                 .environmentObject(appState)
+                .environmentObject(accessibilityManager)
         } else if appState.showMainApp {
             MainAppView(userRole: appState.selectedRole ?? .member, initialTab: 0)
                 .environmentObject(appState)
+                .environmentObject(accessibilityManager)
         } else if appState.showAdminLogin {
             AdminLoginView(showMainApp: $appState.showMainApp)
                 .environmentObject(appState)
+                .environmentObject(accessibilityManager)
         } else if appState.showLibrarianApp {
             LibrarianInitialView()
                 .environmentObject(appState)
+                .environmentObject(accessibilityManager)
         } else {
             OnboardingView(showMainApp: $appState.showMainApp, showAdminLogin: $appState.showAdminLogin)
                 .environmentObject(appState)
+                .environmentObject(accessibilityManager)
         }
     }
 }
@@ -40,6 +47,7 @@ struct OnboardingView: View {
     @Binding var showMainApp: Bool
     @Binding var showAdminLogin: Bool
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var accessibilityManager: AccessibilityManager
     @State private var animateHeader = false
     @State private var animateCards = false
     @State private var animateButton = false
@@ -146,9 +154,11 @@ struct OnboardingView: View {
                         if appState.selectedRole == .admin {
                             AdminLoginView(showMainApp: $showMainApp)
                                 .environmentObject(appState)
+                                .environmentObject(accessibilityManager)
                         } else if appState.selectedRole == .librarian {
                             LibrarianLoginView(showMainApp: $showMainApp, selectedRole: $appState.selectedRole)
                                 .environmentObject(appState)
+                                .environmentObject(accessibilityManager)
                         } else {
                             EmptyView()
                         }
@@ -292,6 +302,7 @@ struct MainAppView: View {
     @StateObject private var adminBookStore = AdminBookStore()
 
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var accessibilityManager: AccessibilityManager
 
     
     init(userRole: UserRole, initialTab: Int = 0) {
@@ -303,6 +314,7 @@ struct MainAppView: View {
             TabView(selection: $selectedTab) {
                 HomeView()
                     .environmentObject(appState)
+                    .environmentObject(accessibilityManager)
                     .tabItem {
                         Image(systemName: "house.fill")
                         Text("Home")

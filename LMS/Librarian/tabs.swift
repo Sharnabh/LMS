@@ -11,41 +11,119 @@ import SwiftUI
 struct LibrarianInitialView: View {
     @StateObject private var bookStore = BookStore()
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var accessibilityManager: AccessibilityManager
     @StateObject private var dataController = SupabaseDataController()
     @State private var showDisabledAlert = false
     @AppStorage("librarianIsLoggedIn") private var librarianIsLoggedIn = false
     @AppStorage("librarianEmail") private var librarianEmail = ""
     
+    // Voice command related states
+    @State private var showIsbnScanner = false
+    @State private var showBookIssue = false
+    @State private var showQRScanner = false
+    @State private var showSiriHelp = false
+    @State private var showVoiceCommandButton = true // Fallback when Siri isn't available
+    
     var body: some View {
-        TabView {
-            HomeLibrarianView()
-                .tabItem {
-                    Image(systemName: "house.fill")
-                    Text("Home")
-                }
-            
-            IssueHistoryView()
-                .tabItem {
-                    Image(systemName: "person.crop.rectangle.stack.fill")
-                    Text("Member Desk")
-                }
+        ZStack {
+            TabView {
+                HomeLibrarianView()
+                    .tabItem {
+                        Image(systemName: "house.fill")
+                        Text("Home")
+                    }
+                
+                IssueHistoryView()
+                    .tabItem {
+                        Image(systemName: "person.crop.rectangle.stack.fill")
+                        Text("Member Desk")
+                    }
 
-            AddView()
-                .tabItem {
-                    Image(systemName: "book")
-                        .imageScale(.large)
-                    Text("Add Books")
-                }
+                AddView()
+                    .tabItem {
+                        Image(systemName: "book")
+                            .imageScale(.large)
+                        Text("Add Books")
+                    }
+                
+                ShelfLocationsView()
+                    .tabItem {
+                        Image(systemName: "mappin.and.ellipse")
+                        Text("Book Shelf")
+                    }
+            }
+            .environmentObject(bookStore)
+            .environmentObject(appState)
+            .accentColor(.blue)
             
-            ShelfLocationsView()
-                .tabItem {
-                    Image(systemName: "mappin.and.ellipse")
-                    Text("Book Shelf")
+            // Accessibility buttons overlay
+            VStack {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 12) {
+                        // Show Siri button if available
+                        if accessibilityManager.isSiriAvailable {
+                            SiriButton()
+                                .padding(.top, 60)
+                                .padding(.trailing, 20)
+                        }
+                        
+                        // Show voice command button as fallback or additional option
+                        if showVoiceCommandButton || !accessibilityManager.isSiriAvailable {
+                            VoiceCommandButton()
+                                .padding(.top, accessibilityManager.isSiriAvailable ? 0 : 60)
+                                .padding(.trailing, 20)
+                        }
+                        
+                        // Help button
+                        Button(action: {
+                            showSiriHelp = true
+                        }) {
+                            Image(systemName: "questionmark.circle")
+                                .font(.system(size: 18))
+                                .foregroundColor(.blue)
+                        }
+                        .padding(.trailing, 20)
+                        .accessibilityLabel("Voice commands help")
+                    }
                 }
+                Spacer()
+            }
+            .ignoresSafeArea(.keyboard)
         }
-        .environmentObject(bookStore)
-        .environmentObject(appState)
-        .accentColor(.blue)
+        .sheet(isPresented: $showIsbnScanner) {
+            ISBNScannerWrapper { code in
+                print("Scanned ISBN: \(code)")
+                // Handle the scanned code
+                // This would integrate with your existing ISBN scanning functionality
+            }
+        }
+        .sheet(isPresented: $showBookIssue) {
+            QRScanner(isPresentedAsFullScreen: false)
+        }
+        .sheet(isPresented: $showQRScanner) {
+            QRScanner(isPresentedAsFullScreen: false)
+        }
+        .sheet(isPresented: $showSiriHelp) {
+            VoiceAccessibilityHelpView(isSiriAvailable: accessibilityManager.isSiriAvailable)
+        }
+        .onChange(of: accessibilityManager.shouldScanISBN) { newValue in
+            if newValue {
+                showIsbnScanner = true
+                accessibilityManager.resetCommands()
+            }
+        }
+        .onChange(of: accessibilityManager.shouldIssueBook) { newValue in
+            if newValue {
+                showQRScanner = true
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    UIAccessibility.post(notification: .announcement, argument: "Opening QR scanner for book issue. Please scan member's QR code.")
+                }
+                
+                accessibilityManager.resetCommands()
+            }
+        }
         .onAppear {
             // Set the app-wide background color
             let appearance = UITabBarAppearance()
@@ -62,6 +140,15 @@ struct LibrarianInitialView: View {
             // Check librarian status
             Task {
                 await checkLibrarianStatus()
+            }
+            
+            // Announce voice accessibility options
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                if accessibilityManager.isSiriAvailable {
+                    UIAccessibility.post(notification: .announcement, argument: "Voice commands available. You can use Siri or tap the microphone button.")
+                } else {
+                    UIAccessibility.post(notification: .announcement, argument: "Voice commands available. Tap the microphone button to start listening.")
+                }
             }
         }
         .alert("Account Disabled", isPresented: $showDisabledAlert) {
@@ -92,8 +179,83 @@ struct LibrarianInitialView: View {
     }
 }
 
+// Combined help view for all voice accessibility options
+struct VoiceAccessibilityHelpView: View {
+    @Environment(\.dismiss) private var dismiss
+    var isSiriAvailable: Bool
+    
+    var body: some View {
+        NavigationView {
+            List {
+                if isSiriAvailable {
+                    Section(header: Text("Siri Commands")) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("\"Hey Siri, scan ISBN\"")
+                                .font(.headline)
+                            Text("Opens the ISBN scanner for adding books")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 8)
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("\"Hey Siri, issue books\"")
+                                .font(.headline)
+                            Text("Opens the QR scanner for issuing books to members")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 8)
+                    }
+                }
+                
+                Section(header: Text("In-App Voice Commands")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("\"Scan ISBN\" or \"Scan book\"")
+                            .font(.headline)
+                        Text("Opens the barcode scanner for scanning book ISBNs")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("\"Issue book\" or \"Borrow book\"")
+                            .font(.headline)
+                        Text("Starts the book issue process with QR code")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                Section(header: Text("How to Use")) {
+                    if isSiriAvailable {
+                        Text("Siri commands work anytime, even when the app is closed. In-app commands require tapping the microphone button first.")
+                            .font(.body)
+                            .padding(.vertical, 8)
+                    } else {
+                        Text("Tap the microphone button at the top of the screen, then speak your command clearly.")
+                            .font(.body)
+                            .padding(.vertical, 8)
+                    }
+                }
+            }
+            .navigationTitle("Voice Commands")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
 #Preview {
    LibrarianInitialView()
         .environmentObject(AppState())
+        .environmentObject(AccessibilityManager())
 }
 

@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Rename to avoid conflicts with VoiceCommandBookIssueView
 struct BookIssueData: Codable {
     let id: String
     let memberId: String
@@ -19,6 +20,7 @@ struct BookInfoView: View {
     let bookInfo: BookInfo
     @Environment(\.dismiss) private var dismiss
     @StateObject private var supabaseController = SupabaseDataController()
+    @EnvironmentObject private var accessibilityManager: AccessibilityManager
     @State private var member: MemberModel?
     @State private var books: [LibrarianBook] = []
     @State private var isLoading = false
@@ -33,10 +35,12 @@ struct BookInfoView: View {
                 if isLoading {
                     ProgressView()
                         .frame(maxWidth: .infinity)
+                        .accessibilityLabel("Loading book information")
                 } else if let error = errorMessage {
                     Text(error)
                         .foregroundColor(.red)
                         .padding()
+                        .accessibilityLabel("Error: \(error)")
                 } else {
                     // Member Info Section
                     if let member = member {
@@ -66,6 +70,8 @@ struct BookInfoView: View {
                             .background(Color(.systemBackground))
                             .cornerRadius(12)
                             .shadow(radius: 2)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("Member information: \(member.firstName ?? "Unknown") \(member.lastName ?? "")")
                         }
                     }
                     
@@ -83,9 +89,13 @@ struct BookInfoView: View {
                         } else {
                             ForEach(books) { book in
                                 BookRow(book: book)
+                                    .accessibilityElement(children: .combine)
+                                    .accessibilityLabel("Book: \(book.title) by \(book.author.joined(separator: ", "))")
                             }
                         }
                     }
+                    .accessibilityElement(children: .contain)
+                    .accessibilityLabel("Books to issue: \(books.count) books")
                     
                     // Issue Details Section
                     VStack(alignment: .leading, spacing: 12) {
@@ -106,6 +116,8 @@ struct BookInfoView: View {
                         .background(Color(.systemBackground))
                         .cornerRadius(12)
                         .shadow(radius: 2)
+                        .accessibilityElement(children: .contain)
+                        .accessibilityLabel("Issue details: Status \(bookInfo.issueStatus), Issue date \(bookInfo.issueDate), Return date \(bookInfo.returnDate)")
                     }
                     
                     // Approve Button
@@ -127,6 +139,8 @@ struct BookInfoView: View {
                         }
                         .padding(.top)
                         .disabled(isLoading)
+                        .accessibilityLabel("Approve book issue")
+                        .accessibilityHint("Double tap to approve issuing these books to the member")
                     }
                 }
             }
@@ -138,6 +152,13 @@ struct BookInfoView: View {
         })
         .task {
             await fetchDetails()
+            
+            // Announce for accessibility when view is loaded
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                let bookCount = books.count
+                let memberName = member?.firstName ?? "Unknown"
+                UIAccessibility.post(notification: .announcement, argument: "Showing issue details for \(memberName). \(bookCount) books ready to issue. Say approve to complete the book issue.")
+            }
         }
         .alert(isPresented: $showAlert) {
             Alert(
@@ -149,6 +170,45 @@ struct BookInfoView: View {
                     }
                 }
             )
+        }
+        .overlay {
+            // Voice command button
+            VStack {
+                HStack {
+                    Spacer()
+                    VoiceCommandButton()
+                        .padding(.top, 10)
+                        .padding(.trailing, 20)
+                }
+                Spacer()
+            }
+        }
+        .onChange(of: accessibilityManager.commandDetected) { command in
+            let lowercasedCommand = command.lowercased()
+            
+            // Handle voice commands
+            if (lowercasedCommand.contains("approve") || 
+                lowercasedCommand.contains("confirm") || 
+                lowercasedCommand.contains("issue")) && 
+                bookInfo.issueStatus == "Pending" && !isLoading {
+                
+                // Provide feedback
+                UIAccessibility.post(notification: .announcement, argument: "Approving book issue...")
+                
+                // Execute approve action
+                Task {
+                    await approveBookIssue()
+                }
+            } else if lowercasedCommand.contains("cancel") || lowercasedCommand.contains("close") {
+                dismiss()
+            } else if lowercasedCommand.contains("read details") || lowercasedCommand.contains("information") {
+                // Read out details for accessibility
+                let bookNames = books.map { $0.title }.joined(separator: ", ")
+                let memberName = member?.firstName ?? "Unknown"
+                
+                UIAccessibility.post(notification: .announcement, 
+                    argument: "Issue for member \(memberName). Books: \(bookNames). Status: \(bookInfo.issueStatus). Say approve to issue the books or cancel to go back.")
+            }
         }
     }
     
@@ -243,6 +303,9 @@ struct BookInfoView: View {
                 alertMessage = "Book issue approved successfully"
                 showAlert = true
                 isLoading = false
+                
+                // Announce for accessibility
+                UIAccessibility.post(notification: .announcement, argument: "Books have been successfully issued to the member.")
             }
         } catch {
             await MainActor.run {
@@ -250,6 +313,9 @@ struct BookInfoView: View {
                 alertMessage = "Failed to approve book issue: \(error.localizedDescription)"
                 showAlert = true
                 isLoading = false
+                
+                // Announce error for accessibility
+                UIAccessibility.post(notification: .announcement, argument: "Failed to issue books. \(error.localizedDescription)")
             }
         }
     }

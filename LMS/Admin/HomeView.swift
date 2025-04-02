@@ -58,203 +58,198 @@ struct HomeView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Spacer()
-                // Dashboard Header
-                Text("Dashboard")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .padding(.horizontal)
-                
-                // Four Cards Grid
-                LazyVGrid(columns: [
-                    GridItem(.flexible(), spacing: 16),
-                    GridItem(.flexible(), spacing: 16)
-                ], spacing: 16) {
-                    // Card 1: Total Books
-                    HomeCard(
-                        title: "Total Books",
-                        value: bookCountDisplay,
-                        icon: "book.fill",
-                        color: .blue
-                    )
-                    .overlay(
-                        Group {
-                            if bookError != nil {
-                                Button(action: {
-                                    Task {
-                                        await loadBooksCount()
-                                    }
-                                }) {
-                                    Image(systemName: "arrow.clockwise")
-                                        .foregroundColor(.blue)
-                                }
-                                .padding(8)
-                            }
-                        },
-                        alignment: .topTrailing
-                    )
-                    
-                    // Card 2: Issued Books
-                    HomeCard(
-                        title: "Issued Books",
-                        value: issuedBooksDisplay,
-                        icon: "book.closed.fill",
-                        color: .purple
-                    )
-                    .overlay(
-                        Group {
-                            if analyticsError != nil {
-                                Button(action: {
-                                    Task {
-                                        await loadAnalytics()
-                                    }
-                                }) {
-                                    Image(systemName: "arrow.clockwise")
-                                        .foregroundColor(.purple)
-                                }
-                                .padding(8)
-                            }
-                        },
-                        alignment: .topTrailing
-                    )
-                    
-                    // Card 3: Revenue
-                    HomeCard(
-                        title: "Revenue",
-                        value: revenueDisplay,
-                        icon: "indianrupeesign",
-                        color: .red
-                    )
-                    
-                    HomeCard(
-                        title: "Today's Returns",
-                        value: booksDueTodayDisplay,
-                        icon: "return",
-                        color: .orange
-                    )
-                   
-                }
-                .padding(.horizontal)
-                
-                // Announcements Header
-                HStack {
-                    Text("Announcements")
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    Spacer()
+                    // Dashboard Header
+                    Text("Dashboard")
                         .font(.title2)
                         .fontWeight(.bold)
+                        .padding(.horizontal)
                     
-                    Spacer()
-                    
-                    Button(action: {
-                        showingAddAnnouncementSheet = true
-                    }) {
-                        Image(systemName: "plus")
-                            .font(.title2)
-                            .foregroundColor(.blue)
+                    // Four Cards Grid
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 16),
+                        GridItem(.flexible(), spacing: 16)
+                    ], spacing: 16) {
+                        // Card 1: Total Books
+                        HomeCard(
+                            title: "Total Books",
+                            value: bookCountDisplay,
+                            icon: "book.fill",
+                            color: .blue
+                        )
+                        .overlay(
+                            Group {
+                                if bookError != nil {
+                                    Button(action: {
+                                        Task {
+                                            await loadBooksCount()
+                                        }
+                                    }) {
+                                        Image(systemName: "arrow.clockwise")
+                                            .foregroundColor(.blue)
+                                    }
+                                    .padding(8)
+                                }
+                            },
+                            alignment: .topTrailing
+                        )
+                        
+                        // Card 2: Issued Books
+                        HomeCard(
+                            title: "Issued Books",
+                            value: issuedBooksDisplay,
+                            icon: "book.closed.fill",
+                            color: .purple
+                        )
+                        .overlay(
+                            Group {
+                                if analyticsError != nil {
+                                    Button(action: {
+                                        Task {
+                                            await loadAnalytics()
+                                        }
+                                    }) {
+                                        Image(systemName: "arrow.clockwise")
+                                            .foregroundColor(.purple)
+                                    }
+                                    .padding(8)
+                                }
+                            },
+                            alignment: .topTrailing
+                        )
+                        
+                        // Card 3: Revenue
+                        HomeCard(
+                            title: "Revenue",
+                            value: revenueDisplay,
+                            icon: "indianrupeesign",
+                            color: .red
+                        )
+                        
+                        HomeCard(
+                            title: "Today's Returns",
+                            value: booksDueTodayDisplay,
+                            icon: "return",
+                            color: .orange
+                        )
+                       
                     }
-                }
-                .padding(.horizontal)
-                
-                // Announcement Type Cards
-                LazyVGrid(columns: [
-                    GridItem(.flexible(), spacing: 12),
-                    GridItem(.flexible(), spacing: 12),
-                    GridItem(.flexible(), spacing: 12)
-                ], spacing: 12) {
-                    // Active Announcements Card
-                    AnnouncementTypeCard(
-                        type: .active,
-                        count: announcementStore.activeAnnouncements.count,
-                        showCount: true,
-                        isLoading: isLoadingAnnouncements,
-                        action: {
-                            selectedAnnouncementType = .active
-                            showingAnnouncementList = true
-                        }
-                    )
+                    .padding(.horizontal)
                     
-                    // Scheduled Announcements Card
-                    AnnouncementTypeCard(
-                        type: .scheduled,
-                        count: announcementStore.scheduledAnnouncements.count,
-                        showCount: true,
-                        isLoading: isLoadingAnnouncements,
-                        action: {
-                            selectedAnnouncementType = .scheduled
-                            showingAnnouncementList = true
+                    // Announcements Header
+                    HStack {
+                        Text("Announcements")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            showingAddAnnouncementSheet = true
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.title2)
+                                .foregroundColor(.blue)
                         }
-                    )
+                    }
+                    .padding(.horizontal)
                     
-                    // Archived Announcements Card
-                    AnnouncementTypeCard(
-                        type: .archived,
-                        showCount: false,
-                        isLoading: isLoadingAnnouncements,
-                        action: {
-                            selectedAnnouncementType = .archived
-                            showingAnnouncementList = true
-                        }
-                    )
+                    // Announcement Type Cards
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12)
+                    ], spacing: 12) {
+                        // Active Announcements Card
+                        AnnouncementTypeCard(
+                            type: .active,
+                            count: announcementStore.activeAnnouncements.count,
+                            showCount: true,
+                            isLoading: isLoadingAnnouncements,
+                            action: {
+                                selectedAnnouncementType = .active
+                                showingAnnouncementList = true
+                            }
+                        )
+                        
+                        // Scheduled Announcements Card
+                        AnnouncementTypeCard(
+                            type: .scheduled,
+                            count: announcementStore.scheduledAnnouncements.count,
+                            showCount: true,
+                            isLoading: isLoadingAnnouncements,
+                            action: {
+                                selectedAnnouncementType = .scheduled
+                                showingAnnouncementList = true
+                            }
+                        )
+                        
+                        // Archived Announcements Card
+                        AnnouncementTypeCard(
+                            type: .archived,
+                            showCount: false,
+                            isLoading: isLoadingAnnouncements,
+                            action: {
+                                selectedAnnouncementType = .archived
+                                showingAnnouncementList = true
+                            }
+                        )
+                    }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
             }
-        }
-        .navigationTitle("Home")
-        .navigationBarTitleDisplayMode(.automatic)
-        .navigationBarBackButtonHidden()
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack {
-                    NavigationLink {
-                        BookDeletionRequestsView()
-                            .environmentObject(bookStore)
-                            .navigationBarBackButtonHidden(false)
-                    } label: {
-                        ZStack {
-                            Image(systemName: "bell.fill")
-                                .foregroundColor(.accentColor)
-                            
-                            if !bookStore.deletionRequests.isEmpty {
-                                Text("\(bookStore.deletionRequests.count)")
-                                    .font(.caption2)
-                                    .padding(5)
-                                    .background(Color.red)
-                                    .foregroundColor(.white)
-                                    .clipShape(Circle())
-                                    .offset(x: 10, y: -10)
+            .navigationTitle("Home")
+            .navigationBarTitleDisplayMode(.automatic)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack {
+                        NavigationLink {
+                            BookDeletionRequestsView()
+                                .environmentObject(bookStore)
+                        } label: {
+                            ZStack {
+                                Image(systemName: "bell.fill")
+                                    .foregroundColor(.accentColor)
+                                
+                                if !bookStore.deletionRequests.isEmpty {
+                                    Text("\(bookStore.deletionRequests.count)")
+                                        .font(.caption2)
+                                        .padding(5)
+                                        .background(Color.red)
+                                        .foregroundColor(.white)
+                                        .clipShape(Circle())
+                                        .offset(x: 10, y: -10)
+                                }
                             }
                         }
-                    }
-                    
-                    NavigationLink {
-                        AdminProfileView()
-                            .environmentObject(appState)
-                            .navigationBarBackButtonHidden(false)
-                    } label: {
-                        Image(systemName: "person.circle.fill")
-                            .foregroundColor(.accentColor)
+                        
+                        NavigationLink {
+                            AdminProfileView()
+                                .environmentObject(appState)
+                        } label: {
+                            Image(systemName: "person.circle.fill")
+                                .foregroundColor(.accentColor)
+                        }
                     }
                 }
             }
-        }
-        .sheet(isPresented: $showingAddAnnouncementSheet) {
-            NavigationView {
+            .sheet(isPresented: $showingAddAnnouncementSheet) {
                 AddAnnouncementView(announcementStore: announcementStore)
             }
-        }
-        .sheet(isPresented: $showingAnnouncementList) {
-            NavigationView {
+            .sheet(isPresented: $showingAnnouncementList) {
                 AnnouncementListView(
                     type: selectedAnnouncementType,
                     announcementStore: announcementStore
                 )
             }
-        }
-        .task {
-            print("🏠 HomeView task started - loading data")
-            await loadInitialData()
-            print("🏠 HomeView - Fetched all data")
+            .task {
+                print("🏠 HomeView task started - loading data")
+                await loadInitialData()
+                print("🏠 HomeView - Fetched all data")
+            }
         }
     }
     

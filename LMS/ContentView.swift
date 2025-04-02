@@ -317,7 +317,6 @@ struct MainAppView: View {
     }
     
     var body: some View {
-        NavigationStack {
             TabView(selection: $selectedTab) {
                 HomeView()
                     .environmentObject(appState)
@@ -351,8 +350,6 @@ struct MainAppView: View {
             }
             .toolbar(selectedTab == 0 ? .visible : .hidden, for: .navigationBar)
         }
-        .navigationBarBackButtonHidden()
-    }
 }
 
 // The rest of the file remains the same

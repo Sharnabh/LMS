@@ -89,7 +89,7 @@ extension SupabaseDataController {
         
         // Validate genre against allowed values
         let allowedGenres = ["Science", "Humanities", "Business", "Medicine", "Law", 
-                            "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
+                            "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference", "Fiction", "Non-Fiction", "Literature"]
         guard allowedGenres.contains(book.genre) else {
             throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "Invalid genre. Please select from the allowed genres."])
         }

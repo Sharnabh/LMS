@@ -629,7 +629,6 @@ struct LibrarianPasswordResetView: View {
                 .padding(.bottom, 40)
             }
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle("Reset Password")
             .navigationBarTitleDisplayMode(.inline)
             .alert(isPresented: $showAlert) {
                 Alert(

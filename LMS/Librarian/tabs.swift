@@ -45,7 +45,7 @@ struct LibrarianInitialView: View {
         }
         .environmentObject(bookStore)
         .environmentObject(appState)
-        .accentColor(.blue)
+        .accentColor(.accentColor)
         .onAppear {
             // Set the app-wide background color
             let appearance = UITabBarAppearance()

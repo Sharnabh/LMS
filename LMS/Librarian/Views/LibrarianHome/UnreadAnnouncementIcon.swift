@@ -16,7 +16,7 @@ struct UnreadAnnouncementIcon: View {
         ZStack(alignment: .topTrailing) {
             Image(systemName: "megaphone.fill")
                 .imageScale(.large)
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
             
             if unreadCount > 0 {
                 ZStack {

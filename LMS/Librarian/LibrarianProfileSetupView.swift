@@ -47,54 +47,53 @@ struct LibrarianProfileSetupView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView(.vertical, showsIndicators: true) {
+            //            ScrollView(.vertical, showsIndicators: true) {
+            ZStack{
+                Color("AccentColor") // ----------------Added
+                    .ignoresSafeArea()
+                
+                VStack { // -------------------Added
+                    WaveShape()
+                        .fill(Color.white)
+                        .padding(.top, -350) // Changes
+                        .frame(height: UIScreen.main.bounds.height * 0.9)
+                        .offset(y: UIScreen.main.bounds.height * 0.04)
+                    Spacer()
+                }
+                
                 VStack(spacing: 30) {
                     // Header
                     VStack(spacing: 16) {
                         // Profile Image Selector
-                        ZStack {
-                            if let profileImage = profileImage {
-                                Image(uiImage: profileImage)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 120, height: 120)
-                                    .clipShape(Circle())
-                                    .overlay(Circle().stroke(Color.blue, lineWidth: 3))
-                            } else {
-                                Circle()
-                                    .fill(Color.blue.opacity(0.2))
-                                    .frame(width: 120, height: 120)
-                                    .overlay(
-                                        Image(systemName: "person.crop.circle.fill")
-                                            .font(.system(size: 60))
-                                            .foregroundColor(.blue)
-                                    )
+                        PhotosPicker(selection: $imageSelection, matching: .images) {
+                            ZStack {
+                                if let profileImage = profileImage {
+                                    Image(uiImage: profileImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 120, height: 120)
+                                        .clipShape(Circle())
+                                        .overlay(Circle().stroke(Color.accentColor, lineWidth: 3))
+                                } else {
+                                    Circle()
+                                        .fill(Color.white)
+                                        .frame(width: 120, height: 120)
+                                        .overlay(
+                                            Image(systemName: "person.crop.circle.fill")
+                                                .font(.system(size: 60))
+                                                .foregroundColor(.accentColor)
+                                        )
+                                }
                             }
-                            
-                            PhotosPicker(selection: $imageSelection, matching: .images) {
-                                Circle()
-                                    .fill(Color.black.opacity(0.3))
-                                    .frame(width: 40, height: 40)
-                                    .overlay(
-                                        Image(systemName: "camera.fill")
-                                            .font(.system(size: 20))
-                                            .foregroundColor(.white)
-                                    )
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            .position(x: 95, y: 95)
                         }
+                        .buttonStyle(PlainButtonStyle())
                         .padding(.bottom, 8)
                         
                         Text("Complete Your Profile")
                             .font(.title2)
                             .fontWeight(.bold)
-                        
-                        Text("Please provide your details to complete the setup")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
+                            .padding(80)
+                            .padding(.top, 20)
                     }
                     .padding(.top, 20)
                     
@@ -103,8 +102,8 @@ struct LibrarianProfileSetupView: View {
                         // Full Name Field
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Image(systemName: "person.fill")
-                                    .foregroundColor(.blue)
+                                //                                Image(systemName: "person.fill")
+                                //                                    .foregroundColor(.blue)
                                 Text("Full Name")
                                     .font(.headline)
                             }
@@ -123,8 +122,8 @@ struct LibrarianProfileSetupView: View {
                         // Date of Birth Field
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Image(systemName: "calendar")
-                                    .foregroundColor(.blue)
+                                //                                Image(systemName: "calendar")
+                                //                                    .foregroundColor(.blue)
                                 Text("Date of Birth")
                                     .font(.headline)
                             }
@@ -151,6 +150,7 @@ struct LibrarianProfileSetupView: View {
                         }
                     }
                     .padding(.horizontal)
+                    .padding(.top , -70)
                     
                     Spacer()
                     
@@ -163,7 +163,7 @@ struct LibrarianProfileSetupView: View {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             } else {
-                                Image(systemName: "arrow.right.circle.fill")
+//                                Image(systemName: "arrow.right.circle.fill")
                                 Text("Next")
                             }
                         }
@@ -174,8 +174,8 @@ struct LibrarianProfileSetupView: View {
                         .background(
                             LinearGradient(
                                 gradient: Gradient(colors: [
-                                    isValid ? Color.blue : Color.blue.opacity(0.3),
-                                    isValid ? Color.blue.opacity(0.8) : Color.blue.opacity(0.2)
+                                    isValid ? Color.accentColor : Color.accentColor.opacity(0.3),
+                                    isValid ? Color.accentColor.opacity(0.8) : Color.accentColor.opacity(0.2)
                                 ]),
                                 startPoint: .leading,
                                 endPoint: .trailing

@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CE88E1E62D9D0FFB00D10196 /* PustaklayaWidgitExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CE88E1D52D9D0FF800D10196 /* PustaklayaWidgitExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		CE88E1F92D9D291A00D10196 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE356EF72D9D00DC00E0E9E4 /* SwiftUI.framework */; };
+		CE88E1FA2D9D291A00D10196 /* SwiftUI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = CE356EF72D9D00DC00E0E9E4 /* SwiftUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		CE88E1FC2D9D291C00D10196 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE356EF52D9D00DC00E0E9E4 /* WidgetKit.framework */; };
+		CE88E1FD2D9D291C00D10196 /* WidgetKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = CE356EF52D9D00DC00E0E9E4 /* WidgetKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		CECF48EC2D94756F00B37944 /* SwiftSMTP in Frameworks */ = {isa = PBXBuildFile; productRef = CECF48EB2D94756F00B37944 /* SwiftSMTP */; };
 		CECF48EF2D94759000B37944 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = CECF48EE2D94759000B37944 /* Auth */; };
 		CECF48F12D94759000B37944 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = CECF48F02D94759000B37944 /* Functions */; };
@@ -16,11 +21,58 @@
 		CECF48F92D94759100B37944 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = CECF48F82D94759100B37944 /* Supabase */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		CE88E1E42D9D0FFB00D10196 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE8AE2A22D888E2C001A93FF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE88E1D42D9D0FF800D10196;
+			remoteInfo = PustaklayaWidgitExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		CE356F0E2D9D00DE00E0E9E4 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				CE88E1E62D9D0FFB00D10196 /* PustaklayaWidgitExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE88E1FB2D9D291A00D10196 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				CE88E1FA2D9D291A00D10196 /* SwiftUI.framework in Embed Frameworks */,
+				CE88E1FD2D9D291C00D10196 /* WidgetKit.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		CE356EF52D9D00DC00E0E9E4 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		CE356EF72D9D00DC00E0E9E4 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		CE88E1D52D9D0FF800D10196 /* PustaklayaWidgitExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PustaklayaWidgitExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE88E1EB2D9D100400D10196 /* PustaklayaWidgitExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PustaklayaWidgitExtension.entitlements; sourceTree = "<group>"; };
 		CE8AE2AA2D888E2C001A93FF /* LMS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LMS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		CE88E1EA2D9D0FFB00D10196 /* Exceptions for "PustaklayaWidgit" folder in "PustaklayaWidgitExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CE88E1D42D9D0FF800D10196 /* PustaklayaWidgitExtension */;
+		};
 		F57897B22D8BD49C00B36B63 /* Exceptions for "LMS" folder in "LMS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -31,6 +83,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		CE88E1D82D9D0FF800D10196 /* PustaklayaWidgit */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CE88E1EA2D9D0FFB00D10196 /* Exceptions for "PustaklayaWidgit" folder in "PustaklayaWidgitExtension" target */,
+			);
+			path = PustaklayaWidgit;
+			sourceTree = "<group>";
+		};
 		CE8AE2AC2D888E2C001A93FF /* LMS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -42,6 +102,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		CE88E1D22D9D0FF800D10196 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE88E1F92D9D291A00D10196 /* SwiftUI.framework in Frameworks */,
+				CE88E1FC2D9D291C00D10196 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CE8AE2A72D888E2C001A93FF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -62,7 +131,9 @@
 		CE8AE2A12D888E2C001A93FF = {
 			isa = PBXGroup;
 			children = (
+				CE88E1EB2D9D100400D10196 /* PustaklayaWidgitExtension.entitlements */,
 				CE8AE2AC2D888E2C001A93FF /* LMS */,
+				CE88E1D82D9D0FF800D10196 /* PustaklayaWidgit */,
 				F57897252D8AD1A600B36B63 /* Frameworks */,
 				CE8AE2AB2D888E2C001A93FF /* Products */,
 			);
@@ -72,6 +143,7 @@
 			isa = PBXGroup;
 			children = (
 				CE8AE2AA2D888E2C001A93FF /* LMS.app */,
+				CE88E1D52D9D0FF800D10196 /* PustaklayaWidgitExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -79,6 +151,8 @@
 		F57897252D8AD1A600B36B63 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				CE356EF52D9D00DC00E0E9E4 /* WidgetKit.framework */,
+				CE356EF72D9D00DC00E0E9E4 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -86,6 +160,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		CE88E1D42D9D0FF800D10196 /* PustaklayaWidgitExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE88E1E72D9D0FFB00D10196 /* Build configuration list for PBXNativeTarget "PustaklayaWidgitExtension" */;
+			buildPhases = (
+				CE88E1D12D9D0FF800D10196 /* Sources */,
+				CE88E1D22D9D0FF800D10196 /* Frameworks */,
+				CE88E1D32D9D0FF800D10196 /* Resources */,
+				CE88E1FB2D9D291A00D10196 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CE88E1D82D9D0FF800D10196 /* PustaklayaWidgit */,
+			);
+			name = PustaklayaWidgitExtension;
+			packageProductDependencies = (
+			);
+			productName = PustaklayaWidgitExtension;
+			productReference = CE88E1D52D9D0FF800D10196 /* PustaklayaWidgitExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		CE8AE2A92D888E2C001A93FF /* LMS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CE8AE2B82D888E2E001A93FF /* Build configuration list for PBXNativeTarget "LMS" */;
@@ -93,10 +190,12 @@
 				CE8AE2A62D888E2C001A93FF /* Sources */,
 				CE8AE2A72D888E2C001A93FF /* Frameworks */,
 				CE8AE2A82D888E2C001A93FF /* Resources */,
+				CE356F0E2D9D00DE00E0E9E4 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				CE88E1E52D9D0FFB00D10196 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				CE8AE2AC2D888E2C001A93FF /* LMS */,
@@ -122,9 +221,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1620;
+				LastSwiftUpdateCheck = 1630;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
+					CE88E1D42D9D0FF800D10196 = {
+						CreatedOnToolsVersion = 16.3;
+					};
 					CE8AE2A92D888E2C001A93FF = {
 						CreatedOnToolsVersion = 16.2;
 					};
@@ -149,11 +251,19 @@
 			projectRoot = "";
 			targets = (
 				CE8AE2A92D888E2C001A93FF /* LMS */,
+				CE88E1D42D9D0FF800D10196 /* PustaklayaWidgitExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		CE88E1D32D9D0FF800D10196 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CE8AE2A82D888E2C001A93FF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -164,6 +274,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		CE88E1D12D9D0FF800D10196 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CE8AE2A62D888E2C001A93FF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -173,7 +290,75 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		CE88E1E52D9D0FFB00D10196 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CE88E1D42D9D0FF800D10196 /* PustaklayaWidgitExtension */;
+			targetProxy = CE88E1E42D9D0FFB00D10196 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		CE88E1E82D9D0FFB00D10196 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = PustaklayaWidgitExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SART644AN3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PustaklayaWidgit/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Pustakalaya;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSSupportsLiveActivities = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.infosys04.pustakalaya.PustaklayaWidgit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CE88E1E92D9D0FFB00D10196 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = PustaklayaWidgitExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SART644AN3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PustaklayaWidgit/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Pustakalaya;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSSupportsLiveActivities = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.infosys04.pustakalaya.PustaklayaWidgit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		CE8AE2B62D888E2E001A93FF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -298,6 +483,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LMS/LMS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"LMS/Preview Content\"";
@@ -307,7 +493,6 @@
 				INFOPLIST_FILE = LMS/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Using camera to scan member QR Codes and Book ISBN codes";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone access to enable voice commands for library functions like book scanning and issuing.";
-				INFOPLIST_KEY_NSSiriUsageDescription = "Use Siri to scan ISBNs or issue books with voice commands without opening the app.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We use speech recognition to enable voice commands for managing books and accessibility features.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -320,7 +505,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.infosys04.LMS;
+				PRODUCT_BUNDLE_IDENTIFIER = com.infosys04.pustakalaya;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -333,6 +518,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LMS/LMSRelease.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"LMS/Preview Content\"";
@@ -342,7 +528,6 @@
 				INFOPLIST_FILE = LMS/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Using camera to scan member QR Codes and Book ISBN codes";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need microphone access to enable voice commands for library functions like book scanning and issuing.";
-				INFOPLIST_KEY_NSSiriUsageDescription = "Use Siri to scan ISBNs or issue books with voice commands without opening the app.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "We use speech recognition to enable voice commands for managing books and accessibility features.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -355,7 +540,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.infosys04.LMS;
+				PRODUCT_BUNDLE_IDENTIFIER = com.infosys04.pustakalaya;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -366,6 +551,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		CE88E1E72D9D0FFB00D10196 /* Build configuration list for PBXNativeTarget "PustaklayaWidgitExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE88E1E82D9D0FFB00D10196 /* Debug */,
+				CE88E1E92D9D0FFB00D10196 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		CE8AE2A52D888E2C001A93FF /* Build configuration list for PBXProject "LMS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

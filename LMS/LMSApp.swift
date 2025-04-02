@@ -8,6 +8,7 @@
 import SwiftUI
 import Speech
 import AVFoundation
+import WidgetKit
 
 // Accessibility Manager to handle voice commands
 class AccessibilityManager: NSObject, ObservableObject {
@@ -175,13 +176,43 @@ class AccessibilityManager: NSObject, ObservableObject {
 @main
 struct LMSApp: App {
     @StateObject private var accessibilityManager = AccessibilityManager()
+    @StateObject private var appState = AppState()
+    @State private var showIsbnScanner = false
+    @State private var showQRScanner = false
+    @AppStorage("librarianIsLoggedIn") private var librarianIsLoggedIn = false
+    @AppStorage("librarianEmail") private var librarianEmail = ""
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(accessibilityManager)
+                .environmentObject(appState)
                 .onAppear {
                     configureAccessibility()
+                    
+                    // Debug librarian login state
+                    if librarianIsLoggedIn {
+                        print("Librarian logged in: \(librarianEmail)")
+                    } else {
+                        print("No librarian logged in")
+                    }
+                }
+                .onOpenURL { url in
+                    handleURL(url)
+                }
+                .sheet(isPresented: $showIsbnScanner) {
+                    ISBNScannerWrapper { code in
+                        print("Scanned ISBN: \(code)")
+                        // Handle the scanned code - fetch and add book to Supabase
+                        Task {
+                            await handleScannedISBN(code)
+                        }
+                    }
+                    .environmentObject(accessibilityManager)
+                }
+                .sheet(isPresented: $showQRScanner) {
+                    QRScanner(isPresentedAsFullScreen: false)
+                    .environmentObject(accessibilityManager)
                 }
         }
     }
@@ -189,5 +220,123 @@ struct LMSApp: App {
     private func configureAccessibility() {
         // Enable voice command button in accessibility options
         UIAccessibility.post(notification: .announcement, argument: "Voice commands available. Activate through accessibility menu.")
+    }
+    
+    private func handleURL(_ url: URL) {
+        // Handle the pustkalaya:// URL scheme (as defined in WidgetConfig)
+        guard let scheme = url.scheme?.lowercased(),
+              scheme == "pustkalaya" else {
+            print("Unknown URL scheme: \(url)")
+            return
+        }
+        
+        // Check if a librarian is logged in for widget actions
+        if !librarianIsLoggedIn || librarianEmail.isEmpty {
+            print("Widget action attempted, but no librarian is logged in")
+            
+            // Set app state to show librarian login screen
+            appState.showLibrarianApp = true
+            
+            // Delay to ensure the app is fully loaded before showing the announcement
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                UIAccessibility.post(notification: .announcement, argument: "Please log in as a librarian to use this feature")
+            }
+            return
+        }
+        
+        let host = url.host?.lowercased() ?? ""
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let queryItems = components?.queryItems ?? []
+        
+        // Extract ISBN from query parameters if available
+        let isbnParam = queryItems.first(where: { $0.name == "isbn" })?.value
+        
+        // Check for ISBN scanner paths
+        if host.contains("isbn") || host.contains("barcode") {
+            if let isbn = isbnParam, !isbn.isEmpty {
+                // If ISBN is provided in URL, process it directly
+                print("Processing ISBN from URL: \(isbn)")
+                
+                // Announce that we're processing the ISBN
+                UIAccessibility.post(notification: .announcement, argument: "Processing ISBN code from widget")
+                
+                Task {
+                    await handleScannedISBN(isbn)
+                }
+            } else {
+                // Otherwise open the scanner
+                showIsbnScanner = true
+                print("Opening ISBN scanner from widget via URL: \(url)")
+                
+                // Announce that we're opening the scanner
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    UIAccessibility.post(notification: .announcement, argument: "Opening ISBN scanner. Please position barcode in view.")
+                }
+            }
+        }
+        // Check for QR scanner paths
+        else if host.contains("qr") || host.contains("check") {
+            showQRScanner = true
+            print("Opening QR scanner from widget via URL: \(url)")
+            
+            // Announce that we're opening the QR scanner
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                UIAccessibility.post(notification: .announcement, argument: "Opening QR scanner for check-in or check-out.")
+            }
+        }
+        else {
+            print("Unknown URL path: \(url)")
+            
+            // Announce error for unknown URL
+            UIAccessibility.post(notification: .announcement, argument: "Unknown action requested.")
+        }
+    }
+    
+    @MainActor
+    private func handleScannedISBN(_ isbn: String) async {
+        print("Processing scanned ISBN: \(isbn)")
+        
+        // Check if a librarian is logged in
+        guard librarianIsLoggedIn, !librarianEmail.isEmpty else {
+            print("Error: No librarian is logged in")
+            UIAccessibility.post(notification: .announcement, argument: "Error: Please log in as a librarian to add books")
+            
+            // Set app state to show librarian login screen
+            appState.showLibrarianApp = true
+            
+            // Delay to ensure view changes before announcement
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                UIAccessibility.post(notification: .announcement, argument: "Please log in as a librarian to add books")
+            }
+            return
+        }
+        
+        // Create a temporary BookStore to handle the book addition
+        let bookStore = BookStore()
+        
+        do {
+            // First, fetch the book details from Google Books API
+            let fetchedBook = try await GoogleBooksService.fetchBookByISBN(isbn: isbn)
+            
+            // Set default copies to 1 for scanned books
+            var bookToAdd = fetchedBook
+            bookToAdd.totalCopies = 1
+            bookToAdd.availableCopies = 1
+            
+            // Add publication date if missing
+            if bookToAdd.publicationDate.isEmpty {
+                bookToAdd.publicationDate = "Unknown"
+            }
+            
+            // Add the book to Supabase
+            print("Adding book to Supabase: \(bookToAdd.title) by librarian: \(librarianEmail)")
+            bookStore.addBook(bookToAdd)
+            
+            // Show success feedback to user
+            UIAccessibility.post(notification: .announcement, argument: "Book added successfully: \(bookToAdd.title)")
+        } catch {
+            print("Error processing ISBN: \(error)")
+            UIAccessibility.post(notification: .announcement, argument: "Error: Could not find book with ISBN \(isbn)")
+        }
     }
 }

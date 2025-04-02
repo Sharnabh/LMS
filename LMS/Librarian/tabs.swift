@@ -70,14 +70,19 @@ struct LibrarianInitialView: View {
             ISBNScannerWrapper { code in
                 print("Scanned ISBN: \(code)")
                 // Handle the scanned code
-                // This would integrate with your existing ISBN scanning functionality
+                Task {
+                    await handleScannedISBN(code)
+                }
             }
+            .environmentObject(accessibilityManager)
         }
         .sheet(isPresented: $showBookIssue) {
             QRScanner(isPresentedAsFullScreen: false)
+                .environmentObject(accessibilityManager)
         }
         .sheet(isPresented: $showQRScanner) {
             QRScanner(isPresentedAsFullScreen: false)
+                .environmentObject(accessibilityManager)
         }
         .onChange(of: accessibilityManager.shouldScanISBN) { newValue in
             if newValue {
@@ -143,6 +148,34 @@ struct LibrarianInitialView: View {
             } catch {
                 print("Error checking librarian status: \(error)")
             }
+        }
+    }
+    
+    // Add function to handle scanned ISBN
+    private func handleScannedISBN(_ isbn: String) async {
+        print("Processing scanned ISBN in LibrarianInitialView: \(isbn)")
+        
+        // Create a temporary BookStore to handle the book addition
+        let bookStore = BookStore()
+        
+        do {
+            // First, fetch the book details from Google Books API
+            let fetchedBook = try await GoogleBooksService.fetchBookByISBN(isbn: isbn)
+            
+            // Set default copies to 1 for scanned books
+            var bookToAdd = fetchedBook
+            bookToAdd.totalCopies = 1
+            bookToAdd.availableCopies = 1
+            
+            // Add the book to Supabase
+            print("Adding book to Supabase: \(bookToAdd.title) by librarian: \(librarianEmail)")
+            bookStore.addBook(bookToAdd)
+            
+            // Show success feedback to user
+            UIAccessibility.post(notification: .announcement, argument: "Book added successfully: \(bookToAdd.title)")
+        } catch {
+            print("Error processing ISBN: \(error)")
+            UIAccessibility.post(notification: .announcement, argument: "Error: Could not find book with ISBN \(isbn)")
         }
     }
 }

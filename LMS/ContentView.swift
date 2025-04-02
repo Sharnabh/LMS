@@ -7,7 +7,7 @@
 
 import SwiftUI
 struct ContentView: View {
-    @StateObject private var appState = AppState()
+    @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var accessibilityManager: AccessibilityManager
     @AppStorage("adminIsLoggedIn") private var adminIsLoggedIn = false
     @AppStorage("adminEmail") private var adminEmail = ""

@@ -4,9 +4,19 @@
 <dict>
 	<key>NSAppTransportSecurity</key>
 	<dict/>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>We use speech recognition to enable voice commands for managing books and accessibility features.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>We need microphone access to enable voice commands for library functions like book scanning and issuing.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.infosys04.pustakalaya</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>pustkalaya</string>
+				<string>pustakaalya</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

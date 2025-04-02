@@ -12,6 +12,10 @@ struct HomeLibrarianView: View {
     @State private var isAnimating = false // Track if cards are currently animating
     @State private var showingCardView = false // Track which view mode to show
     @State private var isRefreshing = false // Track refresh state
+    @State private var totalMembersCount: Int = 0 // Track total members count
+    @State private var isLoadingMembers: Bool = false // Track loading state for members
+    @State private var totalCollectedFines: Double = 0 // Track total collected fines
+    @State private var isLoadingFines: Bool = false // Track loading state for fines
     
     // For Needs Shelf Location section
     @State private var needsLocationCurrentBookIndex = 0 // Track which book is currently displayed in the needs location section
@@ -73,6 +77,8 @@ struct HomeLibrarianView: View {
                 // Content area
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
+                        Spacer()
+                        Spacer()
                         // Quick Stats Cards
                         LazyVGrid(columns: [
                             GridItem(.flexible(), spacing: 16),
@@ -89,7 +95,7 @@ struct HomeLibrarianView: View {
                             // Total Members Card
                             HomeCard(
                                 title: "Total Members",
-                                value: "\(bookStore.books.filter { $0.availableCopies > 0 }.count)",
+                                value: isLoadingMembers ? "Loading..." : "\(totalMembersCount)",
                                 icon: "person.3.fill",
                                 color: .green
                             )
@@ -105,7 +111,7 @@ struct HomeLibrarianView: View {
                             // Due Collected Card
                             HomeCard(
                                 title: "Due Collected",
-                                value: "\(recentBooks.count)",
+                                value: isLoadingFines ? "Loading..." : "₹\(String(format: "%.2f", totalCollectedFines))",
                                 icon: "indianrupeesign",
                                 color: .purple
                             )
@@ -113,7 +119,7 @@ struct HomeLibrarianView: View {
                         .padding(.horizontal)
                         
                         // Divider with more spacing
-                        Divider()
+//                        Divider()
                             .padding(.vertical, 20)
                         
                         HStack {
@@ -128,7 +134,7 @@ struct HomeLibrarianView: View {
                                 }
                             }) {
                                 Image(systemName: "arrow.up.arrow.down")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                                     .imageScale(.medium)
                                     .rotationEffect(showingCardView ? .degrees(180) : .degrees(0))
                             }
@@ -139,7 +145,7 @@ struct HomeLibrarianView: View {
                             NavigationLink(destination: AllBooksView()) {
                                 Text("See all")
                                     .font(.subheadline)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -201,7 +207,7 @@ struct HomeLibrarianView: View {
                                        }
                                    }) {
                                        Image(systemName: "arrow.up.arrow.down")
-                                           .foregroundColor(.blue)
+                                           .foregroundColor(.accentColor)
                                            .imageScale(.medium)
                                            .rotationEffect(showingCardView ? .degrees(180) : .degrees(0))
                                    }
@@ -211,7 +217,7 @@ struct HomeLibrarianView: View {
                                    NavigationLink(destination: AllBooksWithoutShelfLocationView()) {
                                        Text("See all")
                                            .font(.subheadline)
-                                           .foregroundColor(.blue)
+                                           .foregroundColor(.accentColor)
                                    }
                                }
                                .frame(maxWidth: .infinity, alignment: .leading)
@@ -280,7 +286,7 @@ struct HomeLibrarianView: View {
                         } label: {
                             Image(systemName: "person.crop.circle.fill")
                                 .font(.system(size: 22))
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                         }
                     }
                 }
@@ -300,6 +306,12 @@ struct HomeLibrarianView: View {
             // Reset indices if they're out of bounds
             if needsLocationCurrentBookIndex >= booksWithEmptyShelfLocation.count && !booksWithEmptyShelfLocation.isEmpty {
                 needsLocationCurrentBookIndex = 0
+            }
+            
+            // Load members count and collected fines
+            Task {
+                await loadMembersCount()
+                await loadCollectedFines()
             }
         }
         .onReceive(bookStore.objectWillChange) { _ in
@@ -909,11 +921,35 @@ struct HomeLibrarianView: View {
         isRefreshing = true
         Task {
             await bookStore.loadBooks()
+            await loadMembersCount() // Add this line to load members count
+            await loadCollectedFines() // Add this line to load collected fines
             await MainActor.run {
                 isRefreshing = false
                 currentBookIndex = 0 // Reset to show newest book
             }
         }
+    }
+
+    // Add function to load members count
+    private func loadMembersCount() async {
+        isLoadingMembers = true
+        do {
+            totalMembersCount = try await MemberService.shared.getTotalMembersCount()
+        } catch {
+            print("Error loading members count: \(error)")
+        }
+        isLoadingMembers = false
+    }
+
+    // Add function to load collected fines
+    private func loadCollectedFines() async {
+        isLoadingFines = true
+        do {
+            totalCollectedFines = try await AnalyticsService.shared.getTotalRevenue()
+        } catch {
+            print("Error loading collected fines: \(error)")
+        }
+        isLoadingFines = false
     }
 
     // Tinder-style card stack for books that need a shelf location

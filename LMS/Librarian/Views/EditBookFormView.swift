@@ -16,7 +16,7 @@ struct EditBookFormView: View {
     private let genres = [
         "Fiction", "Science", "Humanities", "Business",
         "Medicine", "Law", "Education", "Arts", "Religion",
-        "Mathematics", "Technology", "Reference", "Uncategorized"
+        "Mathematics", "Technology", "Reference", "Uncategorized", "Fiction", "Non-Fiction", "Literature"
     ]
     
     init(book: LibrarianBook) {

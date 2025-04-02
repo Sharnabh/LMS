@@ -289,7 +289,7 @@ struct AllBooksViewContent: View {
     @Binding var selectedGenre: String?
     
     private let genres = ["All", "Science", "Humanities", "Business", "Medicine", "Law",
-                         "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
+                         "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference", "Fiction", "Non-Fiction", "Literature"]
     
     private var filteredBooks: [LibrarianBook] {
         var books = bookStore.books

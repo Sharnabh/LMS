@@ -15,19 +15,19 @@ struct AddLibrarianView: View {
                 VStack(spacing: 30) {
                     // Header Image
                     VStack(spacing: 16) {
-                        Image(systemName: "person.badge.plus.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(.purple)
+//                        Image(systemName: "person.badge.plus.circle.fill")
+//                            .font(.system(size: 60))
+//                            .foregroundColor(.purple)
                         
                         Text("Add New Librarian")
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text("Fill in the details to create a new librarian account")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
+//                        Text("Fill in the details to create a new librarian account")
+//                            .font(.subheadline)
+//                            .foregroundColor(.secondary)
+//                            .multilineTextAlignment(.center)
+//                            .padding(.horizontal)
                     }
                     .padding(.top, 20)
                     
@@ -36,8 +36,8 @@ struct AddLibrarianView: View {
                         // Full Name Field
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Image(systemName: "person.fill")
-                                    .foregroundColor(.purple)
+//                                Image(systemName: "person.fill")
+//                                    .foregroundColor(.purple)
                                 Text("Full Name")
                                     .font(.headline)
                             }
@@ -56,8 +56,7 @@ struct AddLibrarianView: View {
                         // Email Field
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Image(systemName: "envelope.fill")
-                                    .foregroundColor(.purple)
+                                
                                 Text("Email Address")
                                     .font(.headline)
                             }
@@ -100,7 +99,7 @@ struct AddLibrarianView: View {
                         .padding()
                         .background(
                             LinearGradient(
-                                gradient: Gradient(colors: [Color.purple, Color.purple.opacity(0.8)]),
+                                gradient: Gradient(colors: [Color.accentColor, Color.accentColor.opacity(0.8)]),
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -119,7 +118,7 @@ struct AddLibrarianView: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .foregroundColor(.purple)
+                    .foregroundColor(.accentColor)
                 }
             }
             .alert(isPresented: $showAlert) {

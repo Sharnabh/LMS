@@ -86,6 +86,7 @@ struct MemberModel: Codable {
     var enrollmentNumber: String?
     var collegeName: String?
     var isDisabled: Bool?
+    var fine: Double?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -98,6 +99,7 @@ struct MemberModel: Codable {
         case enrollmentNumber = "enrollmentNumber"
         case collegeName = "collegeName"
         case isDisabled = "is_disabled"  // Make sure this matches your Supabase column name
+        case fine
     }
 }
 

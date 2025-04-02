@@ -36,16 +36,18 @@ struct AdminForgotPasswordView: View {
     var body: some View {
         ZStack {
             // Background gradient
-            LinearGradient(
-                colors: [
-                    Color.blue.opacity(0.1),
-                    Color.purple.opacity(0.1)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
             
+           Color("AccentColor") // ----------------Added
+            .ignoresSafeArea()
+        
+        VStack { // -------------------Added
+            WaveShape()
+                .fill(Color.white)
+                .padding(.top, -350) // Changes
+                .frame(height: UIScreen.main.bounds.height * 0.9)
+                .offset(y: UIScreen.main.bounds.height * 0.04)
+            Spacer()
+        }
             VStack {
                 // Header
                 HStack {
@@ -71,19 +73,16 @@ struct AdminForgotPasswordView: View {
                     VStack(spacing: 30) {
                         // Icon and title
                         VStack(spacing: 16) {
-                            Image(systemName: "lock.rotation")
-                                .font(.system(size: 60))
-                                .foregroundColor(.blue)
-                                .scaleEffect(animateContent ? 1 : 0.8)
-                                .opacity(animateContent ? 1 : 0)
                             
                             Text(step == 1 ? "Forgot Password" : (step == 2 ? "Verify OTP" : "Reset Password"))
                                 .font(.title)
                                 .fontWeight(.semibold)
+                                .padding(.top, 170)
+                                .padding(.leading, -150)
                                 .opacity(animateContent ? 1 : 0)
                                 .offset(y: animateContent ? 0 : 20)
                             
-                            Text(step == 1 ? "Enter your email to receive a verification code" : 
+                            Text(step == 1 ? "" :
                                  (step == 2 ? "Enter the 6-digit code sent to your email" : 
                                     "Create a new password for your account"))
                                 .font(.subheadline)
@@ -169,7 +168,7 @@ struct AdminForgotPasswordView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(Color.blue)
+                .background(Color.accentColor)
                 .cornerRadius(12)
             }
             .disabled(isLoading)
@@ -178,9 +177,9 @@ struct AdminForgotPasswordView: View {
             Button(action: {
                 onComplete()
             }) {
-                Text("Back to Login")
-                    .font(.subheadline)
-                    .foregroundColor(.blue)
+//                Text("Back to Login")
+//                    .font(.subheadline)
+//                    .foregroundColor(.blue)
             }
             .padding(.top, 8)
         }

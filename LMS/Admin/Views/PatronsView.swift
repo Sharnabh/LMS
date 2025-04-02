@@ -27,6 +27,8 @@ struct PatronsView: View {
     @State private var exportError: String?
     @State private var searchText = ""
     @State private var isShowingShareSheet = false
+    @State private var memberFines: [String: Double] = [:]
+    @State private var memberDefaultCounts: [String: Int] = [:]
     
     private var membersData: String {
         var data = "First Name,Last Name,Email,Enrollment Number\n"
@@ -401,24 +403,46 @@ struct PatronsView: View {
         errorMessage = nil
         
         do {
+            // Query all members from the Member table including the fine column
             let query = supabaseController.client.from("Member")
-                .select()
+                .select("""
+                    id,
+                    firstName,
+                    lastName,
+                    email,
+                    enrollmentNumber,
+                    is_disabled,
+                    created_at,
+                    favourites,
+                    myBag,
+                    shelves,
+                    fine
+                """)
             
-            // Debug: Print raw response data
             let response = try await query.execute()
             if let jsonString = String(data: response.data, encoding: .utf8) {
                 print("Raw Member data: \(jsonString)")
             }
             
-            // Use JSONDecoder with appropriate settings
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
             
             do {
                 self.members = try decoder.decode([MemberModel].self, from: response.data)
                 print("Successfully decoded \(self.members.count) members")
+                
+                // Update memberFines dictionary with fines from Member table
+                var newFines: [String: Double] = [:]
+                for member in self.members {
+                    if let memberId = member.id {
+                        newFines[memberId] = member.fine ?? 0.0
+                    }
+                }
+                self.memberFines = newFines
+                
+                // After fetching members, fetch default counts
+                await fetchDefaultCounts()
             } catch {
-                print("Decoder error: \(error)")
                 errorMessage = "Failed to decode member data: \(error.localizedDescription)"
             }
         } catch {
@@ -429,58 +453,97 @@ struct PatronsView: View {
         isLoading = false
     }
     
+    private func fetchDefaultCounts() async {
+        do {
+            // Fetch all book issues
+            let query = supabaseController.client.from("BookIssue")
+                .select()
+            
+            let response = try await query.execute()
+            
+            struct BookIssue: Codable {
+                let id: String
+                let memberId: String
+                let bookId: String
+                let issueDate: String
+                let dueDate: String
+                let returnDate: String?
+                let fine: Double
+                let status: String
+            }
+            
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            
+            let bookIssues = try decoder.decode([BookIssue].self, from: response.data)
+            
+            // Calculate default counts (instances with fine > 0)
+            var defaultCounts: [String: Int] = [:]
+            
+            for issue in bookIssues {
+                if issue.fine > 0 {
+                    let currentCount = defaultCounts[issue.memberId] ?? 0
+                    defaultCounts[issue.memberId] = currentCount + 1
+                }
+            }
+            
+            // Update the memberDefaultCounts dictionary
+            self.memberDefaultCounts = defaultCounts
+            
+            print("Identified \(defaultCounts.filter { $0.value >= 3 }.count) frequent defaulters")
+            
+        } catch {
+            print("Failed to fetch default counts: \(error)")
+        }
+    }
+    
     // Filter members based on search text with prioritized matches
     private var filteredMembers: [MemberModel] {
         if searchText.isEmpty {
             return members
         }
         
-        let searchTermLower = searchText.lowercased()
+        let searchQuery = searchText.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         
-        // First, find exact matches
-        let exactMatches = members.filter { member in
-            let fullName = "\(member.firstName ?? "") \(member.lastName ?? "")".lowercased()
+        // First filter to get all matching members
+        let matchingMembers = members.filter { member in
+            let firstName = member.firstName?.lowercased() ?? ""
+            let lastName = member.lastName?.lowercased() ?? ""
+            let fullName = "\(firstName) \(lastName)"
             let email = member.email?.lowercased() ?? ""
-            let enrollment = member.enrollmentNumber?.lowercased() ?? ""
+            let enrollmentNumber = member.enrollmentNumber?.lowercased() ?? ""
             
-            return fullName == searchTermLower ||
-                   email == searchTermLower ||
-                   enrollment == searchTermLower
+            return fullName.contains(searchQuery) ||
+                   email.contains(searchQuery) ||
+                   enrollmentNumber.contains(searchQuery) ||
+                   firstName.contains(searchQuery) ||
+                   lastName.contains(searchQuery)
         }
         
-        // Second, find matches that start with the search term
-        let startsWithMatches = members.filter { member in
-            let fullName = "\(member.firstName ?? "") \(member.lastName ?? "")".lowercased()
-            let firstName = (member.firstName ?? "").lowercased()
-            let lastName = (member.lastName ?? "").lowercased()
-            let email = member.email?.lowercased() ?? ""
-            let enrollment = member.enrollmentNumber?.lowercased() ?? ""
+        // Sort the matching members to prioritize exact matches
+        return matchingMembers.sorted { member1, member2 in
+            let firstName1 = member1.firstName?.lowercased() ?? ""
+            let lastName1 = member1.lastName?.lowercased() ?? ""
+            let fullName1 = "\(firstName1) \(lastName1)"
             
-            return (firstName.starts(with: searchTermLower) ||
-                   lastName.starts(with: searchTermLower) ||
-                   fullName.starts(with: searchTermLower) ||
-                   email.starts(with: searchTermLower) ||
-                   enrollment.starts(with: searchTermLower)) &&
-                   !exactMatches.contains { $0.id == member.id }
+            let firstName2 = member2.firstName?.lowercased() ?? ""
+            let lastName2 = member2.lastName?.lowercased() ?? ""
+            let fullName2 = "\(firstName2) \(lastName2)"
+            
+            // Check for exact matches in first name, last name, or full name
+            let isExactMatch1 = firstName1 == searchQuery || lastName1 == searchQuery || fullName1 == searchQuery
+            let isExactMatch2 = firstName2 == searchQuery || lastName2 == searchQuery || fullName2 == searchQuery
+            
+            // Prioritize exact matches
+            if isExactMatch1 && !isExactMatch2 {
+                return true
+            } else if !isExactMatch1 && isExactMatch2 {
+                return false
+            }
+            
+            // If both are exact matches or both are partial matches, sort alphabetically
+            return fullName1 < fullName2
         }
-        
-        // Finally, find other partial matches
-        let partialMatches = members.filter { member in
-            let fullName = "\(member.firstName ?? "") \(member.lastName ?? "")".lowercased()
-            let email = member.email?.lowercased() ?? ""
-            let enrollment = member.enrollmentNumber?.lowercased() ?? ""
-            
-            let isPartialMatch = fullName.contains(searchTermLower) ||
-                                email.contains(searchTermLower) ||
-                                enrollment.contains(searchTermLower)
-            
-            return isPartialMatch &&
-                   !exactMatches.contains { $0.id == member.id } &&
-                   !startsWithMatches.contains { $0.id == member.id }
-        }
-        
-        // Combine all matches in priority order
-        return exactMatches + startsWithMatches + partialMatches
     }
     
     private func exportMembersList() {
@@ -646,6 +709,19 @@ struct MembersList: View {
                                 }
                                 
                                 Spacer()
+                                
+                                // Add fine and default count information
+                                if let memberId = member.id {
+                                    VStack(alignment: .trailing) {
+                                        let fine = member.fine ?? 0.0
+                                        Text("₹\(String(format: "%.2f", fine))")
+                                            .font(.headline)
+                                            .foregroundColor(fine > 0 ? .red : .green)
+                                        Text(fine > 0 ? "Fine Due" : "No Fine")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
                             }
                             .padding(.vertical, 4)
                         }

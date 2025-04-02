@@ -21,8 +21,6 @@ struct LibrarianInitialView: View {
     @State private var showIsbnScanner = false
     @State private var showBookIssue = false
     @State private var showQRScanner = false
-    @State private var showSiriHelp = false
-    @State private var showVoiceCommandButton = true // Fallback when Siri isn't available
     
     var body: some View {
         ZStack {
@@ -56,36 +54,13 @@ struct LibrarianInitialView: View {
             .environmentObject(appState)
             .accentColor(.blue)
             
-            // Accessibility buttons overlay
+            // Voice command button overlay - always visible
             VStack {
                 HStack {
                     Spacer()
-                    VStack(spacing: 12) {
-                        // Show Siri button if available
-                        if accessibilityManager.isSiriAvailable {
-                            SiriButton()
-                                .padding(.top, 60)
-                                .padding(.trailing, 20)
-                        }
-                        
-                        // Show voice command button as fallback or additional option
-                        if showVoiceCommandButton || !accessibilityManager.isSiriAvailable {
-                            VoiceCommandButton()
-                                .padding(.top, accessibilityManager.isSiriAvailable ? 0 : 60)
-                                .padding(.trailing, 20)
-                        }
-                        
-                        // Help button
-                        Button(action: {
-                            showSiriHelp = true
-                        }) {
-                            Image(systemName: "questionmark.circle")
-                                .font(.system(size: 18))
-                                .foregroundColor(.blue)
-                        }
+                    VoiceCommandButton()
+                        .padding(.top, 60)
                         .padding(.trailing, 20)
-                        .accessibilityLabel("Voice commands help")
-                    }
                 }
                 Spacer()
             }
@@ -103,9 +78,6 @@ struct LibrarianInitialView: View {
         }
         .sheet(isPresented: $showQRScanner) {
             QRScanner(isPresentedAsFullScreen: false)
-        }
-        .sheet(isPresented: $showSiriHelp) {
-            VoiceAccessibilityHelpView(isSiriAvailable: accessibilityManager.isSiriAvailable)
         }
         .onChange(of: accessibilityManager.shouldScanISBN) { newValue in
             if newValue {
@@ -142,13 +114,9 @@ struct LibrarianInitialView: View {
                 await checkLibrarianStatus()
             }
             
-            // Announce voice accessibility options
+            // Announce voice command availability
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                if accessibilityManager.isSiriAvailable {
-                    UIAccessibility.post(notification: .announcement, argument: "Voice commands available. You can use Siri or tap the microphone button.")
-                } else {
-                    UIAccessibility.post(notification: .announcement, argument: "Voice commands available. Tap the microphone button to start listening.")
-                }
+                UIAccessibility.post(notification: .announcement, argument: "Voice commands available for ISBN scanning and book issuing. Tap the microphone button in the top right corner to activate.")
             }
         }
         .alert("Account Disabled", isPresented: $showDisabledAlert) {
@@ -174,80 +142,6 @@ struct LibrarianInitialView: View {
                 }
             } catch {
                 print("Error checking librarian status: \(error)")
-            }
-        }
-    }
-}
-
-// Combined help view for all voice accessibility options
-struct VoiceAccessibilityHelpView: View {
-    @Environment(\.dismiss) private var dismiss
-    var isSiriAvailable: Bool
-    
-    var body: some View {
-        NavigationView {
-            List {
-                if isSiriAvailable {
-                    Section(header: Text("Siri Commands")) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("\"Hey Siri, scan ISBN\"")
-                                .font(.headline)
-                            Text("Opens the ISBN scanner for adding books")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 8)
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("\"Hey Siri, issue books\"")
-                                .font(.headline)
-                            Text("Opens the QR scanner for issuing books to members")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 8)
-                    }
-                }
-                
-                Section(header: Text("In-App Voice Commands")) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("\"Scan ISBN\" or \"Scan book\"")
-                            .font(.headline)
-                        Text("Opens the barcode scanner for scanning book ISBNs")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 8)
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("\"Issue book\" or \"Borrow book\"")
-                            .font(.headline)
-                        Text("Starts the book issue process with QR code")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 8)
-                }
-                
-                Section(header: Text("How to Use")) {
-                    if isSiriAvailable {
-                        Text("Siri commands work anytime, even when the app is closed. In-app commands require tapping the microphone button first.")
-                            .font(.body)
-                            .padding(.vertical, 8)
-                    } else {
-                        Text("Tap the microphone button at the top of the screen, then speak your command clearly.")
-                            .font(.body)
-                            .padding(.vertical, 8)
-                    }
-                }
-            }
-            .navigationTitle("Voice Commands")
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
             }
         }
     }

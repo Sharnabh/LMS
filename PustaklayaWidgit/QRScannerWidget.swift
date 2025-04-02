@@ -9,17 +9,26 @@ import WidgetKit
 import SwiftUI
 import AppIntents
 
+// Define the intent directly to avoid import issues
+struct QRScannerWidgetIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource { "Check-In/Out Widget" }
+    static var description: IntentDescription { "Scan QR codes to check-in or check-out books." }
+}
+
 struct QRScannerProvider: AppIntentTimelineProvider {
+    typealias Intent = QRScannerWidgetIntent
+    typealias Entry = QRScannerEntry
+    
     func placeholder(in context: Context) -> QRScannerEntry {
         QRScannerEntry(date: Date())
     }
 
     func snapshot(for configuration: QRScannerWidgetIntent, in context: Context) async -> QRScannerEntry {
-        QRScannerEntry(date: Date())
+        QRScannerEntry(date: Date(), configuration: configuration)
     }
     
     func timeline(for configuration: QRScannerWidgetIntent, in context: Context) async -> Timeline<QRScannerEntry> {
-        let entries = [QRScannerEntry(date: Date())]
+        let entries = [QRScannerEntry(date: Date(), configuration: configuration)]
         return Timeline(entries: entries, policy: .never)
     }
 }
@@ -65,21 +74,23 @@ struct QRScannerWidgetEntryView : View {
             }
             .padding()
         }
-        .widgetURL(URL(string: WidgetConfig.URLSchemes.qrScannerURL))
+        .widgetURL(URL(string: "pustkalaya://qr-scanner"))
     }
 }
 
 struct QRScannerWidget: Widget {
-    let kind: String = WidgetRegistry.qrScannerKind
+    let kind: String = "QRScannerWidget"
 
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: QRScannerWidgetIntent.self, provider: QRScannerProvider()) { entry in
             QRScannerWidgetEntryView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
+                .containerBackground(for: .widget) {
+                    Color(.systemBackground).opacity(0.5)
+                }
         }
         .contentMarginsDisabled()
         .supportedFamilies([.systemSmall, .systemMedium])
-        .configurationDisplayName(WidgetRegistry.qrScannerDisplayName)
+        .configurationDisplayName("Check-In/Out")
         .description("Scan QR codes to check-in or check-out books. Requires librarian login.")
     }
 }
@@ -87,11 +98,11 @@ struct QRScannerWidget: Widget {
 #Preview(as: .systemSmall) {
     QRScannerWidget()
 } timeline: {
-    QRScannerEntry(date: .now)
+    QRScannerEntry(date: Date())
 }
 
 #Preview(as: .systemMedium) {
     QRScannerWidget()
 } timeline: {
-    QRScannerEntry(date: .now)
+    QRScannerEntry(date: Date())
 } 

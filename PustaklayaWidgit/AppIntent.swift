@@ -17,12 +17,5 @@ struct ConfigurationAppIntent: WidgetConfigurationIntent {
     var favoriteEmoji: String
 }
 
-struct ISBNScannerWidgetIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource { "ISBN Scanner Widget" }
-    static var description: IntentDescription { "Scan ISBN to add new books." }
-}
-
-struct QRScannerWidgetIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource { "Check-In/Out Widget" }
-    static var description: IntentDescription { "Scan QR codes to check-in or check-out books." }
-}
+// Note: The ISBNScannerWidgetIntent and QRScannerWidgetIntent are now
+// defined directly in their respective widget files to avoid compilation issues.

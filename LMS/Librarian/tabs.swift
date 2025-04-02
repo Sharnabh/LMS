@@ -22,20 +22,25 @@ struct LibrarianInitialView: View {
     @State private var showBookIssue = false
     @State private var showQRScanner = false
     
+    // Tab selection state
+    @State private var selectedTab = 0
+    
     var body: some View {
         ZStack {
-            TabView {
+            TabView(selection: $selectedTab) {
                 HomeLibrarianView()
                     .tabItem {
                         Image(systemName: "house.fill")
                         Text("Home")
                     }
+                    .tag(0)
                 
                 IssueHistoryView()
                     .tabItem {
                         Image(systemName: "person.crop.rectangle.stack.fill")
                         Text("Member Desk")
                     }
+                    .tag(1)
 
                 AddView()
                     .tabItem {
@@ -43,12 +48,14 @@ struct LibrarianInitialView: View {
                             .imageScale(.large)
                         Text("Add Books")
                     }
+                    .tag(2)
                 
                 ShelfLocationsView()
                     .tabItem {
                         Image(systemName: "mappin.and.ellipse")
                         Text("Book Shelf")
                     }
+                    .tag(3)
             }
             .environmentObject(bookStore)
             .environmentObject(appState)
@@ -99,6 +106,21 @@ struct LibrarianInitialView: View {
                 }
                 
                 accessibilityManager.resetCommands()
+            }
+        }
+        .onChange(of: appState.shouldNavigateToAddBooks) { _, shouldNavigate in
+            if shouldNavigate {
+                print("LibrarianInitialView: Navigating to Add Books tab")
+                
+                // Navigate to Add Books tab
+                withAnimation {
+                    selectedTab = 2
+                }
+                
+                // Reset the navigation flag after a short delay to avoid race conditions
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    appState.shouldNavigateToAddBooks = false
+                }
             }
         }
         .onAppear {

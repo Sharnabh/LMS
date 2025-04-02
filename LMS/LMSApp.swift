@@ -234,8 +234,8 @@ struct LMSApp: App {
         if !librarianIsLoggedIn || librarianEmail.isEmpty {
             print("Widget action attempted, but no librarian is logged in")
             
-            // Set app state to show librarian login screen
-            appState.showLibrarianApp = true
+            // Set app state to reset to first screen and show role selection
+            appState.resetToFirstScreen()
             
             // Delay to ensure the app is fully loaded before showing the announcement
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -301,15 +301,18 @@ struct LMSApp: App {
             print("Error: No librarian is logged in")
             UIAccessibility.post(notification: .announcement, argument: "Error: Please log in as a librarian to add books")
             
-            // Set app state to show librarian login screen
-            appState.showLibrarianApp = true
+            // Reset to the initial role selection screen
+            appState.resetToFirstScreen()
             
             // Delay to ensure view changes before announcement
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                UIAccessibility.post(notification: .announcement, argument: "Please log in as a librarian to add books")
+                UIAccessibility.post(notification: .announcement, argument: "Please select the librarian role and log in to add books")
             }
             return
         }
+        
+        // Set ISBN to process immediately - this will be used if the book fetch fails
+        appState.isbnToProcess = isbn
         
         // Create a temporary BookStore to handle the book addition
         let bookStore = BookStore()
@@ -317,25 +320,24 @@ struct LMSApp: App {
         do {
             // First, fetch the book details from Google Books API
             let fetchedBook = try await GoogleBooksService.fetchBookByISBN(isbn: isbn)
+            print("Book fetched successfully: \(fetchedBook.title) with ISBN: \(fetchedBook.ISBN)")
             
-            // Set default copies to 1 for scanned books
-            var bookToAdd = fetchedBook
-            bookToAdd.totalCopies = 1
-            bookToAdd.availableCopies = 1
+            // Store the book in app state for AddView to display
+            appState.scannedBook = fetchedBook
             
-            // Add publication date if missing
-            if bookToAdd.publicationDate.isEmpty {
-                bookToAdd.publicationDate = "Unknown"
-            }
-            
-            // Add the book to Supabase
-            print("Adding book to Supabase: \(bookToAdd.title) by librarian: \(librarianEmail)")
-            bookStore.addBook(bookToAdd)
+            // After we have the book data, set the navigation flag
+            // This ensures we have data ready when the AddView appears
+            appState.shouldNavigateToAddBooks = true
             
             // Show success feedback to user
-            UIAccessibility.post(notification: .announcement, argument: "Book added successfully: \(bookToAdd.title)")
+            UIAccessibility.post(notification: .announcement, argument: "Book found: \(fetchedBook.title)")
         } catch {
-            print("Error processing ISBN: \(error)")
+            print("Error fetching book with ISBN \(isbn): \(error)")
+            
+            // Even if we fail to fetch the book, still navigate to the AddView
+            // where the user can manually enter the ISBN
+            appState.shouldNavigateToAddBooks = true
+            
             UIAccessibility.post(notification: .announcement, argument: "Error: Could not find book with ISBN \(isbn)")
         }
     }

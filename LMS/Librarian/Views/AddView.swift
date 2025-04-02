@@ -4,6 +4,7 @@ import UIKit
 
 struct AddView: View {
     @EnvironmentObject private var bookStore: BookStore
+    @EnvironmentObject private var appState: AppState
     @State private var searchText: String = ""
     @State private var book: LibrarianBook? = nil
     @State private var isSearching = false
@@ -177,6 +178,68 @@ struct AddView: View {
                     searchText = newCode
                     searchBook()
                     scannedCode = ""
+                }
+            }
+            .onAppear {
+                // Check if we have a book from the widget scan
+                if let scannedBook = appState.scannedBook {
+                    print("AddView: Received scanned book from appState: \(scannedBook.title)")
+                    
+                    // Set the scanned book
+                    self.book = scannedBook
+                    
+                    // Ensure we're in the "Add Books" section
+                    withAnimation {
+                        self.showingAddSection = true
+                    }
+                    
+                    // Set the search text to the ISBN
+                    if !appState.isbnToProcess.isEmpty {
+                        self.searchText = appState.isbnToProcess
+                    } else if !scannedBook.ISBN.isEmpty {
+                        self.searchText = scannedBook.ISBN
+                    }
+                    
+                    // Clear the appState
+                    DispatchQueue.main.async {
+                        self.appState.scannedBook = nil
+                        self.appState.isbnToProcess = ""
+                    }
+                } else if !appState.isbnToProcess.isEmpty {
+                    // If we have an ISBN but no book, set the search text and trigger search
+                    print("AddView: Received ISBN from appState: \(appState.isbnToProcess)")
+                    self.searchText = appState.isbnToProcess
+                    
+                    // Ensure we're in the "Add Books" section
+                    withAnimation {
+                        self.showingAddSection = true
+                    }
+                    
+                    // Search for the book
+                    searchBook()
+                    
+                    // Clear the ISBN
+                    DispatchQueue.main.async {
+                        self.appState.isbnToProcess = ""
+                    }
+                }
+            }
+            .onChange(of: appState.scannedBook) { _, newBook in
+                if let newBook = newBook {
+                    print("AddView: Book changed in appState: \(newBook.title)")
+                    
+                    // Update our local book
+                    self.book = newBook
+                    
+                    // Ensure we're in the "Add Books" section
+                    withAnimation {
+                        self.showingAddSection = true
+                    }
+                    
+                    // Set the search text to the ISBN if available
+                    if !newBook.ISBN.isEmpty {
+                        self.searchText = newBook.ISBN
+                    }
                 }
             }
         }

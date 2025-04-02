@@ -66,6 +66,21 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		CE0ABF242D9D3F07004317F6 /* Exceptions for "PustaklayaWidgit" folder in "LMS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AppIntent.swift,
+				Assets.xcassets,
+				Info.plist,
+				PustaklayaWidgit.swift,
+				PustaklayaWidgitBundle.swift,
+				PustaklayaWidgitControl.swift,
+				QRScannerWidget.swift,
+				WidgetConfig.swift,
+				WidgetRegistry.swift,
+			);
+			target = CE8AE2A92D888E2C001A93FF /* LMS */;
+		};
 		CE88E1EA2D9D0FFB00D10196 /* Exceptions for "PustaklayaWidgit" folder in "PustaklayaWidgitExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -86,6 +101,7 @@
 		CE88E1D82D9D0FF800D10196 /* PustaklayaWidgit */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				CE0ABF242D9D3F07004317F6 /* Exceptions for "PustaklayaWidgit" folder in "LMS" target */,
 				CE88E1EA2D9D0FFB00D10196 /* Exceptions for "PustaklayaWidgit" folder in "PustaklayaWidgitExtension" target */,
 			);
 			path = PustaklayaWidgit;
@@ -198,6 +214,7 @@
 				CE88E1E52D9D0FFB00D10196 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				CE88E1D82D9D0FF800D10196 /* PustaklayaWidgit */,
 				CE8AE2AC2D888E2C001A93FF /* LMS */,
 			);
 			name = LMS;

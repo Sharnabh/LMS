@@ -62,7 +62,7 @@ struct NotificationView: View {
                 }
             }
         }
-        .onChange(of: selectedSegment) { newValue in
+        .onChange(of: selectedSegment) { oldValue, newValue in
             // Mark active announcements as seen when switching to active tab
             if newValue == 0 {
                 tracker.markAllAsSeen(filteredAnnouncements)

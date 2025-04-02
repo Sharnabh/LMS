@@ -206,7 +206,7 @@ class AnnouncementService {
             .execute()
         
         let decoder = JSONDecoder()
-        var announcements = try decoder.decode([AnnouncementModel].self, from: response.data)
+        let announcements = try decoder.decode([AnnouncementModel].self, from: response.data)
         
         var activeAnnouncements: [AnnouncementModel] = []
         
@@ -293,7 +293,7 @@ class AnnouncementService {
             .execute()
         
         let decoder = JSONDecoder()
-        var announcements = try decoder.decode([AnnouncementModel].self, from: response.data)
+        let announcements = try decoder.decode([AnnouncementModel].self, from: response.data)
         
         // Convert UTC dates to local and update status
         var scheduledAnnouncements: [AnnouncementModel] = []

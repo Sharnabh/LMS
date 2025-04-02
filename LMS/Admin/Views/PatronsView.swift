@@ -221,7 +221,7 @@ struct PatronsView: View {
                 } else {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
-                            let pdfData = generatePDF()
+                            _ = generatePDF()
                             isShowingShareSheet = true
                         } label: {
                             Image(systemName: "arrow.down.doc")
@@ -711,7 +711,7 @@ struct MembersList: View {
                                 Spacer()
                                 
                                 // Add fine and default count information
-                                if let memberId = member.id {
+                                if member.id != nil {
                                     VStack(alignment: .trailing) {
                                         let fine = member.fine ?? 0.0
                                         Text("₹\(String(format: "%.2f", fine))")

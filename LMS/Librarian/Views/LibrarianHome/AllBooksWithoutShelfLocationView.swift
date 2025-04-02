@@ -139,17 +139,23 @@ struct BookCardWithAssignButton: View {
             .padding(8)
         }
         .background(
-            // Hidden navigation link that's only activated when tapping the card, not the button
-            NavigationLink(
-                destination: 
-                    BookDetailedView(bookId: book.id)
-                        .environmentObject(BookStore()),
-                isActive: $navigateToDetail
-            ) {
-                EmptyView()
+            ZStack {
+                // Use the modern NavigationLink style but keep it hidden like before
+                NavigationLink(value: book.id) {
+                    EmptyView()
+                }
+                .opacity(0)
             }
-            .opacity(0)
         )
+        // This modifier detects when navigateToDetail changes and programmatically triggers navigation
+        .onChange(of: navigateToDetail) { oldValue, newValue in
+            if newValue {
+                // Reset the flag when navigation completes
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    navigateToDetail = false
+                }
+            }
+        }
     }
 }
 
@@ -244,8 +250,14 @@ struct CustomBookCard: View {
 }
 
 #Preview {
-    NavigationView {
+    NavigationStack {
         AllBooksWithoutShelfLocationView()
             .environmentObject(BookStore())
+            .navigationDestination(for: UUID?.self) { bookId in
+                if let id = bookId {
+                    BookDetailedView(bookId: id)
+                        .environmentObject(BookStore())
+                }
+            }
     }
 } 

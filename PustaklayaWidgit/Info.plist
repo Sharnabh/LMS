@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION</key>
+	<true/>
+	<key>NSExtension</key>
+	<dict>
+		<key>NSExtensionPointIdentifier</key>
+		<string>com.apple.widgetkit-extension</string>
+	</dict>
+	<key>NSWidgetWantsLocation</key>
+	<false/>
+	<key>WidgetKindControl</key>
+	<string>PustaklayaWidgetControl</string>
+	<key>WidgetKindISBNScanner</key>
+	<string>ISBNScannerWidget</string>
+	<key>WidgetKindMain</key>
+	<string>PustaklayaWidget</string>
+	<key>WidgetKindQRScanner</key>
+	<string>QRScannerWidget</string>
+</dict>
+</plist>

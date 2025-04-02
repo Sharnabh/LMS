@@ -20,6 +20,7 @@ struct ReturnConfirmationView: View {
     let book: LibrarianBook
     @Environment(\.dismiss) private var dismiss
     @StateObject private var supabaseController = SupabaseDataController()
+    @EnvironmentObject private var accessibilityManager: AccessibilityManager
     @State private var isProcessing = false
     @State private var showAlert = false
     @State private var alertMessage = ""
@@ -51,6 +52,8 @@ struct ReturnConfirmationView: View {
                         .background(Color(.systemBackground))
                         .cornerRadius(12)
                         .shadow(radius: 2)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Book details: \(book.title) by \(book.author.joined(separator: ", "))")
                     }
                     
                     // Issue Details Section
@@ -78,6 +81,8 @@ struct ReturnConfirmationView: View {
                         .background(Color(.systemBackground))
                         .cornerRadius(12)
                         .shadow(radius: 2)
+                        .accessibilityElement(children: .contain)
+                        .accessibilityLabel("Issue details: Issue date \(formatDate(issue.issueDate)), Due date \(formatDate(issue.dueDate)). \(isOverdue() ? "This book is overdue." : "This book is being returned on time.")")
                     }
                     
                     // Confirm Button
@@ -96,6 +101,8 @@ struct ReturnConfirmationView: View {
                     }
                     .disabled(isProcessing)
                     .padding(.top)
+                    .accessibilityLabel("Confirm book return")
+                    .accessibilityHint("Double tap to confirm the return of this book")
                 }
                 .padding()
             }
@@ -123,6 +130,46 @@ struct ReturnConfirmationView: View {
                             .background(Color(.systemBackground))
                             .cornerRadius(8)
                     }
+                }
+                
+                // Voice command button overlay
+                VStack {
+                    HStack {
+                        Spacer()
+                        VoiceCommandButton()
+                            .padding(.top, 60)
+                            .padding(.trailing, 20)
+                    }
+                    Spacer()
+                }
+            }
+            .onAppear {
+                // Announce for accessibility
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    let message = "Book return confirmation for \(book.title). \(isOverdue() ? "This book is overdue." : "This book is being returned on time.") Say confirm to process the return."
+                    UIAccessibility.post(notification: .announcement, argument: message)
+                }
+            }
+            .onChange(of: accessibilityManager.commandDetected) { oldValue, command in
+                let lowercasedCommand = command.lowercased()
+                
+                // Handle voice commands
+                if (lowercasedCommand.contains("confirm") || 
+                    lowercasedCommand.contains("return")) && 
+                    !isProcessing {
+                    
+                    // Provide feedback
+                    UIAccessibility.post(notification: .announcement, argument: "Confirming book return...")
+                    
+                    // Execute return action
+                    confirmReturn()
+                } else if lowercasedCommand.contains("cancel") || lowercasedCommand.contains("go back") {
+                    dismiss()
+                } else if lowercasedCommand.contains("details") || lowercasedCommand.contains("information") {
+                    // Read out details for accessibility
+                    let message = "Book: \(book.title) by \(book.author.joined(separator: ", ")). Issue date: \(formatDate(issue.issueDate)). Due date: \(formatDate(issue.dueDate)). \(isOverdue() ? "This book is overdue." : "This book is being returned on time.")"
+                    
+                    UIAccessibility.post(notification: .announcement, argument: message)
                 }
             }
         }
@@ -237,6 +284,7 @@ struct QRScanner: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.presentationMode) private var presentationMode
     @StateObject private var supabaseController = SupabaseDataController()
+    @EnvironmentObject private var accessibilityManager: AccessibilityManager
     
     // Add flag to check if this is presented as a fullScreenCover
     var isPresentedAsFullScreen: Bool = false
@@ -244,7 +292,7 @@ struct QRScanner: View {
     // Add function to check borrowing limits
     private func checkBorrowingLimit(memberId: String, newBooksCount: Int) async throws -> Bool {
         // 1. Fetch library policies
-        let policiesQuery = try supabaseController.client.from("library_policies")
+        let policiesQuery = supabaseController.client.from("library_policies")
             .select()
         
         let policiesResponse = try await policiesQuery.execute()
@@ -255,7 +303,7 @@ struct QRScanner: View {
         }
         
         // 2. Count currently issued books for the member
-        let issuedBooksQuery = try supabaseController.client.from("BookIssue")
+        let issuedBooksQuery = supabaseController.client.from("BookIssue")
             .select()
             .eq("memberId", value: memberId)
             .eq("status", value: "Issued")
@@ -286,7 +334,14 @@ struct QRScanner: View {
                     // Reset the scanned code when scanner appears
                     scannedCode = ""
                     lastProcessedCode = ""
+                    
+                    // Announce for accessibility
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        UIAccessibility.post(notification: .announcement, argument: "QR Scanner active. Please position the member's QR code in the center of the screen.")
+                    }
                 }
+                .accessibilityLabel("QR code scanner")
+                .accessibilityHint("Center the QR code in the middle of the screen to scan")
             
             VStack {
                 Spacer()
@@ -296,16 +351,32 @@ struct QRScanner: View {
                     .padding()
                     .background(Color.black.opacity(0.7))
                     .cornerRadius(8)
+                    .accessibilityLabel("Scan Library QR Code")
                 Spacer().frame(height: 100)
+            }
+            
+            // Add voice command button overlay
+            VStack {
+                HStack {
+                    Spacer()
+                    VoiceCommandButton()
+                        .padding(.top, 60)
+                        .padding(.trailing, 20)
+                }
+                Spacer()
             }
         }
         .edgesIgnoringSafeArea(.all)
-        .onChange(of: scannedCode) { newValue in
+        .onChange(of: scannedCode) { oldValue, newValue in
             // Only process if we have a non-empty code, we're not already processing,
             // and this isn't the same code we just processed
             if !newValue.isEmpty && !isProcessing && newValue != lastProcessedCode {
                 lastProcessedCode = newValue
                 isProcessing = true
+                
+                // Announce scanning feedback for accessibility
+                UIAccessibility.post(notification: .announcement, argument: "QR code detected. Processing.")
+                
                 processQRCode(newValue)
             }
         }
@@ -316,6 +387,9 @@ struct QRScanner: View {
                 dismissButton: .default(Text("OK")) {
                     // After dismissing an alert, allow processing again
                     isProcessing = false
+                    
+                    // Announce alert dismissal for accessibility
+                    UIAccessibility.post(notification: .announcement, argument: "Alert dismissed. Scanner ready.")
                 }
             )
         }
@@ -335,6 +409,16 @@ struct QRScanner: View {
                 ReturnConfirmationView(issue: issue, book: book)
             }
         }
+        .onChange(of: accessibilityManager.commandDetected) { oldCommand, command in
+            // Process voice commands relevant to QR scanning
+            let lowercasedCommand = command.lowercased()
+            
+            if lowercasedCommand.contains("cancel") || lowercasedCommand.contains("go back") {
+                dismiss()
+            } else if lowercasedCommand.contains("help") {
+                UIAccessibility.post(notification: .announcement, argument: "Position the QR code in the center of the screen. Say cancel or go back to exit.")
+            }
+        }
         
         // Only wrap in NavigationView if not presented as fullScreenCover
         if isPresentedAsFullScreen {
@@ -343,7 +427,9 @@ struct QRScanner: View {
             return AnyView(NavigationView {
                 content.navigationBarItems(trailing: Button("Close") {
                     dismiss()
-                })
+                }
+                .accessibilityLabel("Close scanner")
+                .accessibilityHint("Double tap to close the QR scanner"))
             })
         }
     }
@@ -355,6 +441,9 @@ struct QRScanner: View {
         lastProcessedCode = ""
         returnIssue = nil
         returnBook = nil
+        
+        // Announce ready state for accessibility
+        UIAccessibility.post(notification: .announcement, argument: "Scanner ready for next scan.")
     }
     
     private func processQRCode(_ code: String) {
@@ -399,7 +488,7 @@ struct QRScanner: View {
             Task {
                 do {
                     let newBooksCount = parsedInfo.bookIds.count
-                    let withinLimit = try await checkBorrowingLimit(memberId: parsedInfo.memberId, newBooksCount: newBooksCount)
+                    _ = try await checkBorrowingLimit(memberId: parsedInfo.memberId, newBooksCount: newBooksCount)
                     
                     await MainActor.run {
                         bookInfo = parsedInfo

@@ -18,7 +18,7 @@ struct QRCodeParser {
     static func parseBookInfo(from qrContent: String) -> Result<BookInfo, QRParseError> {
         // First try parsing as JSON
         if let jsonData = qrContent.data(using: .utf8) {
-            do {
+//            do {
                 let decoder = JSONDecoder()
                 decoder.keyDecodingStrategy = .useDefaultKeys
                 decoder.dateDecodingStrategy = .iso8601
@@ -178,11 +178,11 @@ struct QRCodeParser {
                     return parseTextFormat(from: qrContent)
                 }
                 
-            } catch {
-                print("JSON parsing error: \(error)")
-                // If JSON parsing fails, try text format parsing
-                return parseTextFormat(from: qrContent)
-            }
+//            } catch {
+//                print("JSON parsing error: \(error)")
+//                // If JSON parsing fails, try text format parsing
+//                return parseTextFormat(from: qrContent)
+//            }
         }
         
         // Fallback to text format parsing

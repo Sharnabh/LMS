@@ -11,7 +11,7 @@ struct WelcomeScreenView: View {
     @State private var isShowingLogin = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 // Background color
                 Color("AccentColor")
@@ -39,29 +39,30 @@ struct WelcomeScreenView: View {
                         .foregroundColor(.gray)
                         .padding(.horizontal, 20)
                     
-                    NavigationLink(destination: ContentView(), isActive: $isShowingLogin) {
-                        Button(action: {
-                            isShowingLogin = true
-                        }) {
-                            HStack {
-                                Text("Continue")
-                                    .fontWeight(.semibold)
-                                
-                                Image(systemName: "arrow.right.circle.fill")
-                                    .font(.title3)
-                            }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color("AccentColor"))
-                            .cornerRadius(15)
-                            .padding(.horizontal, 20)
+                    Button(action: {
+                        isShowingLogin = true
+                    }) {
+                        HStack {
+                            Text("Continue")
+                                .fontWeight(.semibold)
+                            
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title3)
                         }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color("AccentColor"))
+                        .cornerRadius(15)
+                        .padding(.horizontal, 20)
                     }
                     
                     Spacer()
                         .frame(height: 50)
                 }
+            }
+            .navigationDestination(isPresented: $isShowingLogin) {
+                ContentView()
             }
         }
     }

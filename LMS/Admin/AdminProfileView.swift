@@ -246,7 +246,7 @@ struct AdminProfileView: View {
                 Text("Select a photo")
             }
         }
-        .onChange(of: imageSelection) { item in
+        .onChange(of: imageSelection) { oldValue, item in
             Task {
                 if let data = try? await item?.loadTransferable(type: Data.self),
                    let uiImage = UIImage(data: data) {

@@ -210,7 +210,7 @@ struct AdminForgotPasswordView: View {
                     .frame(width: 0, height: 0)
                     .opacity(0)
                     .focused($otpFieldFocused)
-                    .onChange(of: otp) { newValue in
+                    .onChange(of: otp) { oldValue, newValue in
                         // Limit to 6 digits
                         if newValue.count > 6 {
                             otp = String(newValue.prefix(6))

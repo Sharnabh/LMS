@@ -94,8 +94,8 @@ struct AddAnnouncementView: View {
         isLoading = true
         
         Task {
-            do {
-                try await announcementStore.createAnnouncement(
+//            do {
+                await announcementStore.createAnnouncement(
                     title: title,
                     content: content,
                     type: selectedType,
@@ -109,14 +109,14 @@ struct AddAnnouncementView: View {
                     alertMessage = "Announcement created successfully!"
                     showingAlert = true
                 }
-            } catch {
-                await MainActor.run {
-                    isLoading = false
-                    isError = true
-                    alertMessage = "Failed to create announcement: \(error.localizedDescription)"
-                    showingAlert = true
-                }
-            }
+//            } catch {
+//                await MainActor.run {
+//                    isLoading = false
+//                    isError = true
+//                    alertMessage = "Failed to create announcement: \(error.localizedDescription)"
+//                    showingAlert = true
+//                }
+//            }
         }
     }
 }

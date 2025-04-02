@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-class LibraryPoliciesViewModel: ObservableObject {
+class LibraryPoliciesViewModel: ObservableObject, @unchecked Sendable {
     @Published var borrowingLimit: Int = 5
     @Published var returnPeriod: Int = 14
     @Published var fineAmount: Int = 5

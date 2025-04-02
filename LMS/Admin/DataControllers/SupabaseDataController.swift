@@ -129,7 +129,8 @@ class SupabaseDataController: ObservableObject {
                 } else {
                     // Generate and send OTP for non-first-time logins
                     let otp = generateOTP(for: email)
-                    let _ = try await sendOTP(to: email, name: "Admin", otp: otp, type: "login")
+                    // Send OTP - this is an async operation that can throw
+                    try await sendOTP(to: email, name: "Admin", otp: otp, type: "login")
                     return (true, false, admin.id, true)
                 }
             }
@@ -440,6 +441,7 @@ class SupabaseDataController: ObservableObject {
         }
     }
     
+    @discardableResult
     func sendOTP(to email: String, name: String, otp: String, type: String = "reset") async throws -> Bool {
         // Create email content
         let emailContent = """
@@ -651,37 +653,32 @@ class SupabaseDataController: ObservableObject {
         print("Checking if any books are currently issued...")
         var issuedBookIds: [UUID] = []
         
-        do {
-            for bookId in bookIds {
-                let query = client.from("BookIssue")
-                    .select()
-                    .eq("bookId", value: bookId.uuidString)
-                    .eq("status", value: "Issued")
-                
-                struct BookIssueRecord: Codable {
-                    let id: String
-                    let bookId: String
-                }
-                
-                do {
-                    let response = try await query.execute()
-                    let records = try JSONDecoder().decode([BookIssueRecord].self, from: response.data)
-                    
-                    if !records.isEmpty {
-                        print("Book with ID \(bookId) is currently issued")
-                        issuedBookIds.append(bookId)
-                    }
-                } catch {
-                    print("Error checking if book \(bookId) is issued: \(error)")
-                    continue
-                }
+        for bookId in bookIds {
+            let query = client.from("BookIssue")
+                .select()
+                .eq("bookId", value: bookId.uuidString)
+                .eq("status", value: "Issued")
+            
+            struct BookIssueRecord: Codable {
+                let id: String
+                let bookId: String
             }
             
-            return issuedBookIds
-        } catch {
-            print("Error checking issued books: \(error)")
-            throw error
+            do {
+                let response = try await query.execute()
+                let records = try JSONDecoder().decode([BookIssueRecord].self, from: response.data)
+                
+                if !records.isEmpty {
+                    print("Book with ID \(bookId) is currently issued")
+                    issuedBookIds.append(bookId)
+                }
+            } catch {
+                print("Error checking if book \(bookId) is issued: \(error)")
+                continue
+            }
         }
+        
+        return issuedBookIds
     }
     
     func fetchDeletionRequests() async throws -> [BookDeletionRequest] {
@@ -689,47 +686,42 @@ class SupabaseDataController: ObservableObject {
         let query = client.from("book_requests")
             .select()
         
-        do {
-            // Define a decoder type for the Supabase response
-            struct RawRequest: Codable {
-                let id: String
-                let book_ids: [String]
-                let requested_by: String
-                let request_date: String
-                let status: String
-                let admin_response: String?
-                let response_date: String?
-            }
-            
-            print("📋 SupabaseDataController: Executing query to fetch deletion requests...")
-            let rawRequests: [RawRequest] = try await query.execute().value
-            print("📋 SupabaseDataController: Received \(rawRequests.count) raw deletion requests")
-            
-            // Convert the raw data to our app model
-            let formatter = ISO8601DateFormatter()
-            
-            let result = rawRequests.map { raw in
-                let bookIDs = raw.book_ids.compactMap { UUID(uuidString: $0) }
-                let requestDate = formatter.date(from: raw.request_date) ?? Date()
-                let responseDate = raw.response_date.flatMap { formatter.date(from: $0) }
-                
-                return BookDeletionRequest(
-                    id: UUID(uuidString: raw.id),
-                    bookIDs: bookIDs,
-                    requestedBy: raw.requested_by,
-                    requestDate: requestDate,
-                    status: raw.status,
-                    adminResponse: raw.admin_response,
-                    responseDate: responseDate
-                )
-            }
-            
-            print("📋 SupabaseDataController: Successfully mapped \(result.count) deletion requests")
-            return result
-        } catch let error {
-            print("📋 SupabaseDataController: Error fetching deletion requests: \(error)")
-            throw error
+        // Define a decoder type for the Supabase response
+        struct RawRequest: Codable {
+            let id: String
+            let book_ids: [String]
+            let requested_by: String
+            let request_date: String
+            let status: String
+            let admin_response: String?
+            let response_date: String?
         }
+        
+        print("📋 SupabaseDataController: Executing query to fetch deletion requests...")
+        let rawRequests: [RawRequest] = try await query.execute().value
+        print("📋 SupabaseDataController: Received \(rawRequests.count) raw deletion requests")
+        
+        // Convert the raw data to our app model
+        let formatter = ISO8601DateFormatter()
+        
+        let result = rawRequests.map { raw in
+            let bookIDs = raw.book_ids.compactMap { UUID(uuidString: $0) }
+            let requestDate = formatter.date(from: raw.request_date) ?? Date()
+            let responseDate = raw.response_date.flatMap { formatter.date(from: $0) }
+            
+            return BookDeletionRequest(
+                id: UUID(uuidString: raw.id),
+                bookIDs: bookIDs,
+                requestedBy: raw.requested_by,
+                requestDate: requestDate,
+                status: raw.status,
+                adminResponse: raw.admin_response,
+                responseDate: responseDate
+            )
+        }
+        
+        print("📋 SupabaseDataController: Successfully mapped \(result.count) deletion requests")
+        return result
     }
     
     // MARK: - Book Operations
@@ -817,12 +809,12 @@ extension SupabaseDataController {
             last_updated: currentTimestamp
         )
         
+        // First check if a policy exists
+        struct PolicyIdResponse: Decodable {
+            let id: UUID
+        }
+        
         do {
-            // First check if a policy exists
-            struct PolicyIdResponse: Decodable {
-                let id: UUID
-            }
-            
             let response: [PolicyIdResponse] = try await client
                 .from("library_policies")
                 .select("id")

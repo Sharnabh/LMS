@@ -461,7 +461,7 @@ struct BookDeletionDetailsView: View {
         errorMessage = nil
         books = []
         
-        do {
+//        do {
             print("📚 Loading books for deletion request: \(request.id?.uuidString ?? "unknown")")
             print("📚 Book IDs to load: \(request.bookIDs)")
             
@@ -486,13 +486,13 @@ struct BookDeletionDetailsView: View {
                 print("📚 Total books loaded: \(loadedBooks.count)")
                 self.isLoading = false
             }
-        } catch {
-            print("📚 Error in loadBooks: \(error.localizedDescription)")
-            await MainActor.run {
-                self.errorMessage = "Failed to load book details: \(error.localizedDescription)"
-                self.isLoading = false
-            }
-        }
+//        } catch {
+//            print("📚 Error in loadBooks: \(error.localizedDescription)")
+//            await MainActor.run {
+//                self.errorMessage = "Failed to load book details: \(error.localizedDescription)"
+//                self.isLoading = false
+//            }
+//        }
     }
 }
 

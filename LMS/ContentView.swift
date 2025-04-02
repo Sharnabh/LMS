@@ -49,20 +49,34 @@ struct OnboardingView: View {
         NavigationView {
             ZStack {
                 // Updated gradient background with slower animation
-                LinearGradient(
-                    colors: [
-                        Color.blue.opacity(0.15),
-                        Color.purple.opacity(0.15),
-                        Color.blue.opacity(0.15)
-                    ],
-                    startPoint: animateGradient ? .topLeading : .bottomLeading,
-                    endPoint: animateGradient ? .bottomTrailing : .topTrailing
-                )
-                .ignoresSafeArea()
-                .onAppear {
-                    withAnimation(.linear(duration: 8.0).repeatForever(autoreverses: true)) {
-                        animateGradient.toggle()
-                    }
+//                LinearGradient(
+//                    colors: [
+//                        Color.blue.opacity(0.15),
+//                        Color.purple.opacity(0.15),
+//                        Color.blue.opacity(0.15)
+//                    ],
+//                    startPoint: animateGradient ? .topLeading : .bottomLeading,
+//                    endPoint: animateGradient ? .bottomTrailing : .topTrailing
+//                )
+//                .ignoresSafeArea()
+//                .onAppear {
+//                    withAnimation(.linear(duration: 8.0).repeatForever(autoreverses: true)) {
+//                        animateGradient.toggle()
+//                    }
+//                }
+                
+                Color("AccentColor")
+                    .ignoresSafeArea()
+                
+                VStack {
+                    // Wave shape
+                    WaveShape()
+                        .fill(Color.white)
+                        .padding(.top, -200) // Changes
+                        .frame(height: UIScreen.main.bounds.height * 0.9)
+                        .offset(y: UIScreen.main.bounds.height * 0.04)
+                    
+                    Spacer()
                 }
                 
                 // Add subtle pattern overlay
@@ -73,42 +87,45 @@ struct OnboardingView: View {
                 VStack(spacing: 30) {
                     // Header with subtle animation
                     VStack(spacing: 16) {
-                        Image(systemName: "books.vertical.fill")
-                            .font(.system(size: 80))
-                            .foregroundColor(.blue)
-                            .scaleEffect(animateHeader ? 1.05 : 1.0)
-                            .rotationEffect(.degrees(animateHeader ? 2 : -2))
+//                        Image(systemName: "books.vertical.fill")
+//                            .font(.system(size: 80))
+//                            .foregroundColor(.blue)
+//                            .scaleEffect(animateHeader ? 1.05 : 1.0)
+//                            .rotationEffect(.degrees(animateHeader ? 2 : -2))
                         
                         Text("Welcome to Pustakalaya")
                             .font(.largeTitle)
+                            .padding(10)
                             .fontWeight(.bold)
                             .opacity(animateHeader ? 1 : 0)
                             .offset(y: animateHeader ? 0 : 10)
                     }
                     .padding(.top, 60)
+                    .padding(.bottom, 60)
                     .onAppear {
                         withAnimation(.easeOut(duration: 0.5)) {
                             animateHeader = true
                         }
                     }
                     
-                    Spacer()
-                    
-                    // Role selection text
-                    Text("Please select your role to continue")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                        .opacity(animateCards ? 1 : 0)
-                        .offset(y: animateCards ? 0 : 10)
-                        .padding(.bottom, 10)
+
                     
                     // Role selection cards with subtle animation
                     VStack(spacing: 20) {
+                        Text("Please select your role to continue")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.black)
+                            .opacity(animateCards ? 1 : 0)
+                            .offset(y: animateCards ? 0 : 10)
+                            .padding(.top, 100)
+                            .padding(.leading, 7)
+                        
                         RoleCard(
                             title: "Admin",
                             description: "Manage the entire\nlibrary system",
                             iconName: "person.badge.shield.checkmark",
-                            color: .purple,
+                            color: .accentColor,
                             isSelected: appState.selectedRole == .admin,
                             delay: 0.2
                         ) {
@@ -121,7 +138,7 @@ struct OnboardingView: View {
                             title: "Librarian",
                             description: "Manage books and\nmember borrowings",
                             iconName: "person.text.rectangle",
-                            color: .blue,
+                            color: .accentColor,
                             isSelected: appState.selectedRole == .librarian,
                             delay: 0.3
                         ) {
@@ -161,11 +178,11 @@ struct OnboardingView: View {
                             .padding(.horizontal, 24)
                             .background(
                                 appState.selectedRole != nil ?
-                                LinearGradient(colors: [.blue, .blue.opacity(0.8)], startPoint: .leading, endPoint: .trailing) :
+                                LinearGradient(colors: [.accentColor, .accentColor.opacity(0.8)], startPoint: .leading, endPoint: .trailing) :
                                 LinearGradient(colors: [.gray, .gray.opacity(0.8)], startPoint: .leading, endPoint: .trailing)
                             )
                             .cornerRadius(12)
-                            .shadow(color: appState.selectedRole != nil ? .blue.opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
+                            .shadow(color: appState.selectedRole != nil ? .accent.opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
                     }
                     .disabled(appState.selectedRole == nil)
                     .padding(.horizontal, 30)

@@ -18,7 +18,7 @@ struct ResourcesView: View {
     @State private var showingGenreFilter = false
     private let maxRetries = 3
     
-    private let allGenres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
+    private let allGenres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference", "Fiction", "Non-Fiction", "Literature"]
     
     private var filteredBooks: [LibrarianBook] {
         var filtered = bookStore.books
@@ -392,7 +392,7 @@ struct AddBookView: View {
     @State private var isSuccess = false
     @State private var isLoading = false
     
-    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
+    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference", "Fiction", "Non-Fiction", "Literature"]
     
     private var isValid: Bool {
         !title.isEmpty &&

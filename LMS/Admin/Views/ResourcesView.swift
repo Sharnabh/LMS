@@ -14,17 +14,30 @@ struct ResourcesView: View {
     @State private var searchText = ""
     @State private var selectedBook: LibrarianBook? = nil
     @State private var showBookDetails = false
+    @State private var selectedGenre: String? = nil
+    @State private var showingGenreFilter = false
     private let maxRetries = 3
     
+    private let allGenres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
+    
     private var filteredBooks: [LibrarianBook] {
-        if searchText.isEmpty {
-            return bookStore.books
-        } else {
-            return bookStore.books.filter { book in
+        var filtered = bookStore.books
+        
+        // Apply genre filter if selected
+        if let genre = selectedGenre {
+            filtered = filtered.filter { $0.genre == genre }
+        }
+        
+        // Apply search text filter
+        if !searchText.isEmpty {
+            filtered = filtered.filter { book in
                 book.title.localizedCaseInsensitiveContains(searchText) ||
-                book.author.joined(separator: " ").localizedCaseInsensitiveContains(searchText)
+                book.author.joined(separator: " ").localizedCaseInsensitiveContains(searchText) ||
+                book.ISBN.localizedCaseInsensitiveContains(searchText)
             }
         }
+        
+        return filtered
     }
     
     var body: some View {
@@ -61,17 +74,96 @@ struct ResourcesView: View {
                             .foregroundColor(.accentColor)
                         }
                     } else {
-                        // Search bar
-                        HStack {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundColor(.gray)
-                            TextField("Search books...", text: $searchText)
-                                .textFieldStyle(.plain)
+                        // Search bar with genre filter
+                        HStack(spacing: 8) {
+                            // Search bar
+                            HStack {
+                                Image(systemName: "magnifyingglass")
+                                    .foregroundColor(.gray)
+                                TextField("Search by title, author, or ISBN...", text: $searchText)
+                                    .textFieldStyle(.plain)
+                                
+                                if !searchText.isEmpty {
+                                    Button(action: {
+                                        searchText = ""
+                                    }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                            }
+                            .padding(8)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(10)
+                            
+                            // Genre filter button
+                            Menu {
+                                Button(action: {
+                                    selectedGenre = nil
+                                }) {
+                                    HStack {
+                                        Text("All Genres")
+                                        if selectedGenre == nil {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                                
+                                Divider()
+                                
+                                ForEach(allGenres, id: \.self) { genre in
+                                    Button(action: {
+                                        selectedGenre = genre
+                                    }) {
+                                        HStack {
+                                            Text(genre)
+                                            if selectedGenre == genre {
+                                                Image(systemName: "checkmark")
+                                            }
+                                        }
+                                    }
+                                }
+                            } label: {
+                                HStack {
+                                    Image(systemName: "line.3.horizontal.decrease.circle")
+                                        .foregroundColor(selectedGenre == nil ? .gray : .accentColor)
+                                        .font(.title3)
+                                    
+                                    if let genre = selectedGenre {
+                                        Text(genre)
+                                            .font(.caption)
+                                            .foregroundColor(.accentColor)
+                                            .lineLimit(1)
+                                    }
+                                }
+                                .padding(8)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(10)
+                            }
                         }
-                        .padding(8)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
                         .padding(.horizontal)
+                        
+                        // Results indicator (only shown when filtering or searching)
+                        if !searchText.isEmpty || selectedGenre != nil {
+                            HStack {
+                                Text("\(filteredBooks.count) books found")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    searchText = ""
+                                    selectedGenre = nil
+                                }) {
+                                    Text("Clear All")
+                                        .font(.caption)
+                                        .foregroundColor(.accentColor)
+                                }
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 4)
+                        }
                         
                         // Books grid
                         ScrollView {
@@ -544,7 +636,7 @@ struct ExpandableDescriptionCard: View {
                     Text("Show Less")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                 }
                 .padding(.top, 4)
             } else {
@@ -561,7 +653,7 @@ struct ExpandableDescriptionCard: View {
                     Text("Read More...")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                 }
                 .padding(.top, 4)
             }

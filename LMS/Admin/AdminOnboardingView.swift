@@ -172,7 +172,7 @@ struct BookFormView: View {
     @State private var selectedImage: UIImage?
     @State private var showImagePicker = false
     
-    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference", "Fiction", "Non-Fiction", "Literature"]
+    let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference"]
     
     var body: some View {
         NavigationView {
@@ -747,9 +747,7 @@ struct AdminOnboardingView: View {
                             Text("Library Setup")
                                 .font(.largeTitle)
                                 .fontWeight(.bold)
-                                .padding(90)
-                                .padding(.top, 80)
-                                .padding(.leading, -170)
+                                .padding(100)
                             
                             Text("Manage your library resources")
                                 .font(.headline)
@@ -757,7 +755,6 @@ struct AdminOnboardingView: View {
                                 .fontWeight(.semibold)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal)
-                                
                         }
                         .padding(.top, 30)
                         
@@ -787,7 +784,7 @@ struct AdminOnboardingView: View {
                                     Spacer()
                                     
                                     Image(systemName: showLibrarianForm ? "chevron.up" : "chevron.down")
-                                        .foregroundColor(.accentColor)
+                                        .foregroundColor(.purple)
                                 }
                                 .padding(.vertical, 20)
                                 .padding(.horizontal)
@@ -861,7 +858,7 @@ struct AdminOnboardingView: View {
                                     Spacer()
                                     
                                     Image(systemName: showBookForm ? "chevron.up" : "chevron.down")
-                                        .foregroundColor(.accentColor)
+                                        .foregroundColor(.purple)
                                 }
                                 .padding(.vertical, 20)
                                 .padding(.horizontal)
@@ -885,7 +882,7 @@ struct AdminOnboardingView: View {
                                             Spacer()
                                             
                                             Image(systemName: "chevron.right")
-                                                .foregroundColor(.accentColor)
+                                                .foregroundColor(.purple)
                                         }
                                         .padding()
                                         .background(Color(.secondarySystemBackground))
@@ -908,7 +905,7 @@ struct AdminOnboardingView: View {
                                             Spacer()
                                             
                                             Image(systemName: "chevron.right")
-                                                .foregroundColor(.accentColor)
+                                                .foregroundColor(.purple)
                                         }
                                         .padding()
                                         .background(Color(.secondarySystemBackground))

@@ -40,7 +40,7 @@ struct LibrarianProfileView: View {
                                     .scaledToFill()
                                     .frame(width: 100, height: 100)
                                     .clipShape(Circle())
-                                    .overlay(Circle().stroke(Color.blue, lineWidth: 2))
+                                    .overlay(Circle().stroke(Color.accentColor, lineWidth: 2))
                             } else if let avatarUrl = avatarUrl, avatarUrl.starts(with: "data:image") {
                                 // Handle base64 data URI
                                 if let imageData = extractBase64Data(from: avatarUrl),
@@ -50,14 +50,15 @@ struct LibrarianProfileView: View {
                                         .scaledToFill()
                                         .frame(width: 100, height: 100)
                                         .clipShape(Circle())
-                                        .overlay(Circle().stroke(Color.blue, lineWidth: 2))
+                                        .overlay(Circle().stroke(Color.accentColor, lineWidth: 2))
                                 } else {
                                     // Fallback if we can't load the base64 image
                                     Image(systemName: "person.crop.circle.fill")
                                         .resizable()
                                         .aspectRatio(contentMode: .fit)
                                         .frame(width: 100, height: 100)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
+                                        
                                 }
                             } else if let avatarUrl = avatarUrl, !avatarUrl.isEmpty {
                                 // Handle remote URL
@@ -78,13 +79,13 @@ struct LibrarianProfileView: View {
                                             .resizable()
                                             .aspectRatio(contentMode: .fit)
                                             .frame(width: 100, height: 100)
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(.accentColor)
                                     @unknown default:
                                         Image(systemName: "person.crop.circle.fill")
                                             .resizable()
                                             .aspectRatio(contentMode: .fit)
                                             .frame(width: 100, height: 100)
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(.accentColor)
                                     }
                                 }
                             } else {
@@ -93,14 +94,14 @@ struct LibrarianProfileView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 100, height: 100)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                             
                             if isEditing {
                                 PhotosPicker(selection: $imageSelection, matching: .images) {
                                     Text("Change Photo")
                                         .font(.subheadline)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
                                 }
                                 .accessibilityLabel("Change profile photo")
                             }
@@ -182,7 +183,7 @@ struct LibrarianProfileView: View {
                             Text("Library Policies")
                         } icon: {
                             Image(systemName: "doc.text.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                         }
                     }
                 } header: {

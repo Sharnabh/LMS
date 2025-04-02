@@ -77,6 +77,8 @@ struct HomeLibrarianView: View {
                 // Content area
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
+                        Spacer()
+                        Spacer()
                         // Quick Stats Cards
                         LazyVGrid(columns: [
                             GridItem(.flexible(), spacing: 16),
@@ -117,7 +119,7 @@ struct HomeLibrarianView: View {
                         .padding(.horizontal)
                         
                         // Divider with more spacing
-                        Divider()
+//                        Divider()
                             .padding(.vertical, 20)
                         
                         HStack {

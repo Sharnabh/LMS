@@ -18,7 +18,6 @@ struct LibrarianProfileSetupView: View {
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var isLoading = false
-    @State private var showLibrarianOnboarding = false
     @State private var showDatePicker = false
     @State private var profileImage: UIImage?
     @State private var showImagePicker = false
@@ -244,9 +243,6 @@ struct LibrarianProfileSetupView: View {
                     }
                 }
             }
-            .fullScreenCover(isPresented: $showLibrarianOnboarding) {
-                LibrarianOnboardingView(onComplete: onComplete)
-            }
             .onChange(of: imageSelection) { item in
                 Task {
                     if let data = try? await item?.loadTransferable(type: Data.self),
@@ -301,7 +297,8 @@ struct LibrarianProfileSetupView: View {
                 
                 await MainActor.run {
                     isLoading = false
-                    showLibrarianOnboarding = true
+                    // Call onComplete directly instead of showing the onboarding view
+                    onComplete()
                 }
             } catch {
                 await MainActor.run {
@@ -514,183 +511,6 @@ class LibrarianService {
         } catch {
             print("Failed to update librarian profile: \(error.localizedDescription)")
             throw error
-        }
-    }
-}
-
-// MARK: - Librarian Onboarding View
-struct LibrarianOnboardingView: View {
-    let onComplete: () -> Void
-    @State private var currentPage = 0
-    let totalPages = 3
-    
-    var body: some View {
-        ZStack {
-            // Background color
-            Color(.systemBackground).edgesIgnoringSafeArea(.all)
-            
-            // Onboarding pages
-            TabView(selection: $currentPage) {
-                // Page 1: Welcome
-                VStack(spacing: 20) {
-                    Image(systemName: "books.vertical.fill")
-                        .font(.system(size: 80))
-                        .foregroundColor(.blue)
-                        .padding(.bottom, 20)
-                    
-                    Text("Welcome to the Librarian Dashboard")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                        .multilineTextAlignment(.center)
-                    
-                    Text("Manage your library efficiently with our comprehensive tools.")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 40)
-                        .padding(.bottom, 40)
-                }
-                .tag(0)
-                
-                // Page 2: Features
-                VStack(spacing: 30) {
-                    Image(systemName: "list.bullet.clipboard.fill")
-                        .font(.system(size: 70))
-                        .foregroundColor(.blue)
-                        .padding(.bottom, 20)
-                    
-                    Text("Powerful Library Management")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                        .multilineTextAlignment(.center)
-                    
-                    VStack(alignment: .leading, spacing: 20) {
-                        FeatureRow(icon: "book.fill", title: "Catalog Books", description: "Add, update and organize your book collection")
-                        FeatureRow(icon: "person.crop.circle.badge.checkmark", title: "Manage Checkouts", description: "Track all library transactions in one place")
-                        FeatureRow(icon: "chart.bar.xaxis", title: "Analytics", description: "Get insights on library usage patterns")
-                    }
-                    .padding(.horizontal, 30)
-                }
-                .tag(1)
-                
-                // Page 3: Get Started
-                VStack(spacing: 25) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 80))
-                        .foregroundColor(.green)
-                        .padding(.bottom, 20)
-                    
-                    Text("You're All Set!")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                    
-                    Text("Your account is now ready. Tap the button below to start using the librarian portal.")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 40)
-                        .padding(.bottom, 40)
-                    
-                    Button(action: {
-                        onComplete()
-                    }) {
-                        Text("Start Using Pustakalaya")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.blue)
-                            .cornerRadius(12)
-                            .padding(.horizontal, 40)
-                    }
-                }
-                .tag(2)
-            }
-            .tabViewStyle(PageTabViewStyle())
-            .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
-            
-            // Navigation buttons
-            VStack {
-                Spacer()
-                
-                HStack {
-                    // Back button
-                    if currentPage > 0 {
-                        Button(action: {
-                            withAnimation {
-                                currentPage -= 1
-                            }
-                        }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "chevron.left")
-                                Text("Back")
-                            }
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                        }
-                    } else {
-                        Spacer()
-                    }
-                    
-                    Spacer()
-                    
-                    // Next/Get Started button
-                    if currentPage < totalPages - 1 {
-                        Button(action: {
-                            withAnimation {
-                                currentPage += 1
-                            }
-                        }) {
-                            HStack(spacing: 4) {
-                                Text("Next")
-                                Image(systemName: "chevron.right")
-                            }
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                        }
-                    } else {
-                        Button(action: {
-                            onComplete()
-                        }) {
-                            Text("Get Started")
-                                .font(.headline)
-                                .foregroundColor(.blue)
-                        }
-                    }
-                }
-                .padding(.horizontal, 40)
-                .padding(.bottom, 20)
-            }
-        }
-    }
-}
-
-// Feature row component for onboarding
-struct FeatureRow: View {
-    let icon: String
-    let title: String
-    let description: String
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 15) {
-            Image(systemName: icon)
-                .font(.system(size: 26))
-                .foregroundColor(.blue)
-                .frame(width: 30)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
         }
     }
 }

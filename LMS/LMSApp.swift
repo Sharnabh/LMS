@@ -11,7 +11,7 @@ import SwiftUI
 struct LMSApp: App {
     var body: some Scene {
         WindowGroup {
-            WelcomeScreenView()
+            ContentView()
         }
     }
 }

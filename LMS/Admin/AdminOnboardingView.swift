@@ -747,7 +747,9 @@ struct AdminOnboardingView: View {
                             Text("Library Setup")
                                 .font(.largeTitle)
                                 .fontWeight(.bold)
-                                .padding(100)
+                                .padding(90)
+                                .padding(.top, 80)
+                                .padding(.leading, -170)
                             
                             Text("Manage your library resources")
                                 .font(.headline)
@@ -755,6 +757,7 @@ struct AdminOnboardingView: View {
                                 .fontWeight(.semibold)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal)
+                                
                         }
                         .padding(.top, 30)
                         
@@ -784,7 +787,7 @@ struct AdminOnboardingView: View {
                                     Spacer()
                                     
                                     Image(systemName: showLibrarianForm ? "chevron.up" : "chevron.down")
-                                        .foregroundColor(.purple)
+                                        .foregroundColor(.accentColor)
                                 }
                                 .padding(.vertical, 20)
                                 .padding(.horizontal)
@@ -858,7 +861,7 @@ struct AdminOnboardingView: View {
                                     Spacer()
                                     
                                     Image(systemName: showBookForm ? "chevron.up" : "chevron.down")
-                                        .foregroundColor(.purple)
+                                        .foregroundColor(.accentColor)
                                 }
                                 .padding(.vertical, 20)
                                 .padding(.horizontal)
@@ -882,7 +885,7 @@ struct AdminOnboardingView: View {
                                             Spacer()
                                             
                                             Image(systemName: "chevron.right")
-                                                .foregroundColor(.purple)
+                                                .foregroundColor(.accentColor)
                                         }
                                         .padding()
                                         .background(Color(.secondarySystemBackground))
@@ -905,7 +908,7 @@ struct AdminOnboardingView: View {
                                             Spacer()
                                             
                                             Image(systemName: "chevron.right")
-                                                .foregroundColor(.purple)
+                                                .foregroundColor(.accentColor)
                                         }
                                         .padding()
                                         .background(Color(.secondarySystemBackground))

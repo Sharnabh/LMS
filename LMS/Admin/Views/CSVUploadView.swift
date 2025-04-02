@@ -50,7 +50,7 @@ struct CSVUploadView: View {
                             .padding(.vertical, 8)
                             .background(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.blue)
+                                    .fill(Color.accentColor)
                             )
                             .foregroundColor(.white)
                         }

@@ -58,20 +58,21 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8E1EF4632D9DB8A70067EFD6 /* PustaklayaWidgitExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PustaklayaWidgitExtension.entitlements; sourceTree = "<group>"; };
 		CE356EF52D9D00DC00E0E9E4 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		CE356EF72D9D00DC00E0E9E4 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		CE88E1D52D9D0FF800D10196 /* PustaklayaWidgitExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PustaklayaWidgitExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		CE88E1EB2D9D100400D10196 /* PustaklayaWidgitExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PustaklayaWidgitExtension.entitlements; sourceTree = "<group>"; };
 		CE8AE2AA2D888E2C001A93FF /* LMS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LMS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		CE0ABF242D9D3F07004317F6 /* Exceptions for "PustaklayaWidgit" folder in "LMS" target */ = {
+		8E07DDD42D9DB4F6008B5732 /* Exceptions for "PustaklayaWidgit" folder in "LMS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				AppIntent.swift,
 				Assets.xcassets,
 				Info.plist,
+				ISBNScannerWidget.swift,
 				PustaklayaWidgit.swift,
 				PustaklayaWidgitBundle.swift,
 				PustaklayaWidgitControl.swift,
@@ -81,7 +82,7 @@
 			);
 			target = CE8AE2A92D888E2C001A93FF /* LMS */;
 		};
-		CE88E1EA2D9D0FFB00D10196 /* Exceptions for "PustaklayaWidgit" folder in "PustaklayaWidgitExtension" target */ = {
+		8E07DDD82D9DB7C7008B5732 /* Exceptions for "PustaklayaWidgit" folder in "PustaklayaWidgitExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -101,8 +102,8 @@
 		CE88E1D82D9D0FF800D10196 /* PustaklayaWidgit */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				CE0ABF242D9D3F07004317F6 /* Exceptions for "PustaklayaWidgit" folder in "LMS" target */,
-				CE88E1EA2D9D0FFB00D10196 /* Exceptions for "PustaklayaWidgit" folder in "PustaklayaWidgitExtension" target */,
+				8E07DDD42D9DB4F6008B5732 /* Exceptions for "PustaklayaWidgit" folder in "LMS" target */,
+				8E07DDD82D9DB7C7008B5732 /* Exceptions for "PustaklayaWidgit" folder in "PustaklayaWidgitExtension" target */,
 			);
 			path = PustaklayaWidgit;
 			sourceTree = "<group>";
@@ -147,7 +148,7 @@
 		CE8AE2A12D888E2C001A93FF = {
 			isa = PBXGroup;
 			children = (
-				CE88E1EB2D9D100400D10196 /* PustaklayaWidgitExtension.entitlements */,
+				8E1EF4632D9DB8A70067EFD6 /* PustaklayaWidgitExtension.entitlements */,
 				CE8AE2AC2D888E2C001A93FF /* LMS */,
 				CE88E1D82D9D0FF800D10196 /* PustaklayaWidgit */,
 				F57897252D8AD1A600B36B63 /* Frameworks */,
@@ -325,6 +326,7 @@
 				CODE_SIGN_ENTITLEMENTS = PustaklayaWidgitExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2TWN3DD56C;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PustaklayaWidgit/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pustakalaya;
@@ -354,6 +356,7 @@
 				CODE_SIGN_ENTITLEMENTS = PustaklayaWidgitExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2TWN3DD56C;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PustaklayaWidgit/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pustakalaya;
@@ -505,6 +508,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"LMS/Preview Content\"";
+				DEVELOPMENT_TEAM = 2TWN3DD56C;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LMS/Info.plist;
@@ -539,6 +543,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"LMS/Preview Content\"";
+				DEVELOPMENT_TEAM = 2TWN3DD56C;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LMS/Info.plist;

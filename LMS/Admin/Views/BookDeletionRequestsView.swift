@@ -9,9 +9,6 @@ struct BookDeletionRequestsView: View {
     @State private var isProcessing = false
     @State private var showSuccessAlert = false
     @State private var showErrorAlert = false
-    @State private var showIssuedBooksWarning = false
-    @State private var issuedBooksCount = 0
-    @State private var issuedBookIds: [UUID] = []
     @State private var alertMessage = ""
     @State private var selectedRequestForDetails: BookDeletionRequest?
     @State private var showingBookDetails = false
@@ -118,14 +115,6 @@ struct BookDeletionRequestsView: View {
         } message: {
             Text(alertMessage)
         }
-        .alert("Books Currently Issued", isPresented: $showIssuedBooksWarning) {
-            Button("Cancel", role: .cancel) { }
-            Button("Force Delete Anyway", role: .destructive) {
-                forceApproval(for: selectedRequest, issuedBookIds: issuedBookIds)
-            }
-        } message: {
-            Text("\(issuedBooksCount) books in this deletion request are currently issued to members. Deleting these books may affect current loans. Would you like to proceed anyway?")
-        }
         .sheet(isPresented: $showingRejectionDialog) {
             NavigationView {
                 Form {
@@ -167,37 +156,17 @@ struct BookDeletionRequestsView: View {
     
     private func handleApproval(for request: BookDeletionRequest) {
         isProcessing = true
-        selectedRequest = request
         
         Task {
-            do {
-                let success = try await bookStore.approveDeletionRequest(request)
-                
-                await MainActor.run {
-                    isProcessing = false
-                    if success {
-                        alertMessage = "Request approved and books deleted successfully."
-                        showSuccessAlert = true
-                    } else {
-                        alertMessage = "Failed to approve request. Please try again."
-                        showErrorAlert = true
-                    }
-                }
-            } catch let error as AdminBookStore.BookDeletionError {
-                await MainActor.run {
-                    isProcessing = false
-                    
-                    switch error {
-                    case .booksCurrentlyIssued(let bookIds):
-                        issuedBookIds = bookIds
-                        issuedBooksCount = bookIds.count
-                        showIssuedBooksWarning = true
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    isProcessing = false
-                    alertMessage = "Failed to approve request: \(error.localizedDescription)"
+            let success = await bookStore.approveDeletionRequest(request)
+            
+            await MainActor.run {
+                isProcessing = false
+                if success {
+                    alertMessage = "Request approved and books deleted successfully."
+                    showSuccessAlert = true
+                } else {
+                    alertMessage = "Failed to approve request. Please try again."
                     showErrorAlert = true
                 }
             }
@@ -221,67 +190,6 @@ struct BookDeletionRequestsView: View {
                     showSuccessAlert = true
                 } else {
                     alertMessage = "Failed to reject request. Please try again."
-                    showErrorAlert = true
-                }
-            }
-        }
-    }
-    
-    private func forceApproval(for request: BookDeletionRequest?, issuedBookIds: [UUID]) {
-        guard let request = request else { return }
-        
-        isProcessing = true
-        
-        // Force delete despite issued books
-        Task {
-            do {
-                // We're choosing to proceed with deletion despite issued books
-                // In a real app, you might want to update the BookIssue records or notify users
-                var allBooksDeleted = true
-                
-                // First try to delete all books
-                for bookId in request.bookIDs {
-                    if let book = try await bookStore.dataController.fetchBook(by: bookId) {
-                        print("Force deleting book: \(book.title) (ID: \(bookId))")
-                        let deleteSuccess = try await bookStore.dataController.deleteBook(book)
-                        
-                        if !deleteSuccess {
-                            allBooksDeleted = false
-                        }
-                    } else {
-                        allBooksDeleted = false
-                    }
-                }
-                
-                if allBooksDeleted {
-                    let success = try await bookStore.dataController.updateDeletionRequestStatus(
-                        requestId: request.id!,
-                        status: "approved",
-                        adminResponse: "Force deleted despite \(issuedBookIds.count) issued books"
-                    )
-                    
-                    await MainActor.run {
-                        isProcessing = false
-                        if success {
-                            bookStore.fetchDeletionRequests()
-                            alertMessage = "Request force-approved and books marked as deleted despite being issued."
-                            showSuccessAlert = true
-                        } else {
-                            alertMessage = "Failed to approve request. Please try again."
-                            showErrorAlert = true
-                        }
-                    }
-                } else {
-                    await MainActor.run {
-                        isProcessing = false
-                        alertMessage = "Not all books could be deleted."
-                        showErrorAlert = true
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    isProcessing = false
-                    alertMessage = "Error: \(error.localizedDescription)"
                     showErrorAlert = true
                 }
             }

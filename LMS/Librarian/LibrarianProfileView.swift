@@ -177,11 +177,11 @@ struct LibrarianProfileView: View {
                 
                 // Preferences Section
                 Section {
-                    NavigationLink(destination: LibrarianPoliciesView()) {
+                    NavigationLink(destination: NotificationsView()) {
                         Label {
-                            Text("Library Policies")
+                            Text("Notifications")
                         } icon: {
-                            Image(systemName: "doc.text.fill")
+                            Image(systemName: "bell.fill")
                                 .foregroundColor(.blue)
                         }
                     }
@@ -244,10 +244,6 @@ struct LibrarianProfileView: View {
                     librarianEmail = ""
                     // Reset app state to go back to the first screen
                     appState.resetToFirstScreen()
-                    appState.showLibrarianApp = false
-                    // Need to clear the currentLibrarianID from UserDefaults
-                    UserDefaults.standard.removeObject(forKey: "currentLibrarianID")
-                    UserDefaults.standard.removeObject(forKey: "currentLibrarianEmail")
                     dismiss()
                 }
             } message: {
@@ -553,226 +549,6 @@ struct NotificationsView: View {
     var body: some View {
         Text("Notifications settings would go here")
             .navigationTitle("Notifications")
-    }
-}
-
-struct LibrarianPoliciesView: View {
-    @StateObject private var policiesViewModel = LibrarianPoliciesViewModel()
-    @StateObject private var timingsViewModel = LibrarianTimingsViewModel()
-    
-    var body: some View {
-        List {
-            Section(header: Text("Borrowing Rules").font(.headline)) {
-                if policiesViewModel.isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical)
-                } else if let errorMessage = policiesViewModel.errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                        .padding()
-                } else {
-                    HStack {
-                        Text("Borrowing Limit")
-                        Spacer()
-                        Text("\(policiesViewModel.borrowingLimit) books")
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                    
-                    HStack {
-                        Text("Return Period")
-                        Spacer()
-                        Text("\(policiesViewModel.returnPeriod) days")
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                    
-                    HStack {
-                        Text("Late Fine (per day)")
-                        Spacer()
-                        Text("₹\(policiesViewModel.fineAmount)")
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                    
-                    HStack {
-                        Text("Lost Book Fine")
-                        Spacer()
-                        Text("₹\(policiesViewModel.lostBookFine)")
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                }
-            }
-            
-            Section(header: Text("Library Timings").font(.headline)) {
-                if timingsViewModel.isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical)
-                } else if let error = timingsViewModel.error {
-                    Text("Error: \(error.localizedDescription)")
-                        .foregroundColor(.red)
-                        .padding()
-                } else if let timings = timingsViewModel.libraryTimings {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Monday - Saturday")
-                            .font(.subheadline)
-                            .foregroundColor(.primary)
-                        
-                        HStack {
-                            Text("Opening Time")
-                            Spacer()
-                            Text(timings.weekdayOpeningTime, style: .time)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                        
-                        HStack {
-                            Text("Closing Time")
-                            Spacer()
-                            Text(timings.weekdayClosingTime, style: .time)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Sunday")
-                            .font(.subheadline)
-                            .foregroundColor(.primary)
-                            .padding(.top, 8)
-                        
-                        HStack {
-                            Text("Opening Time")
-                            Spacer()
-                            Text(timings.sundayOpeningTime, style: .time)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                        
-                        HStack {
-                            Text("Closing Time")
-                            Spacer()
-                            Text(timings.sundayClosingTime, style: .time)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                    }
-                }
-            }
-        }
-        .listStyle(InsetGroupedListStyle())
-        .navigationTitle("Library Policies")
-        .onAppear {
-            Task {
-                await policiesViewModel.fetchPolicies()
-                await timingsViewModel.fetchLibraryTimings()
-            }
-        }
-    }
-}
-
-// View model for policies
-class LibrarianPoliciesViewModel: ObservableObject {
-    @Published var borrowingLimit: Int = 4
-    @Published var returnPeriod: Int = 14
-    @Published var fineAmount: Int = 10
-    @Published var lostBookFine: Int = 500
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String? = nil
-    
-    private var dataController = SupabaseDataController()
-    
-    func fetchPolicies() async {
-        await MainActor.run {
-            self.isLoading = true
-            self.errorMessage = nil
-        }
-        
-        do {
-            let policies = try await dataController.fetchLibraryPolicies()
-            
-            await MainActor.run {
-                self.borrowingLimit = policies.borrowingLimit
-                self.returnPeriod = policies.returnPeriod
-                self.fineAmount = policies.fineAmount
-                self.lostBookFine = policies.lostBookFine
-                self.isLoading = false
-            }
-        } catch {
-            await MainActor.run {
-                self.errorMessage = "Failed to load policies: \(error.localizedDescription)"
-                self.isLoading = false
-            }
-        }
-    }
-}
-
-// View model for library timings
-class LibrarianTimingsViewModel: ObservableObject {
-    @Published var libraryTimings: LibraryTiming?
-    @Published var isLoading = false
-    @Published var error: Error?
-    private var dataController = SupabaseDataController()
-    
-    func fetchLibraryTimings() async {
-        await MainActor.run {
-            self.isLoading = true
-        }
-        
-        do {
-            let query = dataController.client
-                .from("library_timings")
-                .select()
-                .limit(1)
-                .single()
-            
-            let response: LibraryTiming = try await query.execute().value
-            await MainActor.run {
-                self.libraryTimings = response
-                self.isLoading = false
-            }
-        } catch {
-            print("Error fetching library timings: \(error.localizedDescription)")
-            
-            // If no data exists yet, create default timings
-            if self.libraryTimings == nil {
-                // Create default timings object
-                let defaultTimings = createDefaultTimings()
-                await MainActor.run {
-                    self.libraryTimings = defaultTimings
-                    self.isLoading = false
-                    self.error = nil
-                }
-            } else {
-                await MainActor.run {
-                    self.error = error
-                    self.isLoading = false
-                }
-            }
-        }
-    }
-    
-    private func createDefaultTimings() -> LibraryTiming {
-        // Create default times
-        let calendar = Calendar.current
-        let defaultDate = calendar.startOfDay(for: Date())
-        
-        let weekdayOpeningTime = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: defaultDate)!
-        let weekdayClosingTime = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: defaultDate)!
-        let sundayOpeningTime = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: defaultDate)!
-        let sundayClosingTime = calendar.date(bySettingHour: 16, minute: 0, second: 0, of: defaultDate)!
-        
-        return LibraryTiming(
-            id: UUID(),
-            weekdayOpeningTime: weekdayOpeningTime,
-            weekdayClosingTime: weekdayClosingTime,
-            sundayOpeningTime: sundayOpeningTime,
-            sundayClosingTime: sundayClosingTime,
-            lastUpdated: Date()
-        )
     }
 }
 

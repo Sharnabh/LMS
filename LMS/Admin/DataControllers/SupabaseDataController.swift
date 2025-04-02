@@ -647,6 +647,43 @@ class SupabaseDataController: ObservableObject {
         }
     }
     
+    func checkIssuedBooks(bookIds: [UUID]) async throws -> [UUID] {
+        print("Checking if any books are currently issued...")
+        var issuedBookIds: [UUID] = []
+        
+        do {
+            for bookId in bookIds {
+                let query = client.from("BookIssue")
+                    .select()
+                    .eq("bookId", value: bookId.uuidString)
+                    .eq("status", value: "Issued")
+                
+                struct BookIssueRecord: Codable {
+                    let id: String
+                    let bookId: String
+                }
+                
+                do {
+                    let response = try await query.execute()
+                    let records = try JSONDecoder().decode([BookIssueRecord].self, from: response.data)
+                    
+                    if !records.isEmpty {
+                        print("Book with ID \(bookId) is currently issued")
+                        issuedBookIds.append(bookId)
+                    }
+                } catch {
+                    print("Error checking if book \(bookId) is issued: \(error)")
+                    continue
+                }
+            }
+            
+            return issuedBookIds
+        } catch {
+            print("Error checking issued books: \(error)")
+            throw error
+        }
+    }
+    
     func fetchDeletionRequests() async throws -> [BookDeletionRequest] {
         print("📋 SupabaseDataController: Fetching deletion requests from the database...")
         let query = client.from("book_requests")
@@ -727,12 +764,12 @@ extension SupabaseDataController {
     func fetchLibraryPolicies() async throws -> (borrowingLimit: Int, returnPeriod: Int, fineAmount: Int, lostBookFine: Int) {
         do {
             // Create a decodable struct to match the database columns
-            struct PolicyResponse: Decodable {
-                let borrowing_limit: Int
-                let return_period: Int
-                let fine_amount: Int
-                let lost_book_fine: Int
-            }
+//            struct PolicyResponse: Decodable {
+//                let borrowing_limit: Int
+//                let return_period: Int
+//                let fine_amount: Int
+//                let lost_book_fine: Int
+//            }
             
             let response: [PolicyResponse] = try await client
                 .from("library_policies")

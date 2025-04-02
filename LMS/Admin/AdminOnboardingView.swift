@@ -747,7 +747,9 @@ struct AdminOnboardingView: View {
                             Text("Library Setup")
                                 .font(.largeTitle)
                                 .fontWeight(.bold)
-                                .padding(100)
+                                .padding()
+                                .padding(.top , 170)
+                                .padding(.leading, -120)
                             
                             Text("Manage your library resources")
                                 .font(.headline)
@@ -755,6 +757,7 @@ struct AdminOnboardingView: View {
                                 .fontWeight(.semibold)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal)
+                                .padding(.leading, -90)
                         }
                         .padding(.top, 30)
                         
@@ -775,20 +778,26 @@ struct AdminOnboardingView: View {
                                             .font(.title2)
                                             .fontWeight(.bold)
                                             .foregroundColor(.accentColor)
+                                            .padding(.leading, 12)
                                         
                                         Text("Add a new librarian to your library")
                                             .font(.subheadline)
-                                            .foregroundColor(.gray)
+                                            .foregroundColor(.black)
+                                            .padding(.leading, 12)
                                     }
                                     
                                     Spacer()
                                     
                                     Image(systemName: showLibrarianForm ? "chevron.up" : "chevron.down")
-                                        .foregroundColor(.purple)
+                                        .foregroundColor(.accentColor)
                                 }
                                 .padding(.vertical, 20)
                                 .padding(.horizontal)
                                 .frame(maxWidth: .infinity)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color.gray, lineWidth: 1)
+                                )
                             }
                             
                             if showLibrarianForm {
@@ -829,8 +838,9 @@ struct AdminOnboardingView: View {
                             }
                         }
                         .background(Color.white)
-                        .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+//                        .border(.black, width: 0.5)
+                        .cornerRadius(12)
+                        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
                         .padding(.horizontal)
                         
                         // Books Card
@@ -858,11 +868,15 @@ struct AdminOnboardingView: View {
                                     Spacer()
                                     
                                     Image(systemName: showBookForm ? "chevron.up" : "chevron.down")
-                                        .foregroundColor(.purple)
+                                        .foregroundColor(.accentColor)
                                 }
                                 .padding(.vertical, 20)
                                 .padding(.horizontal)
                                 .frame(maxWidth: .infinity)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color.gray, lineWidth: 1)
+                                    )
                             }
                             
                             if showBookForm {
@@ -882,7 +896,7 @@ struct AdminOnboardingView: View {
                                             Spacer()
                                             
                                             Image(systemName: "chevron.right")
-                                                .foregroundColor(.purple)
+                                                .foregroundColor(.accentColor)
                                         }
                                         .padding()
                                         .background(Color(.secondarySystemBackground))
@@ -905,7 +919,7 @@ struct AdminOnboardingView: View {
                                             Spacer()
                                             
                                             Image(systemName: "chevron.right")
-                                                .foregroundColor(.purple)
+                                                .foregroundColor(.accentColor)
                                         }
                                         .padding()
                                         .background(Color(.secondarySystemBackground))
@@ -918,7 +932,7 @@ struct AdminOnboardingView: View {
                         }
                         .background(Color.white)
                         .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
                         .padding(.horizontal)
                         
                         // Finish Button

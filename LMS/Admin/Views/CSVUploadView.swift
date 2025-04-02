@@ -14,6 +14,8 @@ struct CSVUploadView: View {
     var body: some View {
         NavigationView {
             ZStack(alignment: .bottom) {
+                Color(UIColor.systemBackground).edgesIgnoringSafeArea(.all)
+                
                 ScrollView(.vertical, showsIndicators: true) {
                     VStack(spacing: 16) {
                         // Required format section
@@ -80,16 +82,9 @@ struct CSVUploadView: View {
                                     }
                                 }
                             }
-
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.accentColor)
-                            )
-                            .foregroundColor(.white)
-
                         }
+                        .background(Color(UIColor.secondarySystemGroupedBackground))
+                        .cornerRadius(8)
                         .padding(.horizontal)
                         
                         // Example section
@@ -109,7 +104,7 @@ struct CSVUploadView: View {
                                     .font(.system(.caption, design: .monospaced))
                                     .padding(8)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Color.secondary.opacity(0.1))
+                                    .background(Color(UIColor.tertiarySystemBackground))
                                     .cornerRadius(4)
                                 
                                 // Example rows
@@ -126,7 +121,7 @@ struct CSVUploadView: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(.vertical, 4)
                                         .padding(.horizontal, 8)
-                                        .background(Color.secondary.opacity(0.05))
+                                        .background(Color(UIColor.tertiarySystemBackground))
                                         .cornerRadius(4)
                                     
                                     Text("Good Omens,Neil Gaiman; Terry Pratchett,Fiction,978-0060853976,1990,3")
@@ -135,11 +130,13 @@ struct CSVUploadView: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(.vertical, 4)
                                         .padding(.horizontal, 8)
-                                        .background(Color.secondary.opacity(0.05))
+                                        .background(Color(UIColor.tertiarySystemBackground))
                                         .cornerRadius(4)
                                 }
                             }
                         }
+                        .background(Color(UIColor.secondarySystemGroupedBackground))
+                        .cornerRadius(8)
                         .padding(.horizontal)
                     }
                     .padding(.bottom, 80) // Add padding at the bottom to account for the fixed button
@@ -169,7 +166,7 @@ struct CSVUploadView: View {
                     .padding(.bottom, 8)
                     .background(
                         Rectangle()
-                            .fill(Color(UIColor.systemGroupedBackground))
+                            .fill(Color(UIColor.systemBackground))
                             .edgesIgnoringSafeArea(.bottom)
                             .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: -2)
                     )
@@ -203,7 +200,6 @@ struct CSVUploadView: View {
             .navigationBarItems(leading: Button("Cancel") {
                 dismiss()
             })
-            .background(Color(UIColor.systemGroupedBackground))
         }
         .fileImporter(
             isPresented: $showFilePicker,

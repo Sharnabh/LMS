@@ -78,16 +78,14 @@ class GenrePredictionService {
         
         1. GENRE: Select the most appropriate genre from this list: \(genreOptions)
         2. YEAR: Estimate the most likely publication year (4-digit year only)
-        3. ISBN: Generate a plausible 13-digit ISBN (numbers only, no hyphens)
-        4. AUTHOR: If author is unknown, suggest the most likely author's full name
+        3. AUTHOR: If author is unknown, suggest the most likely author's full name
         
         Format your response EXACTLY like this example:
         GENRE: Fiction
         YEAR: 2019
-        ISBN: 9781234567890
         AUTHOR: Jane Smith
         
-        Your response should contain ONLY these four lines with no additional text or explanations.
+        Your response should contain ONLY these three lines with no additional text or explanations.
         """
         
         // Create the request body according to the current API format
@@ -180,7 +178,6 @@ class GenrePredictionService {
                 // Parse the response into structured data
                 var genre = ""
                 var year = ""
-                var isbn = ""
                 var author = ""
                 
                 // Split by lines and extract each piece of information
@@ -194,9 +191,6 @@ class GenrePredictionService {
                     } else if trimmedLine.hasPrefix("YEAR:") {
                         let extractedYear = trimmedLine.replacingOccurrences(of: "YEAR:", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
                         year = extractedYear
-                    } else if trimmedLine.hasPrefix("ISBN:") {
-                        let extractedISBN = trimmedLine.replacingOccurrences(of: "ISBN:", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
-                        isbn = extractedISBN
                     } else if trimmedLine.hasPrefix("AUTHOR:") {
                         let extractedAuthor = trimmedLine.replacingOccurrences(of: "AUTHOR:", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
                         author = extractedAuthor
@@ -237,12 +231,12 @@ class GenrePredictionService {
                     }
                 }
                 
-                print("✅ Gemini predictions - Genre: \(matchedGenre), Year: \(year), ISBN: \(isbn), Author: \(author)")
+                print("✅ Gemini predictions - Genre: \(matchedGenre), Year: \(year), Author: \(author)")
                 
                 return BookPrediction(
                     genre: matchedGenre,
                     publicationYear: year,
-                    isbn: isbn,
+                    isbn: "", // Return empty string for ISBN since we're not predicting it
                     author: author
                 )
             }

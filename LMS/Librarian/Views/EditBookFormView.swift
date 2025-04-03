@@ -6,7 +6,7 @@ struct EditBookFormView: View {
     
     let book: LibrarianBook
     @State private var quantity: String
-    @State private var shelfLocation: String
+//    @State private var shelfLocation: String
     @State private var selectedGenre: String
     @State private var errorMessage: String? = nil
     @State private var showSuccessMessage = false
@@ -24,7 +24,7 @@ struct EditBookFormView: View {
     init(book: LibrarianBook) {
         self.book = book
         _quantity = State(initialValue: String(book.totalCopies))
-        _shelfLocation = State(initialValue: book.shelfLocation ?? "")
+//        _shelfLocation = State(initialValue: book.shelfLocation ?? "")
         _selectedGenre = State(initialValue: book.genre)
     }
     
@@ -81,8 +81,8 @@ struct EditBookFormView: View {
                     TextField("Quantity", text: $quantity)
                         .keyboardType(.numberPad)
                     
-                    TextField("Shelf Location", text: $shelfLocation)
-                        .autocapitalization(.words)
+//                    TextField("Shelf Location", text: $shelfLocation)
+//                        .autocapitalization(.words)
                     
                     Picker("Genre", selection: $selectedGenre) {
                         ForEach(genres, id: \.self) { genre in
@@ -161,10 +161,10 @@ struct EditBookFormView: View {
         }
         
         // Validate shelf location
-        if shelfLocation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            errorMessage = "Please enter a shelf location"
-            return
-        }
+//        if shelfLocation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+//            errorMessage = "Please enter a shelf location"
+//            return
+//        }
         
         isLoading = true
         
@@ -195,7 +195,7 @@ struct EditBookFormView: View {
                 availableCopies: newAvailableCopies,
                 ISBN: book.ISBN,
                 Description: book.Description,
-                shelfLocation: shelfLocation,
+//                shelfLocation: shelfLocation,
                 dateAdded: book.dateAdded,
                 publisher: book.publisher,
                 imageLink: book.imageLink

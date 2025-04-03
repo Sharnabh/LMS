@@ -16,6 +16,7 @@ struct AddBookFormView: View {
     @State private var isLoadingShelves = true
     @State private var showAddNewShelfSheet = false
     @State private var newShelfName = ""
+    @State private var newShelfCapacity = "50" // Default capacity
     @State private var alertMessage: String? = nil
     @State private var showAlert = false
     
@@ -197,15 +198,17 @@ struct AddBookFormView: View {
             Form {
                 Section(header: Text("Add New Shelf Location")) {
                     TextField("Shelf Name", text: $newShelfName)
+                    TextField("Capacity", text: $newShelfCapacity)
+                        .keyboardType(.numberPad)
                 }
                 
                 Button("Add Shelf") {
                     addNewShelf()
                 }
-                .disabled(newShelfName.isEmpty)
+                .disabled(newShelfName.isEmpty || newShelfCapacity.isEmpty)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(newShelfName.isEmpty ? Color.gray : Color.accentColor)
+                .background(newShelfName.isEmpty || newShelfCapacity.isEmpty ? Color.gray : Color.accentColor)
                 .foregroundColor(.white)
                 .cornerRadius(8)
                 .padding()
@@ -214,6 +217,7 @@ struct AddBookFormView: View {
             .navigationBarItems(trailing: Button("Cancel") {
                 showAddNewShelfSheet = false
                 newShelfName = ""
+                newShelfCapacity = "50"
             })
         }
     }
@@ -246,12 +250,14 @@ struct AddBookFormView: View {
                 return
             }
             
-            // Check if shelf already exists
             if !shelfLocationStore.shelfLocations.contains(where: { $0.shelfNo == newShelfName }) {
+                let capacity = Int(newShelfCapacity) ?? 50 // Default to 50 if parsing fails
+                
                 let newShelf = BookShelfLocation(
                     id: UUID(),
                     shelfNo: newShelfName,
-                    bookID: []
+                    bookID: [],
+                    capacity: capacity
                 )
                 
                 shelfLocationStore.addShelfLocation(newShelf)
@@ -264,12 +270,14 @@ struct AddBookFormView: View {
                     shelfLocation = newShelfName
                     showAddNewShelfSheet = false
                     newShelfName = ""
+                    newShelfCapacity = "50"
                 }
             } else {
                 // Just select the existing shelf and close
                 shelfLocation = newShelfName
                 showAddNewShelfSheet = false
                 newShelfName = ""
+                newShelfCapacity = "50"
             }
         }
     }

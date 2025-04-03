@@ -135,9 +135,9 @@ struct BookDetailedView: View {
                                 Label("Assign Shelf", systemImage: "mappin.and.ellipse")
                             }
                             
-                            Button(role: .destructive, action: { showingDeleteAlert = true }) {
-                                Label("Delete", systemImage: "trash")
-                            }
+//                            Button(role: .destructive, action: { showingDeleteAlert = true }) {
+//                                Label("Delete", systemImage: "trash")
+//                            }
                         } label: {
                             Image(systemName: "ellipsis.circle")
                         }
@@ -149,15 +149,15 @@ struct BookDetailedView: View {
                 .sheet(isPresented: $showingAssignShelfSheet) {
                     AssignShelfLocationView(book: book)
                 }
-                .alert("Delete Book", isPresented: $showingDeleteAlert) {
-                    Button("Cancel", role: .cancel) { }
-                    Button("Delete", role: .destructive) {
-                        bookStore.deleteBook(book)
-                        dismiss()
-                    }
-                } message: {
-                    Text("Are you sure you want to delete this book? This action cannot be undone.")
-                }
+//                .alert("Delete Book", isPresented: $showingDeleteAlert) {
+//                    Button("Cancel", role: .cancel) { }
+//                    Button("Delete", role: .destructive) {
+//                        bookStore.deleteBook(book)
+//                        dismiss()
+//                    }
+//                } message: {
+//                    Text("Are you sure you want to delete this book? This action cannot be undone.")
+//                }
             } else {
                 VStack(spacing: 20) {
                     Image(systemName: "book.slash")

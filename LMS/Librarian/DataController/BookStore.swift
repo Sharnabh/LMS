@@ -117,16 +117,16 @@ class BookStore: ObservableObject {
         }
     }
     
-    func deleteBook(_ book: LibrarianBook) {
-        Task {
-            do {
-                let _ = try await dataController.deleteBook(book)
-                await loadBooks()
-            } catch {
-                print("Error deleting book: \(error)")
-            }
-        }
-    }
+//    func deleteBook(_ book: LibrarianBook) {
+//        Task {
+//            do {
+//                let _ = try await dataController.deleteBook(book)
+//                await loadBooks()
+//            } catch {
+//                print("Error deleting book: \(error)")
+//            }
+//        }
+//    }
     
     // New method to create a deletion request instead of directly deleting books
     func createDeletionRequest(for books: Set<LibrarianBook>) async -> Bool {

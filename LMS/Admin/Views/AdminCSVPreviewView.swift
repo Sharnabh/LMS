@@ -3,6 +3,7 @@ import SwiftUI
 struct AdminCSVPreviewView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var bookStore: AdminBookStore
+    @EnvironmentObject private var shelfLocationStore: ShelfLocationStore
     
     // Use a @State array of books so we can modify shelf locations
     @State private var booksToImport: [LibrarianBook]
@@ -134,6 +135,19 @@ struct AdminCSVPreviewView: View {
                         timestamp = Int(date.timeIntervalSince1970)
                     } else {
                         timestamp = Int(Date().timeIntervalSince1970)
+                    }
+                    
+                    // Check shelf capacity if shelf location is set
+                    if let shelfLocation = book.shelfLocation {
+                        if let shelf = shelfLocationStore.shelfLocations.first(where: { $0.shelfNo == shelfLocation }) {
+                            let currentBooks = shelf.bookID.count
+                            let newBooks = book.totalCopies
+                            
+                            if currentBooks + newBooks > shelf.capacity {
+                                print("Skipping book '\(book.title)' - Shelf \(shelfLocation) is at capacity")
+                                continue // Skip this book and move to the next
+                            }
+                        }
                     }
                     
                     // Check if book already exists by ISBN
@@ -476,4 +490,5 @@ struct AdminCSVBookItemView: View {
         )
     ])
     .environmentObject(AdminBookStore())
+    .environmentObject(ShelfLocationStore())
 } 

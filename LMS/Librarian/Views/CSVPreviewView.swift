@@ -3,6 +3,7 @@ import SwiftUI
 struct CSVPreviewView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var bookStore: BookStore
+    @EnvironmentObject private var shelfLocationStore: ShelfLocationStore
     
     // Use a @State array of books so we can modify shelf locations
     @State private var booksToImport: [LibrarianBook]
@@ -191,6 +192,19 @@ struct CSVPreviewView: View {
                         return
                     }
                     
+                    // Check shelf capacity if shelf location is set
+                    if let shelfLocation = book.shelfLocation {
+                        if let shelf = shelfLocationStore.shelfLocations.first(where: { $0.shelfNo == shelfLocation }) {
+                            let currentBooks = shelf.bookID.count
+                            let newBooks = book.totalCopies
+                            
+                            if currentBooks + newBooks > shelf.capacity {
+                                print("Skipping book '\(book.title)' - Shelf \(shelfLocation) is at capacity")
+                                continue // Skip this book and move to the next
+                            }
+                        }
+                    }
+                    
                     // Convert Date to Unix timestamp
                     let timestamp: Int
                     if let date = book.dateAdded {
@@ -218,14 +232,14 @@ struct CSVPreviewView: View {
                     )
                     
                     let result = await bookStore.addOrUpdateBook(bookWithTimestamp)
-                if result.isNewBook {
-                    newBooksCount += 1
-                } else {
-                    updatedBooksCount += 1
-                }
-                
-                // Small delay to avoid overwhelming the database
-                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+                    if result.isNewBook {
+                        importedCount += 1
+                    } else {
+                        updatedCount += 1
+                    }
+                    
+                    // Small delay to avoid overwhelming the database
+                    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
                 } catch {
                     print("Error importing book: \(error)")
                 }

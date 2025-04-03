@@ -384,12 +384,14 @@ struct BookCard: View {
 struct AddBookView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var bookStore: AdminBookStore
+    @EnvironmentObject private var shelfLocationStore: ShelfLocationStore
     @State private var title = ""
     @State private var author = ""
     @State private var genre = ""
     @State private var isbn = ""
     @State private var publicationDate = ""
     @State private var totalCopies = ""
+    @State private var shelfLocation = ""
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var isSuccess = false
@@ -498,6 +500,9 @@ struct AddBookView: View {
                     
                     TextField("Total Copies", text: $totalCopies)
                         .keyboardType(.numberPad)
+                    
+                    TextField("Shelf Location (optional)", text: $shelfLocation)
+                        .autocapitalization(.allCharacters)
                 }
                 
                 // Add Auto-Fill with AI button above the AI Prediction section
@@ -632,14 +637,51 @@ struct AddBookView: View {
         
         Task {
             do {
+                // Check shelf capacity if shelf location is set
+                if !shelfLocation.isEmpty {
+                    if let shelf = shelfLocationStore.shelfLocations.first(where: { $0.shelfNo == shelfLocation }) {
+                        let currentBooks = shelf.bookID.count
+                        let newBooks = Int(totalCopies) ?? 1
+                        
+                        if currentBooks + newBooks > shelf.capacity {
+                            await MainActor.run {
+                                isSuccess = false
+                                alertMessage = "Cannot add \(newBooks) book(s). Shelf \(shelfLocation) only has \(shelf.capacity - currentBooks) space left."
+                                showAlert = true
+                                isLoading = false
+                            }
+                            return
+                        }
+                    }
+                }
+                
                 let result = try await BookService.shared.addBook(
                     title: title,
                     author: author,
                     genre: genre,
                     ISBN: isbn,
                     publicationDate: publicationDate,
-                    totalCopies: Int(totalCopies) ?? 1
+                    totalCopies: Int(totalCopies) ?? 1,
+                    shelfLocation: shelfLocation.isEmpty ? nil : shelfLocation
                 )
+                
+                // Try to fetch book details from Google Books API
+                do {
+                    let fetchedBook = try await GoogleBooksService.fetchBookByISBN(isbn: isbn, useGeminiPrediction: false)
+                    
+                    // Update the book with fetched details
+                    try await BookService.shared.updateBookCopies(
+                        id: result.book.id,
+                        totalCopies: result.book.totalCopies,
+                        availableCopies: result.book.availableCopies,
+                        Description: fetchedBook.Description,
+                        shelfLocation: result.book.shelfLocation,
+                        publisher: fetchedBook.publisher,
+                        imageLink: fetchedBook.imageLink
+                    )
+                } catch {
+                    print("Could not fetch book details from Google Books API: \(error)")
+                }
                 
                 // Refresh the book list
                 await bookStore.loadBooks()

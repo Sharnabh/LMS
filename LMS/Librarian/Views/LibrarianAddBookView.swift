@@ -19,6 +19,7 @@ struct LibrarianAddBookView: View {
     @State private var isLoadingShelves = true
     @State private var showAddNewShelfSheet = false
     @State private var newShelfName = ""
+    @State private var newShelfCapacity = "50"
     @State private var isPredictingGenre = false
     @State private var showGenrePrediction = false
     @State private var predictedGenre: String? = nil
@@ -247,15 +248,17 @@ struct LibrarianAddBookView: View {
             Form {
                 Section(header: Text("Add New Shelf Location")) {
                     TextField("Shelf Name", text: $newShelfName)
+                    TextField("Capacity", text: $newShelfCapacity)
+                        .keyboardType(.numberPad)
                 }
                 
                 Button("Add Shelf") {
                     addNewShelf()
                 }
-                .disabled(newShelfName.isEmpty)
+                .disabled(newShelfName.isEmpty || newShelfCapacity.isEmpty)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(newShelfName.isEmpty ? Color.gray : Color.accentColor)
+                .background(newShelfName.isEmpty || newShelfCapacity.isEmpty ? Color.gray : Color.accentColor)
                 .foregroundColor(.white)
                 .cornerRadius(8)
                 .padding()
@@ -264,6 +267,7 @@ struct LibrarianAddBookView: View {
             .navigationBarItems(trailing: Button("Cancel") {
                 showAddNewShelfSheet = false
                 newShelfName = ""
+                newShelfCapacity = "50"
             })
         }
     }
@@ -293,10 +297,13 @@ struct LibrarianAddBookView: View {
                 }
                 
                 if !shelfLocationStore.shelfLocations.contains(where: { $0.shelfNo == newShelfName }) {
+                    let capacity = Int(newShelfCapacity) ?? 50 // Default to 50 if parsing fails
+                    
                     let newShelf = BookShelfLocation(
                         id: UUID(),
                         shelfNo: newShelfName,
-                        bookID: []
+                        bookID: [],
+                        capacity: capacity
                     )
                     
                     shelfLocationStore.addShelfLocation(newShelf)
@@ -308,11 +315,13 @@ struct LibrarianAddBookView: View {
                         shelfLocation = newShelfName
                         showAddNewShelfSheet = false
                         newShelfName = ""
+                        newShelfCapacity = "50"
                     }
                 } else {
                     shelfLocation = newShelfName
                     showAddNewShelfSheet = false
                     newShelfName = ""
+                    newShelfCapacity = "50"
                 }
             } catch {
                 print("Error adding new shelf: \(error)")
@@ -328,6 +337,22 @@ struct LibrarianAddBookView: View {
                 // Check if librarian is disabled
                 if try await LibrarianService.checkLibrarianStatus() {
                     return
+                }
+                
+                // Check if shelf has enough capacity
+                if let shelf = shelfLocationStore.shelfLocations.first(where: { $0.shelfNo == shelfLocation }) {
+                    let currentBooks = shelf.bookID.count
+                    let newBooks = Int(totalCopies) ?? 1
+                    
+                    if currentBooks + newBooks > shelf.capacity {
+                        await MainActor.run {
+                            isSuccess = false
+                            alertMessage = "Cannot add \(newBooks) book(s). Shelf \(shelfLocation) only has \(shelf.capacity - currentBooks) space left."
+                            showAlert = true
+                            isLoading = false
+                        }
+                        return
+                    }
                 }
                 
                 let authorArray = author.split(separator: ";").map { String($0.trimmingCharacters(in: .whitespaces)) }
@@ -351,6 +376,32 @@ struct LibrarianAddBookView: View {
                 let success = try await bookStore.dataController.addBook(newBook)
                 
                 if success {
+                    // Try to fetch book details from Google Books API
+                    do {
+                        let fetchedBook = try await GoogleBooksService.fetchBookByISBN(isbn: isbn, useGeminiPrediction: false)
+                        
+                        // Update the book with fetched details
+                        let updatedBook = LibrarianBook(
+                            id: newBook.id,
+                            title: newBook.title,
+                            author: newBook.author,
+                            genre: newBook.genre,
+                            publicationDate: newBook.publicationDate,
+                            totalCopies: newBook.totalCopies,
+                            availableCopies: newBook.availableCopies,
+                            ISBN: newBook.ISBN,
+                            Description: fetchedBook.Description,
+                            shelfLocation: newBook.shelfLocation,
+                            dateAdded: newBook.dateAdded,
+                            publisher: fetchedBook.publisher,
+                            imageLink: fetchedBook.imageLink
+                        )
+                        
+                        _ = try await bookStore.dataController.updateBook(updatedBook)
+                    } catch {
+                        print("Could not fetch book details from Google Books API: \(error)")
+                    }
+                    
                     await bookStore.loadBooks()
                     
                     let bookWasAdded = bookStore.books.contains { $0.ISBN == isbn }

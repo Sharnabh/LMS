@@ -311,11 +311,13 @@ struct BookShelfLocation: Codable, Identifiable {
     var id: UUID
     var shelfNo: String
     var bookID: [UUID]
+    var capacity: Int
     
     enum CodingKeys: String, CodingKey {
         case id
         case shelfNo
         case bookID
+        case capacity
     }
 }
 

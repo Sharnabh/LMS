@@ -15,9 +15,15 @@ struct PoliciesView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 16) {
+                    // Divider line between Navigation Title and Content
+                    Rectangle()
+                        .frame(height: 0.5)
+                        .foregroundColor(Color.gray.opacity(0.3))
+                        .padding(.bottom, 8)
+                    
                     // Librarian Policies Section
-                    VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 1) {
                         Text("Librarian Policies")
                             .font(.title2)
                             .fontWeight(.bold)
@@ -116,11 +122,11 @@ struct PoliciesView: View {
                         .padding(.horizontal)
                     }
                 }
-                .padding(.vertical)
+                .padding(.top, 8)
+                .padding(.bottom)
             }
             .navigationTitle("Policies")
             .navigationBarTitleDisplayMode(.large)
-            .background(Color(.systemGroupedBackground))
             .onAppear {
                 Task {
                     await viewModel.fetchPolicies()

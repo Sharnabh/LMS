@@ -60,7 +60,13 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 14) {
+                    // Divider line between Navigation Title and Dashboard
+                    Rectangle()
+                        .frame(height: 0.5)
+                        .foregroundColor(Color.gray.opacity(0.3))
+                        .padding(.bottom, 8)
+                    
                     // Dashboard Header
                     Text("Dashboard")
                         .font(.title2)

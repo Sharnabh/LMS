@@ -79,6 +79,7 @@ struct HomeView: View {
                             value: bookCountDisplay,
                             icon: "book.fill",
                             color: .blue
+                            
                         )
                         .overlay(
                             Group {
@@ -138,6 +139,10 @@ struct HomeView: View {
                        
                     }
                     .padding(.horizontal)
+//                    .frame(maxWidth: .infinity, maxHeight: 150)
+//                            .background(Color(.systemBackground))
+//                            .cornerRadius(12)
+                            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
                     
                     // Announcements Header
                     HStack {
@@ -152,10 +157,11 @@ struct HomeView: View {
                         }) {
                             Image(systemName: "plus")
                                 .font(.title2)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                         }
                     }
                     .padding(.horizontal)
+                    
                     
                     // Announcement Type Cards
                     LazyVGrid(columns: [

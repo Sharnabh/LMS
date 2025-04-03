@@ -334,7 +334,7 @@ struct MemberBorrowingRulesView: View {
         }
         .navigationTitle("Borrowing Rules")
         .navigationBarTitleDisplayMode(.inline)
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground))
     }
 }
 
@@ -422,7 +422,7 @@ struct MemberLateFinesView: View {
         }
         .navigationTitle("Late Fees")
         .navigationBarTitleDisplayMode(.inline)
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground))
     }
 }
 

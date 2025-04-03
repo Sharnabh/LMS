@@ -24,7 +24,7 @@ struct NotificationView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "bell.slash")
                         .font(.system(size: 50))
-                        .foregroundColor(.gray)
+                        .foregroundColor(.accentColor)
                     Text("No messages")
                         .font(.headline)
                         .foregroundColor(.gray)
@@ -77,7 +77,7 @@ struct MessageStyleNotificationCard: View {
                     .frame(width: 50, height: 50)
                     .overlay(
                         Image(systemName: typeIcon)
-                            .foregroundColor(.gray)
+                            .foregroundColor(.accentColor)
                             .font(.system(size: 20))
                     )
                 
@@ -137,7 +137,7 @@ struct AnnouncementDetailView: View {
                         .frame(width: 40, height: 40)
                         .overlay(
                             Image(systemName: typeIcon)
-                                .foregroundColor(.gray)
+                                .foregroundColor(.accentColor)
                                 .font(.system(size: 20))
                         )
                     
@@ -157,47 +157,7 @@ struct AnnouncementDetailView: View {
                 // Content
                 Text(announcement.content)
                     .font(.body)
-                    .foregroundColor(.primary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.bottom, 4)
-            } else {
-                Text(truncatedContent)
-                    .font(.body)
-                    .foregroundColor(.primary)
-                    .lineLimit(2)
-                    .padding(.bottom, 4)
-            }
-            
-            if announcement.content.count > 120 {
-                Button(action: {
-                    withAnimation {
-                        isExpanded.toggle()
-                    }
-                }) {
-                    Text(isExpanded ? "Show less" : "Read more")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.accentColor)
-                }
-                .padding(.top, 2)
-            }
-            
-            HStack {
-                Label(announcement.type.rawValue.capitalized, systemImage: typeIcon)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(typeBackgroundColor.opacity(0.2))
-                    .cornerRadius(12)
-                
-                Spacer()
-                
-                if let daysRemaining = daysRemaining, daysRemaining > 0 {
-                    Text("Expires in \(daysRemaining) day\(daysRemaining == 1 ? "" : "s")")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                    .padding(.horizontal)
             }
             .padding(.vertical)
         }

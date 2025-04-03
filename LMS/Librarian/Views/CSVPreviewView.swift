@@ -95,22 +95,8 @@ struct CSVPreviewView: View {
                         .shadow(radius: 10)
                     )
             }
-            .navigationTitle("Preview CSV Books")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    dismiss()
-                },
-                trailing: Button("Import") {
-                    importBooks()
-                }
-                .disabled(booksToImport.isEmpty)
-                .foregroundColor(booksToImport.isEmpty ? .gray : .accentColor)
-            )
         }
         .navigationBarHidden(true)
-        .navigationTitle("Preview CSV Books")
-        .navigationBarTitleDisplayMode(.inline)
         .alert(isPresented: $showAlert) {
             Alert(
                 title: Text(isSuccess ? "Success" : "Error"),

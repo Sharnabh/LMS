@@ -22,7 +22,7 @@ struct VoiceCommandButton: View {
             HStack(spacing: 8) {
                 Image(systemName: accessibilityManager.isListening ? "waveform.circle.fill" : "mic.circle")
                     .font(.system(size: 22))
-                    .foregroundColor(accessibilityManager.isListening ? .red : .blue)
+                    .foregroundColor(accessibilityManager.isListening ? .red : .accentColor)
                     .symbolEffect(.pulse, options: .repeating, isActive: accessibilityManager.isListening)
                 
                 if accessibilityManager.isListening {

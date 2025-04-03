@@ -17,6 +17,9 @@ struct LibrarianInitialView: View {
     @AppStorage("librarianIsLoggedIn") private var librarianIsLoggedIn = false
     @AppStorage("librarianEmail") private var librarianEmail = ""
     
+    // Timer for checking librarian status
+    @State private var statusCheckTimer: Timer? = nil
+    
     // Voice command related states
     @State private var showIsbnScanner = false
     @State private var showBookIssue = false
@@ -146,10 +149,17 @@ struct LibrarianInitialView: View {
                 await checkLibrarianStatus()
             }
             
+            // Start the timer for status checks
+            startStatusCheckTimer()
+            
             // Announce voice command availability
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 UIAccessibility.post(notification: .announcement, argument: "Voice commands available for ISBN scanning and book issuing. Tap the microphone button in the top right corner to activate.")
             }
+        }
+        .onDisappear {
+            // Stop the timer when the view disappears
+            stopStatusCheckTimer()
         }
         .alert("Account Disabled", isPresented: $showDisabledAlert) {
             Button("OK") {
@@ -163,14 +173,30 @@ struct LibrarianInitialView: View {
         }
     }
     
+    private func startStatusCheckTimer() {
+        // Cancel any existing timer
+        stopStatusCheckTimer()
+        
+        // Create a new timer that fires every 2 seconds
+        statusCheckTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { _ in
+            Task {
+                await checkLibrarianStatus()
+            }
+        }
+    }
+    
+    private func stopStatusCheckTimer() {
+        statusCheckTimer?.invalidate()
+        statusCheckTimer = nil
+    }
+    
     private func checkLibrarianStatus() async {
         if let librarianId = UserDefaults.standard.string(forKey: "currentLibrarianID") {
             do {
                 isLibrarianDisabled = try await dataController.checkLibrarianStatus(librarianId: librarianId)
                 if isLibrarianDisabled {
                     await MainActor.run {
-                        alertMessage = "Your account has been disabled. Please contact the administrator."
-                        showAlert = true
+                        showDisabledAlert = true
                     }
                 }
             } catch {

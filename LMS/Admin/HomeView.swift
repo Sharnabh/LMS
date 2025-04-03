@@ -19,6 +19,9 @@ struct HomeView: View {
     @EnvironmentObject private var appState: AppState
     @State private var memberError: String? = nil
     
+    // Timer for refreshing deletion requests
+    @State private var deletionRequestsTimer: Timer? = nil
+    
     // Analytics states
     @State private var totalBooksCount: Int = 0
     @State private var issuedBooksCount: Int = 0
@@ -255,8 +258,30 @@ struct HomeView: View {
                 print("🏠 HomeView task started - loading data")
                 await loadInitialData()
                 print("🏠 HomeView - Fetched all data")
+                
+                // Start the timer for deletion requests
+                startDeletionRequestsTimer()
+            }
+            .onDisappear {
+                // Stop the timer when the view disappears
+                stopDeletionRequestsTimer()
             }
         }
+    }
+    
+    private func startDeletionRequestsTimer() {
+        // Cancel any existing timer
+        stopDeletionRequestsTimer()
+        
+        // Create a new timer that fires every 2 seconds
+        deletionRequestsTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+            bookStore.fetchDeletionRequests()
+        }
+    }
+    
+    private func stopDeletionRequestsTimer() {
+        deletionRequestsTimer?.invalidate()
+        deletionRequestsTimer = nil
     }
     
     private func loadInitialData() async {

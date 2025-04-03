@@ -289,7 +289,16 @@ extension SupabaseDataController {
             .single()
         
         do {
-            let librarian: LibrarianModel = try await query.execute().value
+            // Create a custom struct that only includes the fields we need
+            struct LibrarianStatusResponse: Codable {
+                let isDisabled: Bool?
+                
+                enum CodingKeys: String, CodingKey {
+                    case isDisabled = "librarian_is_disabled"
+                }
+            }
+            
+            let librarian: LibrarianStatusResponse = try await query.execute().value
             return librarian.isDisabled ?? false
         } catch {
             throw error

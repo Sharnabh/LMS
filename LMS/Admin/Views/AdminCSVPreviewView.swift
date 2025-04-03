@@ -129,14 +129,6 @@ struct AdminCSVPreviewView: View {
                     // Convert LibrarianBook to BookService format
                     let authorString = book.author.joined(separator: "; ")
                     
-                    // Convert Date to Unix timestamp
-                    let timestamp: Int
-                    if let date = book.dateAdded {
-                        timestamp = Int(date.timeIntervalSince1970)
-                    } else {
-                        timestamp = Int(Date().timeIntervalSince1970)
-                    }
-                    
                     // Check shelf capacity if shelf location is set
                     if let shelfLocation = book.shelfLocation {
                         if let shelf = shelfLocationStore.shelfLocations.first(where: { $0.shelfNo == shelfLocation }) {

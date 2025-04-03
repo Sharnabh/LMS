@@ -585,7 +585,7 @@ struct AdminForgotPasswordView: View {
             }
             
             // Update password in database
-            try await dataController.resetAdminPassword(adminId: id, newPassword: newPassword)
+            let _ = try await dataController.resetAdminPassword(adminId: id, newPassword: newPassword)
             
             DispatchQueue.main.async {
                 isLoading = false

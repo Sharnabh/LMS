@@ -472,50 +472,10 @@ struct LostBookCard: View {
     }
 }
 
-#Preview {
-    // Create a sample book and member for preview
-    let sampleMember = MemberModel(
-        id: "1234",
-        firstName: "John",
-        lastName: "Doe",
-        email: "john.doe@example.com",
-        enrollmentNumber: "EN12345"
-    )
-    
-    let sampleBook = LibrarianBook(
-        id: UUID(),
-        title: "The Great Gatsby",
-        author: ["F. Scott Fitzgerald"],
-        genre: "Fiction",
-        publicationDate: "1925",
-        totalCopies: 5,
-        availableCopies: 4,
-        ISBN: "9780743273565",
-        Description: "A novel by F. Scott Fitzgerald that follows a cast of characters living in the fictional town of West Egg.",
-        shelfLocation: "F-123",
-        publisher: "Scribner",
-        imageLink: "https://covers.openlibrary.org/b/id/8796578-L.jpg"
-    )
-    
-    let sampleLostBook = LostBookResponse(
-        id: "abcd1234",
-        memberId: "1234",
-        bookId: "5678",
-        issueDate: "2025-03-01T00:00:00Z",
-        dueDate: "2025-03-15T00:00:00Z",
-        returnDate: nil,
-        fine: 500.0,
-        status: "Lost",
-        isLost: true,
-        isPaid: false,
-        book: sampleBook,
-        member: sampleMember
-    )
-    
-    return NavigationView {
+#Preview("Lost Books List") {
+    NavigationView {
         LostBookView()
     }
-    .previewDisplayName("Lost Books List")
     .onAppear {
         // In a real scenario, this would be loaded from the database
     }

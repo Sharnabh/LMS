@@ -124,46 +124,42 @@ struct InfoRow: View {
     }
 }
 
-#Preview {
-    VStack {
-        // Preview with Add to Collection button
-        NavigationView {
-            BookDetailView(book: LibrarianBook(
-                title: "Sample Book",
-                author: ["Author One", "Author Two"],
-                genre: "Fiction",
-                publicationDate: "2023",
-                totalCopies: 1,
-                availableCopies: 1,
-                ISBN: "9781234567890",
-                Description: "This is a sample description for the book. It contains information about the book's content and other relevant details that a reader might find useful.",
-                shelfLocation: "A1",
-                dateAdded: Date(),
-                publisher: "Sample Publisher",
-                imageLink: "https://via.placeholder.com/150x200"
-            ), showAddToCollectionButton: true)
-            .environmentObject(BookStore())
-        }
-        .previewDisplayName("With Add to Collection Button")
-        
-        // Preview without Add to Collection button
-        NavigationView {
-            BookDetailView(book: LibrarianBook(
-                title: "Sample Book",
-                author: ["Author One", "Author Two"],
-                genre: "Fiction",
-                publicationDate: "2023",
-                totalCopies: 1,
-                availableCopies: 1,
-                ISBN: "9781234567890",
-                Description: "This is a sample description for the book. It contains information about the book's content and other relevant details that a reader might find useful.",
-                shelfLocation: "A1",
-                dateAdded: Date(),
-                publisher: "Sample Publisher",
-                imageLink: "https://via.placeholder.com/150x200"
-            ), showAddToCollectionButton: false)
-            .environmentObject(BookStore())
-        }
-        .previewDisplayName("Without Add to Collection Button")
+#Preview("With Add to Collection Button") {
+    NavigationView {
+        BookDetailView(book: LibrarianBook(
+            title: "Sample Book",
+            author: ["Author One", "Author Two"],
+            genre: "Fiction",
+            publicationDate: "2023",
+            totalCopies: 1,
+            availableCopies: 1,
+            ISBN: "9781234567890",
+            Description: "This is a sample description for the book. It contains information about the book's content and other relevant details that a reader might find useful.",
+            shelfLocation: "A1",
+            dateAdded: Date(),
+            publisher: "Sample Publisher",
+            imageLink: "https://via.placeholder.com/150x200"
+        ), showAddToCollectionButton: true)
+        .environmentObject(BookStore())
+    }
+}
+
+#Preview("Without Add to Collection Button") {
+    NavigationView {
+        BookDetailView(book: LibrarianBook(
+            title: "Sample Book",
+            author: ["Author One", "Author Two"],
+            genre: "Fiction",
+            publicationDate: "2023",
+            totalCopies: 1,
+            availableCopies: 1,
+            ISBN: "9781234567890",
+            Description: "This is a sample description for the book. It contains information about the book's content and other relevant details that a reader might find useful.",
+            shelfLocation: "A1",
+            dateAdded: Date(),
+            publisher: "Sample Publisher",
+            imageLink: "https://via.placeholder.com/150x200"
+        ), showAddToCollectionButton: false)
+        .environmentObject(BookStore())
     }
 } 

@@ -1,9 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-// Import our API configuration
-import LMS
-
 struct ResourcesView: View {
     @StateObject private var bookStore = AdminBookStore()
     @State private var showAddBookSheet = false

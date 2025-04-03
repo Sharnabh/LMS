@@ -127,7 +127,7 @@ struct MemberDetailView: View {
     }
     
     private func collectFine() async {
-        guard let memberId = member.id, pendingFine > 0 else { return }
+        guard pendingFine > 0 else { return }
         
         isCollectingFine = true
         

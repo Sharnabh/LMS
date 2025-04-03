@@ -64,7 +64,7 @@ struct LibrarianInitialView: View {
             }
             .environmentObject(bookStore)
             .environmentObject(appState)
-            .accentColor(.blue)
+            .accentColor(.accentColor)
             
             // Voice command button overlay - always visible
             VStack {

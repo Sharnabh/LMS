@@ -43,7 +43,7 @@ struct EditLibraryTimingsView: View {
                             }) {
                                 Text("Reset")
                                     .font(.system(size: 17))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                         
@@ -81,7 +81,7 @@ struct EditLibraryTimingsView: View {
                             }) {
                                 Text("Reset")
                                     .font(.system(size: 17))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                         

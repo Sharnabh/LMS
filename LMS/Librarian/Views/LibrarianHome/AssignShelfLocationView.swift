@@ -26,7 +26,7 @@ struct AssignShelfLocationView: View {
                     
                     if let existingLocation = book.shelfLocation, !existingLocation.isEmpty {
                         Text("Current Location: \(existingLocation)")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                     } else {
                         Text("No current shelf location")
                             .foregroundColor(.red)

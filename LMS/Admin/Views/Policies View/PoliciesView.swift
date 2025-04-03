@@ -25,18 +25,18 @@ struct PoliciesView: View {
                         
                         VStack(spacing: 16) {
                             NavigationLink(destination: BooksManagementPolicyView()) {
-                                PolicyCard(
-                                    title: "Books Management",
-                                    description: "Guidelines for managing library resources and inventory",
-                                    icon: "books.vertical.fill",
-                                    color: .blue
-                                )
+//                                PolicyCard(
+//                                    title: "Books Management",
+//                                    description: "Guidelines for managing library resources and inventory",
+//                                    icon: "books.vertical.fill",
+//                                    color: .blue
+//                                )
                             }
                             
                             NavigationLink(destination: IssuingRulesView()) {
                                 PolicyCard(
-                                    title: "Borrowing Rules",
-                                    description: "Guidelines for borrowing books and resources",
+                                    title: "Issuing Rules",
+                                    description: "Guidelines for issuing books and resources",
                                     icon: "text.book.closed.fill",
                                     color: .orange
                                 )
@@ -84,9 +84,18 @@ struct PoliciesView: View {
                                 )
                             }
                             
+                            NavigationLink(destination: MemberLibraryTimingsView()) {
+                                PolicyCard(
+                                    title: "Library Timings",
+                                    description: "Working hours and special timings",
+                                    icon: "clock.fill",
+                                    color: .cyan
+                                )
+                            }
+                            
                             NavigationLink(destination: MemberLateFinesView(
                                 fineAmount: viewModel.fineAmount,
-                                gracePeriod: 3, // Default value since this is no longer in our table
+                                gracePeriod: 3, 
                                 maxFine: viewModel.lostBookFine
                             )) {
                                 PolicyCard(
@@ -97,12 +106,12 @@ struct PoliciesView: View {
                                 )
                             }
                             
-                            PolicyCard(
-                                title: "Resource Usage",
-                                description: "Rules for using library resources",
-                                icon: "doc.text.fill",
-                                color: .cyan
-                            )
+//                            PolicyCard(
+//                                title: "Resource Usage",
+//                                description: "Rules for using library resources",
+//                                icon: "doc.text.fill",
+//                                color: .cyan
+//                            )
                         }
                         .padding(.horizontal)
                     }
@@ -171,14 +180,16 @@ struct PolicyCard: View {
                 Text(title)
                     .font(.headline)
                     .foregroundColor(.primary)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Text(description)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
             
             Image(systemName: "chevron.right")
                 .font(.system(size: 14, weight: .semibold))
@@ -362,38 +373,7 @@ struct MemberLateFinesView: View {
                     .cornerRadius(16)
                     .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                     
-                    // Grace Period Card
-                    //                    VStack(alignment: .leading, spacing: 16) {
-                    //                        HStack {
-                    //                            Text("Grace Period")
-                    //                                .font(.headline)
-                    //                                .foregroundColor(.primary)
-                    //
-                    //                            Spacer()
-                    //                        }
-                    //
-                    //                        VStack(alignment: .leading, spacing: 12) {
-                    //                            HStack {
-                    //                                Text("Grace period:")
-                    //                                    .font(.subheadline)
-                    //                                    .foregroundColor(.secondary)
-                    //
-                    //                                Spacer()
-                    //
-                    //                                Text("\(gracePeriod) days")
-                    //                                    .font(.subheadline)
-                    //                                    .foregroundColor(.blue)
-                    //                            }
-                    //
-                    //                            Text("\(gracePeriod) days grace period before fine applies")
-                    //                                .font(.subheadline)
-                    //                                .foregroundColor(.secondary)
-                    //                        }
-                    //                    }
-                    //                    .padding()
-                    //                    .background(Color(.systemBackground))
-                    //                    .cornerRadius(16)
-                    //                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+                   
                     
                     // Maximum Fine Card
                     VStack(alignment: .leading, spacing: 16) {

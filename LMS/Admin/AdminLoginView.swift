@@ -35,13 +35,14 @@ struct AdminLoginView: View {
     var body: some View {
         ZStack {
             
-            Color("AccentColor") // ----------------Added
+            // WaveShape
+            Color("AccentColor")
                 .ignoresSafeArea()
             
-            VStack { // -------------------Added
+            VStack {
                 WaveShape()
                     .fill(Color.white)
-                    .padding(.top, -350) // Changes
+                    .padding(.top, -350)
                     .frame(height: UIScreen.main.bounds.height * 0.9)
                     .offset(y: UIScreen.main.bounds.height * 0.04)
                 Spacer()
@@ -130,7 +131,7 @@ struct AdminLoginView: View {
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 50)
-                                .background(Color.blue)
+                                .background(Color.accentColor)
                                 .cornerRadius(12)
                             }
                             .disabled(isLoading || otp.count != 6)
@@ -153,7 +154,7 @@ struct AdminLoginView: View {
                                     } else {
                                         Text("Resend Code")
                                             .font(.subheadline)
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(.accentColor)
                                     }
                                 }
                                 .disabled(isLoading || resendCountdown > 0)
@@ -208,6 +209,20 @@ struct AdminLoginView: View {
                                             .padding(.trailing, 12)
                                     }
                                 }
+                                
+                                if !showOTPVerification {
+                                    HStack {
+                                        Spacer() // Push the button to the right
+                                        Button(action: {
+                                            showForgotPassword = true
+                                        }) {
+                                            Text("Forgot Password?")
+                                                .font(.subheadline)
+                                                .foregroundColor(.accent)
+                                        }
+                                    }
+                                    .padding(.top, 4)
+                                }
                             }
                             .opacity(animateContent ? 1 : 0)
                             .offset(y: animateContent ? 0 : 20)
@@ -239,20 +254,6 @@ struct AdminLoginView: View {
                         }
                         .disabled(isLoading)
                         .padding(.horizontal, 24)
-                        .opacity(animateContent ? 1 : 0)
-                        .offset(y: animateContent ? 0 : 20)
-                    }
-                    
-                    // Forgot Password Link
-                    if !showOTPVerification {
-                        Button(action: {
-                            showForgotPassword = true
-                        }) {
-                            Text("Forgot Password?")
-                                .font(.subheadline)
-                                .foregroundColor(.accent)
-                        }
-                        .padding(.top, 8)
                         .opacity(animateContent ? 1 : 0)
                         .offset(y: animateContent ? 0 : 20)
                     }

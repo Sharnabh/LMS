@@ -62,7 +62,7 @@ struct BookCardView: View {
                     HStack {
                         Label("Qty: \(book.totalCopies)", systemImage: "number")
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                         
                         Spacer()
                         

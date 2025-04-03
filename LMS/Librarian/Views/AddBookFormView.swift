@@ -105,7 +105,7 @@ struct AddBookFormView: View {
                                     showAddNewShelfSheet = true
                                 }
                                 .font(.caption)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                             }
                         }
                         
@@ -128,7 +128,7 @@ struct AddBookFormView: View {
                         Text("Add to Collection")
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.blue)
+                            .background(Color.accentColor)
                             .foregroundColor(.white)
                             .cornerRadius(8)
                     }
@@ -205,7 +205,7 @@ struct AddBookFormView: View {
                 .disabled(newShelfName.isEmpty)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(newShelfName.isEmpty ? Color.gray : Color.blue)
+                .background(newShelfName.isEmpty ? Color.gray : Color.accentColor)
                 .foregroundColor(.white)
                 .cornerRadius(8)
                 .padding()

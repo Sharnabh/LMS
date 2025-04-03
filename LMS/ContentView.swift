@@ -95,11 +95,6 @@ struct OnboardingView: View {
                 VStack(spacing: 30) {
                     // Header with subtle animation
                     VStack(spacing: 16) {
-//                        Image(systemName: "books.vertical.fill")
-//                            .font(.system(size: 80))
-//                            .foregroundColor(.blue)
-//                            .scaleEffect(animateHeader ? 1.05 : 1.0)
-//                            .rotationEffect(.degrees(animateHeader ? 2 : -2))
                         
                         Text("Welcome to Pustakalaya")
                             .font(.largeTitle)
@@ -251,7 +246,7 @@ struct RoleCard: View {
                 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                         .font(.title2)
                         .transition(.scale.combined(with: .opacity))
                 }

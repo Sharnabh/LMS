@@ -45,7 +45,7 @@ struct IssuingRulesView: View {
                                     
                                     Text("\(viewModel.borrowingLimit) books")
                                         .font(.subheadline)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
                                 }
                                 
                                 Text("Graduate and Post graduate students are entitled to borrow \(viewModel.borrowingLimit) books at a time")
@@ -78,7 +78,7 @@ struct IssuingRulesView: View {
                                     
                                     Text("\(viewModel.returnPeriod) days")
                                         .font(.subheadline)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
                                 }
                                 
                                 Text("Returning period not exceeds \(viewModel.returnPeriod) days")
@@ -105,7 +105,7 @@ struct IssuingRulesView: View {
                     isEditing = true
                 }) {
                     Text("Edit")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                 }
             }
         }

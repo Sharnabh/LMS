@@ -453,7 +453,7 @@ struct AddBookView: View {
                                 HStack(spacing: 4) {
                                     Image(systemName: "sparkles")
                                         .font(.caption2)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
                                     
                                     Text("AI suggestion: ")
                                         .font(.caption)

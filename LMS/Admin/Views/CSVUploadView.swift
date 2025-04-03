@@ -17,7 +17,7 @@ struct CSVUploadView: View {
                 Color(UIColor.systemBackground).edgesIgnoringSafeArea(.all)
                 
                 ScrollView(.vertical, showsIndicators: true) {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 24) {
                         // Required format section
                         GroupBox {
                             VStack(alignment: .leading, spacing: 12) {
@@ -25,6 +25,7 @@ struct CSVUploadView: View {
                                 HStack {
                                     Label("Required CSV Format", systemImage: "list.bullet.rectangle")
                                         .font(.headline)
+                                        .padding(.top, 8)
                                     
                                     Spacer()
                                     
@@ -138,8 +139,12 @@ struct CSVUploadView: View {
                         .background(Color(UIColor.secondarySystemGroupedBackground))
                         .cornerRadius(8)
                         .padding(.horizontal)
+                        
+                        // Add spacer to push content up and create space before button
+                        Spacer()
+                            .frame(height: 40)
                     }
-                    .padding(.bottom, 80) // Add padding at the bottom to account for the fixed button
+                    .padding(.vertical)
                 }
                 
                 VStack {

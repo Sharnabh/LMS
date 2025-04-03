@@ -44,7 +44,7 @@ struct LateFinesView: View {
                                     
                                     Text("₹\(viewModel.fineAmount)")
                                         .font(.subheadline)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
                                 }
                                 
                                 Text("Fine of ₹\(viewModel.fineAmount) per day for late returns")
@@ -77,7 +77,7 @@ struct LateFinesView: View {
                                     
                                     Text("₹\(viewModel.lostBookFine)")
                                         .font(.subheadline)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
                                 }
                                 
                                 Text("Maximum fine capped at ₹\(viewModel.lostBookFine) per book")
@@ -104,7 +104,7 @@ struct LateFinesView: View {
                     isEditing = true
                 }) {
                     Text("Edit")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                 }
             }
         }

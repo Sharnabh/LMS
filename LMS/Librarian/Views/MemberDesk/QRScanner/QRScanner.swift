@@ -34,7 +34,7 @@ struct ReturnConfirmationView: View {
                         HStack {
                             Image(systemName: "book.fill")
                                 .font(.system(size: 60))
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                             
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(book.title)

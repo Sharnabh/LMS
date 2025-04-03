@@ -79,7 +79,7 @@ struct MemberLibraryTimingsView: View {
         }
         .navigationTitle("Library Timings")
         .navigationBarTitleDisplayMode(.inline)
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground))
         .task {
             await viewModel.fetchLibraryTimings()
         }

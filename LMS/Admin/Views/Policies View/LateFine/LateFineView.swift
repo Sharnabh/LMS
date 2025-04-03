@@ -97,7 +97,7 @@ struct LateFinesView: View {
         }
         .navigationTitle("Late Fines")
         .navigationBarTitleDisplayMode(.inline)
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground))
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {

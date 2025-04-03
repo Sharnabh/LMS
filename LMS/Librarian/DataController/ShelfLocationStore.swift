@@ -85,6 +85,12 @@ class ShelfLocationStore: ObservableObject {
             
             // Check if book is already in this shelf
             if !updatedShelf.bookID.contains(bookID) {
+                // Check if shelf has capacity
+                if updatedShelf.bookID.count >= updatedShelf.capacity {
+                    print("Shelf \(shelfNo) is at full capacity")
+                    return false
+                }
+                
                 updatedShelf.bookID.append(bookID)
                 
                 do {
@@ -103,11 +109,12 @@ class ShelfLocationStore: ObservableObject {
                 return true
             }
         } else {
-            // Create a new shelf location
+            // Create a new shelf location with default capacity
             let newShelfLocation = BookShelfLocation(
                 id: UUID(),
                 shelfNo: shelfNo,
-                bookID: [bookID]
+                bookID: [bookID],
+                capacity: 50 // Default capacity for new shelves
             )
             
             do {

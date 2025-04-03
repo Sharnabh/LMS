@@ -9,6 +9,8 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widgetkit-extension</string>
 	</dict>
+	<key>CFBundleDisplayName</key>
+	<string>Pustakalaya Widgets</string>
 	<key>NSWidgetWantsLocation</key>
 	<false/>
 	<key>WidgetKindControl</key>

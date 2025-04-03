@@ -492,6 +492,21 @@ struct VoiceCommandBookIssueView: View {
         
         Task {
             do {
+                // Check if librarian is disabled
+                if try await LibrarianService.checkLibrarianStatus() {
+                    await MainActor.run {
+                        isProcessing = false
+                        isSuccess = false
+                        alertTitle = "Error"
+                        alertMessage = "Your account has been disabled. Please contact the administrator."
+                        showAlert = true
+                        
+                        // Announce for accessibility
+                        UIAccessibility.post(notification: .announcement, argument: "Error: Your account has been disabled. Please contact the administrator.")
+                    }
+                    return
+                }
+                
                 // Issue each book to the member
                 for bookId in bookIds {
                     let bookIssue = BookIssueData(

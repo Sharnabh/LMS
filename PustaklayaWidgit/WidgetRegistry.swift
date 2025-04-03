@@ -18,8 +18,8 @@ struct WidgetRegistry {
     static let qrScannerDisplayName = "Check-In/Out"
     
     // Widget Kinds - must be consistent across the app
-    static let mainWidgetKind = "PustaklayaWidget" // Note: Changed to match proper naming
-    static let controlWidgetKind = "PustaklayaWidgetControl" // Note: Changed to match proper naming
+    static let mainWidgetKind = "PustaklayaWidget"
+    static let controlWidgetKind = "PustaklayaWidgetControl"
     static let isbnScannerKind = "ISBNScannerWidget"
     static let qrScannerKind = "QRScannerWidget"
     

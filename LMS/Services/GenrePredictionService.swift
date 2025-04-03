@@ -5,16 +5,23 @@ class GenrePredictionService {
     
     private init() {}
     
-    /// Predicts the most likely genre for a book based on its metadata using Gemini API
+    struct BookPrediction {
+        let genre: String
+        let publicationYear: String
+        let isbn: String
+        let author: String
+    }
+    
+    /// Predicts the most likely genre and other book details based on its metadata using Gemini API
     /// - Parameters:
     ///   - title: Book title
     ///   - description: Book description
     ///   - authors: Book authors
     ///   - availableGenres: List of available genres to choose from
-    /// - Returns: The most likely genre from the available genres
-    func predictGenre(title: String, description: String?, authors: [String], availableGenres: [String]) async throws -> String {
-        // Get the genre prediction from Gemini
-        return try await predictGenreWithGemini(
+    /// - Returns: The predicted book details including genre, publication year, ISBN, and author
+    func predictGenre(title: String, description: String?, authors: [String], availableGenres: [String]) async throws -> BookPrediction {
+        // Get the predictions from Gemini
+        return try await predictBookDetailsWithGemini(
             title: title,
             description: description,
             authors: authors,
@@ -22,8 +29,8 @@ class GenrePredictionService {
         )
     }
     
-    /// Predicts genre using Google's Gemini API with enhanced focus on title and author
-    private func predictGenreWithGemini(title: String, description: String?, authors: [String], availableGenres: [String]) async throws -> String {
+    /// Predicts book details using Google's Gemini API
+    private func predictBookDetailsWithGemini(title: String, description: String?, authors: [String], availableGenres: [String]) async throws -> BookPrediction {
         // Gemini API endpoint - updated to use the current supported version and model
         let endpoint = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent")!
         
@@ -53,26 +60,32 @@ class GenrePredictionService {
         let genreOptions = availableGenres.joined(separator: ", ")
         
         // Prepare the author string
-        let authorText = authors.isEmpty ? "" : authors.joined(separator: ", ")
+        let authorText = authors.isEmpty ? "[UNKNOWN]" : authors.joined(separator: ", ")
         
         // Prepare the description
         let descriptionText = description ?? "No description available"
         
-        // Enhance the prompt to do web search if needed and put more emphasis on author's typical genre
+        // Enhanced prompt to predict multiple book details
         let prompt = """
-        You are a literary expert tasked with determining the most appropriate genre for a book.
+        You are a literary expert tasked with determining book details based on limited information.
         
         Book Information:
         - Title: "\(title)"
         - Author(s): \(authorText)
         - Description: \(descriptionText)
         
-        Consider both the title and the author's typical writing style. If the author is well-known, their established genre should be heavily weighted in your decision.
+        Using your knowledge of books, authors, and publishing, please provide the following information in the exact format specified:
         
-        Available genres to choose from: \(genreOptions)
+        1. GENRE: Select the most appropriate genre from this list: \(genreOptions)
+        2. YEAR: Estimate the most likely publication year (4-digit year only)
+        3. AUTHOR: If author is unknown, suggest the most likely author's full name
         
-        Analyze the title's wording, the author's usual genre, and the description to identify the most appropriate genre from the provided options.
-        Return ONLY the genre name without any additional text or explanations.
+        Format your response EXACTLY like this example:
+        GENRE: Fiction
+        YEAR: 2019
+        AUTHOR: Jane Smith
+        
+        Your response should contain ONLY these three lines with no additional text or explanations.
         """
         
         // Create the request body according to the current API format
@@ -86,7 +99,7 @@ class GenrePredictionService {
             ],
             "generationConfig": [
                 "temperature": 0.2,
-                "maxOutputTokens": 10,
+                "maxOutputTokens": 100,
                 "topP": 0.95,
                 "topK": 40
             ],
@@ -159,36 +172,73 @@ class GenrePredictionService {
                let firstPart = parts.first,
                let text = firstPart["text"] as? String {
                 
-                // Clean up the response to get just the genre name
+                // Clean up the response
                 let cleanedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
                 
-                // Check if the response matches one of our available genres
-                for genre in availableGenres {
-                    if cleanedText.lowercased() == genre.lowercased() {
-                        print("✅ Gemini predicted genre: \(genre)")
-                        return genre // Use the correctly cased version from our list
+                // Parse the response into structured data
+                var genre = ""
+                var year = ""
+                var author = ""
+                
+                // Split by lines and extract each piece of information
+                let lines = cleanedText.components(separatedBy: .newlines)
+                for line in lines {
+                    let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    if trimmedLine.hasPrefix("GENRE:") {
+                        let extractedGenre = trimmedLine.replacingOccurrences(of: "GENRE:", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                        genre = extractedGenre
+                    } else if trimmedLine.hasPrefix("YEAR:") {
+                        let extractedYear = trimmedLine.replacingOccurrences(of: "YEAR:", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                        year = extractedYear
+                    } else if trimmedLine.hasPrefix("AUTHOR:") {
+                        let extractedAuthor = trimmedLine.replacingOccurrences(of: "AUTHOR:", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                        author = extractedAuthor
                     }
                 }
                 
-                // If the exact match wasn't found, try to find a partial match
-                for genre in availableGenres {
-                    if cleanedText.lowercased().contains(genre.lowercased()) {
-                        print("✅ Gemini predicted genre (partial match): \(genre)")
-                        return genre
+                // Process the genre to match available genres
+                var matchedGenre = genre
+                let genreLowercase = genre.lowercased()
+                
+                // Check for exact match in available genres
+                for availableGenre in availableGenres {
+                    if genreLowercase == availableGenre.lowercased() {
+                        matchedGenre = availableGenre // Use the correctly cased version
+                        break
                     }
                 }
                 
-                // If no match, at least return what Gemini suggested
-                print("⚠️ Gemini returned a genre that doesn't match our list: \(cleanedText)")
-                
-                // Default to a fallback genre if available
-                if availableGenres.contains("Fiction") {
-                    return "Fiction"
-                } else if availableGenres.contains("Non-Fiction") {
-                    return "Non-Fiction"
-                } else {
-                    return availableGenres.first ?? "Uncategorized"
+                // If no exact match, try partial match
+                if matchedGenre == genre {
+                    for availableGenre in availableGenres {
+                        if genreLowercase.contains(availableGenre.lowercased()) || 
+                           availableGenre.lowercased().contains(genreLowercase) {
+                            matchedGenre = availableGenre
+                            break
+                        }
+                    }
                 }
+                
+                // If still no match, use default genre
+                if !availableGenres.contains(where: { $0.lowercased() == matchedGenre.lowercased() }) {
+                    if availableGenres.contains("Fiction") {
+                        matchedGenre = "Fiction"
+                    } else if availableGenres.contains("Non-Fiction") {
+                        matchedGenre = "Non-Fiction"
+                    } else {
+                        matchedGenre = availableGenres.first ?? "Uncategorized"
+                    }
+                }
+                
+                print("✅ Gemini predictions - Genre: \(matchedGenre), Year: \(year), Author: \(author)")
+                
+                return BookPrediction(
+                    genre: matchedGenre,
+                    publicationYear: year,
+                    isbn: "", // Return empty string for ISBN since we're not predicting it
+                    author: author
+                )
             }
             
             // If we couldn't parse the response at all

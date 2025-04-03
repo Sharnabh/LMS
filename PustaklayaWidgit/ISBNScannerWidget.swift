@@ -101,7 +101,7 @@ struct ISBNScannerWidgetEntryView : View {
 }
 
 struct ISBNScannerWidget: Widget {
-    let kind: String = "ISBNScannerWidget"
+    let kind: String = WidgetRegistry.isbnScannerKind
 
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: ISBNScannerWidgetIntent.self, provider: ISBNScannerProvider()) { entry in

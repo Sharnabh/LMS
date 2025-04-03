@@ -304,7 +304,7 @@ class SupabaseDataController: ObservableObject {
             )
             
             // Send the email
-            try await smtp.send(mail)
+            smtp.send(mail)
             
             return password
         } catch {
@@ -577,14 +577,10 @@ class SupabaseDataController: ObservableObject {
             attachments: [htmlAttachment]
         )
         
-        do {
-            // Send the email
-            try await smtp.send(mail)
-            return true
-        } catch {
-            print("Error sending OTP: \(error)")
-            throw error
-        }
+        // Send the email
+        smtp.send(mail)
+        
+        return true
     }
     
     // MARK: - Book Deletion Request Methods

@@ -135,6 +135,16 @@ struct AssignShelfLocationView: View {
         print("Attempting to assign shelf location: \(shelfLocation)")
         
         Task {
+            // Check if librarian is disabled
+            if try await LibrarianService.checkLibrarianStatus() {
+                await MainActor.run {
+                    isUpdating = false
+                    alertMessage = "Your account has been disabled. Please contact the administrator."
+                    showAlert = true
+                }
+                return
+            }
+            
             // 1. Update the book in BookStore
             if let bookId = book.id {
                 print("Updating book with ID: \(bookId)")

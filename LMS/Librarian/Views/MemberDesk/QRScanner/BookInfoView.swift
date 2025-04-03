@@ -253,10 +253,25 @@ struct BookInfoView: View {
     }
     
     private func approveBookIssue() async {
+        guard !isLoading else { return }
+        
         isLoading = true
-        errorMessage = nil
         
         do {
+            // Check if librarian is disabled
+            if try await LibrarianService.checkLibrarianStatus() {
+                await MainActor.run {
+                    isSuccess = false
+                    alertMessage = "Your account has been disabled. Please contact the administrator."
+                    showAlert = true
+                    isLoading = false
+                    
+                    // Announce for accessibility
+                    UIAccessibility.post(notification: .announcement, argument: "Error: Your account has been disabled. Please contact the administrator.")
+                }
+                return
+            }
+            
             // Update BookIssue status in Supabase
             for bookId in bookInfo.bookIds {
                 let bookIssue = BookIssueData(

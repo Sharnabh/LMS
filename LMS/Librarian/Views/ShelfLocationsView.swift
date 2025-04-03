@@ -6,6 +6,7 @@ struct ShelfLocationsView: View {
     
     @State private var isAddingNew = false
     @State private var newShelfNo = ""
+    @State private var newShelfCapacity = "50" // Default capacity
     @State private var searchText = ""
     @State private var selectedShelf: BookShelfLocation? = nil
     @State private var showingShelfDetailSheet = false
@@ -77,23 +78,33 @@ struct ShelfLocationsView: View {
                     } else {
                         List {
                             if isAddingNew {
-                                HStack {
-                                    TextField("New shelf location (e.g. A12)", text: $newShelfNo)
-                                        .autocapitalization(.allCharacters)
-                                        .disableAutocorrection(true)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    
-                                    Button(action: addNewShelfLocation) {
-                                        Text("Add")
+                                VStack(spacing: 10) {
+                                    HStack {
+                                        TextField("New shelf location (e.g. A-12)", text: $newShelfNo)
+                                            .autocapitalization(.allCharacters)
+                                            .disableAutocorrection(true)
+                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                                        
+                                        TextField("Capacity", text: $newShelfCapacity)
+                                            .keyboardType(.numberPad)
+                                            .frame(width: 80)
+                                            .textFieldStyle(RoundedBorderTextFieldStyle())
                                     }
-                                    .disabled(newShelfNo.isEmpty)
                                     
-                                    Button(action: {
-                                        isAddingNew = false
-                                        newShelfNo = ""
-                                    }) {
-                                        Text("Cancel")
-                                            .foregroundColor(.red)
+                                    HStack {
+                                        Button(action: addNewShelfLocation) {
+                                            Text("Add")
+                                        }
+                                        .disabled(newShelfNo.isEmpty || newShelfCapacity.isEmpty)
+                                        
+                                        Button(action: {
+                                            isAddingNew = false
+                                            newShelfNo = ""
+                                            newShelfCapacity = "50"
+                                        }) {
+                                            Text("Cancel")
+                                                .foregroundColor(.red)
+                                        }
                                     }
                                 }
                                 .padding(.vertical, 5)
@@ -130,8 +141,11 @@ struct ShelfLocationsView: View {
                                         Image(systemName: "chevron.right")
                                             .foregroundColor(.gray)
                                     }
+                                    .contentShape(Rectangle())
                                 }
                                 .buttonStyle(PlainButtonStyle())
+                                .listRowBackground(Color(.systemBackground))
+                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                             }
                             .onDelete(perform: deleteShelfLocations)
                         }
@@ -150,6 +164,7 @@ struct ShelfLocationsView: View {
                             isAddingNew.toggle()
                             if !isAddingNew {
                                 newShelfNo = ""
+                                newShelfCapacity = "50"
                             }
                         }) {
                             Label(isAddingNew ? "Cancel" : "Add", systemImage: isAddingNew ? "xmark" : "plus")
@@ -234,15 +249,19 @@ struct ShelfLocationsView: View {
             return
         }
         
+        let capacity = Int(newShelfCapacity) ?? 50 // Default to 50 if parsing fails
+        
         let newShelf = BookShelfLocation(
             id: UUID(),
             shelfNo: newShelfNo,
-            bookID: []
+            bookID: [],
+            capacity: capacity
         )
         
         shelfLocationStore.addShelfLocation(newShelf)
         isAddingNew = false
         newShelfNo = ""
+        newShelfCapacity = "50"
     }
     
     private func deleteShelfLocations(at offsets: IndexSet) {
@@ -279,6 +298,21 @@ struct ShelfDetailView: View {
                     Spacer()
                     Text("\(shelf.bookID.count)")
                         .fontWeight(.semibold)
+                }
+                
+                HStack {
+                    Text("Capacity")
+                    Spacer()
+                    Text("\(shelf.capacity)")
+                        .fontWeight(.semibold)
+                }
+                
+                HStack {
+                    Text("Available Space")
+                    Spacer()
+                    Text("\(shelf.capacity - shelf.bookID.count)")
+                        .fontWeight(.semibold)
+                        .foregroundColor(shelf.capacity - shelf.bookID.count <= 0 ? .red : .primary)
                 }
             }
             

@@ -326,13 +326,13 @@
 				CODE_SIGN_ENTITLEMENTS = PustaklayaWidgitExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2TWN3DD56C;
+				DEVELOPMENT_TEAM = SART644AN3;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PustaklayaWidgit/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Pustakalaya;
+				INFOPLIST_KEY_CFBundleDisplayName = PustaklayaWidgit;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSSupportsLiveActivities = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -356,13 +356,13 @@
 				CODE_SIGN_ENTITLEMENTS = PustaklayaWidgitExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2TWN3DD56C;
+				DEVELOPMENT_TEAM = SART644AN3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PustaklayaWidgit/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Pustakalaya;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSSupportsLiveActivities = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -508,7 +508,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"LMS/Preview Content\"";
-				DEVELOPMENT_TEAM = 2TWN3DD56C;
+				DEVELOPMENT_TEAM = SART644AN3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LMS/Info.plist;
@@ -543,7 +543,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"LMS/Preview Content\"";
-				DEVELOPMENT_TEAM = 2TWN3DD56C;
+				DEVELOPMENT_TEAM = SART644AN3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LMS/Info.plist;

@@ -6,11 +6,13 @@ struct EditBookFormView: View {
     
     let book: LibrarianBook
     @State private var quantity: String
-    @State private var shelfLocation: String
+//    @State private var shelfLocation: String
     @State private var selectedGenre: String
     @State private var errorMessage: String? = nil
     @State private var showSuccessMessage = false
     @State private var isLoading = false
+    @State private var alertMessage: String? = nil
+    @State private var showAlert = false
     
     // List of common book genres
     private let genres = [
@@ -22,7 +24,7 @@ struct EditBookFormView: View {
     init(book: LibrarianBook) {
         self.book = book
         _quantity = State(initialValue: String(book.totalCopies))
-        _shelfLocation = State(initialValue: book.shelfLocation ?? "")
+//        _shelfLocation = State(initialValue: book.shelfLocation ?? "")
         _selectedGenre = State(initialValue: book.genre)
     }
     
@@ -79,8 +81,8 @@ struct EditBookFormView: View {
                     TextField("Quantity", text: $quantity)
                         .keyboardType(.numberPad)
                     
-                    TextField("Shelf Location", text: $shelfLocation)
-                        .autocapitalization(.words)
+//                    TextField("Shelf Location", text: $shelfLocation)
+//                        .autocapitalization(.words)
                     
                     Picker("Genre", selection: $selectedGenre) {
                         ForEach(genres, id: \.self) { genre in
@@ -159,56 +161,68 @@ struct EditBookFormView: View {
         }
         
         // Validate shelf location
-        if shelfLocation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            errorMessage = "Please enter a shelf location"
-            return
-        }
+//        if shelfLocation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+//            errorMessage = "Please enter a shelf location"
+//            return
+//        }
         
         isLoading = true
         
-        // Calculate new available copies based on the difference in total copies
-        let difference = quantityInt - book.totalCopies
-        let newAvailableCopies = max(0, book.availableCopies + difference)
-        
-        // Create updated book
-        var updatedBook = book
-        updatedBook = LibrarianBook(
-            id: book.id,
-            title: book.title,
-            author: book.author,
-            genre: selectedGenre,
-            publicationDate: book.publicationDate,
-            totalCopies: quantityInt,
-            availableCopies: newAvailableCopies,
-            ISBN: book.ISBN,
-            Description: book.Description,
-            shelfLocation: shelfLocation,
-            dateAdded: book.dateAdded,
-            publisher: book.publisher,
-            imageLink: book.imageLink
-        )
-        
-        // Update the book in the store
-        bookStore.updateBook(updatedBook)
-        
-        // Simulate a small delay to show loading state
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            isLoading = false
-            
-            // Show success message
-            withAnimation {
-                showSuccessMessage = true
+        Task {
+            // Check if librarian is disabled
+            if try await LibrarianService.checkLibrarianStatus() {
+                await MainActor.run {
+                    isLoading = false
+                    alertMessage = "Your account has been disabled. Please contact the administrator."
+                    showAlert = true
+                }
+                return
             }
             
-            // Wait 1.5 seconds before dismissing
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            // Calculate new available copies based on the difference in total copies
+            let difference = quantityInt - book.totalCopies
+            let newAvailableCopies = max(0, book.availableCopies + difference)
+            
+            // Create updated book
+            var updatedBook = book
+            updatedBook = LibrarianBook(
+                id: book.id,
+                title: book.title,
+                author: book.author,
+                genre: selectedGenre,
+                publicationDate: book.publicationDate,
+                totalCopies: quantityInt,
+                availableCopies: newAvailableCopies,
+                ISBN: book.ISBN,
+                Description: book.Description,
+//                shelfLocation: shelfLocation,
+                dateAdded: book.dateAdded,
+                publisher: book.publisher,
+                imageLink: book.imageLink
+            )
+            
+            // Update the book in the store
+            bookStore.updateBook(updatedBook)
+            
+            // Simulate a small delay to show loading state
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                isLoading = false
+                
+                // Show success message
                 withAnimation {
-                    showSuccessMessage = false
+                    showSuccessMessage = true
                 }
                 
-                // Dismiss the sheet after a short delay to allow the animation to complete
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    dismiss()
+                // Wait 1.5 seconds before dismissing
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    withAnimation {
+                        showSuccessMessage = false
+                    }
+                    
+                    // Dismiss the sheet after a short delay to allow the animation to complete
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        dismiss()
+                    }
                 }
             }
         }

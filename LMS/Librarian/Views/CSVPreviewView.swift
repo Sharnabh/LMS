@@ -3,6 +3,7 @@ import SwiftUI
 struct CSVPreviewView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var bookStore: BookStore
+    @EnvironmentObject private var shelfLocationStore: ShelfLocationStore
     
     // Use a @State array of books so we can modify shelf locations
     @State private var booksToImport: [LibrarianBook]
@@ -179,22 +180,66 @@ struct CSVPreviewView: View {
             var updatedCount = 0
             
             for book in booksToImport {
-                if book.shelfLocation == nil || book.shelfLocation!.isEmpty {
-                    await MainActor.run {
-                        isImporting = false
-                        alertMessage = "Please set shelf location for all books before importing."
-                        showAlert = true
-                    }
-                    return
-                }
-                
                 do {
-                    let (isNewBook, _) = await bookStore.addOrUpdateBook(book)
-                    if isNewBook {
+                    // Check if librarian is disabled
+                    if try await LibrarianService.checkLibrarianStatus() {
+                        await MainActor.run {
+                            isImporting = false
+                            isSuccess = false
+                            alertMessage = "Your account has been disabled. Please contact the administrator."
+                            showAlert = true
+                        }
+                        return
+                    }
+                    
+                    // Check shelf capacity if shelf location is set
+                    if let shelfLocation = book.shelfLocation {
+                        if let shelf = shelfLocationStore.shelfLocations.first(where: { $0.shelfNo == shelfLocation }) {
+                            let currentBooks = shelf.bookID.count
+                            let newBooks = book.totalCopies
+                            
+                            if currentBooks + newBooks > shelf.capacity {
+                                print("Skipping book '\(book.title)' - Shelf \(shelfLocation) is at capacity")
+                                continue // Skip this book and move to the next
+                            }
+                        }
+                    }
+                    
+                    // Convert Date to Unix timestamp
+                    let timestamp: Int
+                    if let date = book.dateAdded {
+                        timestamp = Int(date.timeIntervalSince1970)
+                    } else {
+                        // Handle the case where date is nil
+                        timestamp = Int(Date().timeIntervalSince1970)
+                    }
+                    
+                    // Create a new book with the timestamp converted back to Date
+                    let bookWithTimestamp = LibrarianBook(
+                        id: book.id,
+                        title: book.title,
+                        author: book.author,
+                        genre: book.genre,
+                        publicationDate: book.publicationDate,
+                        totalCopies: book.totalCopies,
+                        availableCopies: book.availableCopies,
+                        ISBN: book.ISBN,
+                        Description: book.Description,
+                        shelfLocation: book.shelfLocation,
+                        dateAdded: Date(timeIntervalSince1970: TimeInterval(timestamp)),
+                        publisher: book.publisher,
+                        imageLink: book.imageLink
+                    )
+                    
+                    let result = await bookStore.addOrUpdateBook(bookWithTimestamp)
+                    if result.isNewBook {
                         importedCount += 1
                     } else {
                         updatedCount += 1
                     }
+                    
+                    // Small delay to avoid overwhelming the database
+                    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
                 } catch {
                     print("Error importing book: \(error)")
                 }

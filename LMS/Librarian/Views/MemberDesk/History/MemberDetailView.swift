@@ -127,13 +127,22 @@ struct MemberDetailView: View {
     }
     
     private func collectFine() async {
-        guard let memberId = member.id, pendingFine > 0 else { return }
+        guard pendingFine > 0 else { return }
         
         isCollectingFine = true
         
         do {
-            // Step 1: Update each unpaid book issue to mark it as paid
-            for book in issuedBooks where book.fine > 0 && !book.isPaid {
+            // Check if librarian is disabled
+            if try await LibrarianService.checkLibrarianStatus() {
+                await MainActor.run {
+                    errorMessage = "Your account has been disabled. Please contact the administrator."
+                    isCollectingFine = false
+                }
+                return
+            }
+            
+            // Update all unpaid fines for this member
+            for book in issuedBooks where !book.isPaid && book.fine > 0 {
                 let updateQuery = try supabaseController.client.from("BookIssue")
                     .update(["is_paid": true])
                     .eq("id", value: book.id)
@@ -144,7 +153,7 @@ struct MemberDetailView: View {
             // Step 2: Update member's fine to 0
             let memberUpdateQuery = try supabaseController.client.from("Member")
                 .update(["fine": 0])
-                .eq("id", value: memberId)
+                .eq("id", value: member.id)
             
             try await memberUpdateQuery.execute()
             

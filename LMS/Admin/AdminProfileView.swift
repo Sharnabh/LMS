@@ -203,8 +203,6 @@ struct AdminProfileView: View {
                     }
                 }
             } header: {
-                Text("Analytics")
-            } footer: {
 //                Text("Export all library statistics in CSV format")
             }
             
@@ -240,12 +238,7 @@ struct AdminProfileView: View {
                 .accessibilityLabel(isEditing ? "Done editing profile" : "Edit profile")
             }
         }
-        .sheet(isPresented: $showingImagePicker) {
-            // Image picker implementation
-            PhotosPicker(selection: $imageSelection, matching: .images) {
-                Text("Select a photo")
-            }
-        }
+        .photosPicker(isPresented: $showingImagePicker, selection: $imageSelection, matching: .images)
         .onChange(of: imageSelection) { oldValue, item in
             Task {
                 if let data = try? await item?.loadTransferable(type: Data.self),

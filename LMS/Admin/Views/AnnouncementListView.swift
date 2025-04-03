@@ -200,8 +200,7 @@ struct AnnouncementRow: View {
     
     private var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
+        formatter.dateFormat = "d MMM yyyy 'at' h:mm a"
         formatter.timeZone = .current
         formatter.locale = .current
         return formatter
@@ -258,20 +257,26 @@ struct AnnouncementRow: View {
                 
                 if type != .archived {
                     VStack(alignment: .trailing, spacing: 4) {
-                        Label {
-                            Text(dateFormatter.string(from: announcement.startDate))
-                                .foregroundColor(type == .active ? .green : .orange)
-                        } icon: {
+                        HStack(spacing: 0) {
                             Image(systemName: "calendar.badge.plus")
                                 .foregroundColor(type == .active ? .green : .orange)
+                                .frame(width: 16)
+                            
+                            Text(dateFormatter.string(from: announcement.startDate))
+                                .foregroundColor(type == .active ? .green : .orange)
+                                .frame(width: 160, alignment: .trailing)
+                                .lineLimit(1)
                         }
                         
-                        Label {
-                            Text(dateFormatter.string(from: announcement.expiryDate))
-                                .foregroundColor(type == .active ? .green : .orange)
-                        } icon: {
+                        HStack(spacing: 0) {
                             Image(systemName: "calendar.badge.minus")
                                 .foregroundColor(type == .active ? .green : .orange)
+                                .frame(width: 16)
+                            
+                            Text(dateFormatter.string(from: announcement.expiryDate))
+                                .foregroundColor(type == .active ? .green : .orange)
+                                .frame(width: 160, alignment: .trailing)
+                                .lineLimit(1)
                         }
                     }
                     .font(.caption)

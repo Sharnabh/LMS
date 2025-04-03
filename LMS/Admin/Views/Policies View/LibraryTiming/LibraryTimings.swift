@@ -80,7 +80,7 @@ struct LibraryTimingsView: View {
         }
         .navigationTitle("Library Timings")
         .navigationBarTitleDisplayMode(.inline)
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground))
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {

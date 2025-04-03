@@ -98,7 +98,7 @@ struct IssuingRulesView: View {
         }
         .navigationTitle("Borrowing Rules")
         .navigationBarTitleDisplayMode(.inline)
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground))
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {

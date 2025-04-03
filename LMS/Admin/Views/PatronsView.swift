@@ -156,6 +156,12 @@ struct PatronsView: View {
         NavigationView {
             ZStack {
                 VStack(spacing: 0) {
+                    // Divider line between Navigation Title and Content
+                    Rectangle()
+                        .frame(height: 0.5)
+                        .foregroundColor(Color.gray.opacity(0.3))
+                        .padding(.bottom, 8)
+                    
                     // Segmented Control
                     Picker("Patron Type", selection: $selectedSegment) {
                         Text("Librarians").tag(0)

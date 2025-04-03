@@ -67,7 +67,7 @@ struct ShelfLocationsView: View {
                             }) {
                                 Label("Add Shelf Location", systemImage: "plus")
                                     .padding()
-                                    .background(Color.blue)
+                                    .background(Color.accentColor)
                                     .foregroundColor(.white)
                                     .cornerRadius(10)
                             }
@@ -320,7 +320,7 @@ struct ShelfDetailView: View {
                                     Spacer()
                                     
                                     Image(systemName: "chevron.right")
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(.accentColor)
                                 }
                             }
                         }

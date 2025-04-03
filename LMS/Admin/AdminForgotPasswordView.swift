@@ -58,9 +58,9 @@ struct AdminForgotPasswordView: View {
                             onComplete()
                         }
                     }) {
-                        Image(systemName: "arrow.left")
+                        Image(systemName: "chevron.left")
                             .font(.title2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.black)
                     }
                     .padding(.leading)
                     
@@ -267,7 +267,7 @@ struct AdminForgotPasswordView: View {
                     }) {
                         Text("Resend Code")
                             .font(.subheadline)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                     }
                     .disabled(isLoading)
                 }
@@ -299,7 +299,7 @@ struct AdminForgotPasswordView: View {
             }
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(index < otp.count ? Color.blue : Color.clear, lineWidth: 1.5)
+                    .stroke(index < otp.count ? Color.accentColor : Color.clear, lineWidth: 1.5)
             )
             .animation(.spring(response: 0.2), value: otp.count)
             .onTapGesture {
@@ -392,7 +392,7 @@ struct AdminForgotPasswordView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(Color.blue)
+                .background(Color.accentColor)
                 .cornerRadius(12)
             }
             .disabled(isLoading || newPassword.isEmpty || confirmPassword.isEmpty)

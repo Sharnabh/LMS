@@ -139,7 +139,7 @@ struct BooksManagementPolicyView: View {
                     isEditing = true
                 }) {
                     Text("Edit")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                 }
             }
         }

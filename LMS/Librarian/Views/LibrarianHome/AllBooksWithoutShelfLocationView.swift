@@ -61,7 +61,7 @@ struct AllBooksWithoutShelfLocationView: View {
                                 searchText = ""
                             }) {
                                 Text("Clear Search")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                             .padding()
                         }
@@ -131,7 +131,7 @@ struct BookCardWithAssignButton: View {
                     Image(systemName: "mappin.and.ellipse")
                         .foregroundColor(.white)
                         .padding(8)
-                        .background(Color.blue)
+                        .background(Color.accentColor)
                         .clipShape(Circle())
                         .shadow(radius: 2)
                 }
@@ -219,17 +219,17 @@ struct CustomBookCard: View {
                 }
                 
                 HStack {
-                    Label("Qty: \(book.totalCopies)", systemImage: "number")
+                    Label("Quantity: \(book.totalCopies)", systemImage: "number")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                     
                     Spacer()
                     
-                    if let location = book.shelfLocation {
-                        Label(location, systemImage: "mappin.and.ellipse")
-                            .font(.caption)
-                            .foregroundColor(.green)
-                    }
+//                    if let location = book.shelfLocation {
+//                        Label(location, systemImage: "mappin.and.ellipse")
+//                            .font(.caption)
+//                            .foregroundColor(.green)
+//                    }
                 }
                 .padding(.top, 2)
             }

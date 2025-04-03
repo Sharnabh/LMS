@@ -159,7 +159,7 @@ struct LibrarianLoginView: View {
                                     } else {
                                         Text("Resend Code")
                                             .font(.caption)
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(.accentColor)
                                     }
                                 }
                                 .disabled(isLoading || resendCountdown > 0)
@@ -261,20 +261,23 @@ struct LibrarianLoginView: View {
                                         alignment: .trailing
                                     )
                             }
+                            
+                            // Add Forgot Password directly here
+                            HStack {
+                                Spacer() // Push the button to the right
+                                Button(action: {
+                                    showForgotPassword = true
+                                }) {
+                                    Text("Forgot Password?")
+                                        .font(.subheadline)
+                                        .foregroundColor(.accentColor)
+                                }
+                            }
+                            .padding(.top, 4)
                         }
                     }
                     .padding(.horizontal)
                     
-                    // Forgot Password Link
-                    Button(action: {
-                        showForgotPassword = true
-                    }) {
-                        Text("Forgot Password?")
-                            .font(.subheadline)
-                            .foregroundColor(.accentColor)
-                    }
-                    .padding(.top, 8)
-            
                     // Login button
                     Button(action: {
                         Task {

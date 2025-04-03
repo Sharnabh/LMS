@@ -30,7 +30,7 @@ struct MemberDetailView: View {
                     HStack {
                         Image(systemName: "person.circle.fill")
                             .font(.system(size: 60))
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text("\(member.firstName ?? "Unknown") \(member.lastName ?? "")")
@@ -111,7 +111,7 @@ struct MemberDetailView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(Color.accentColor)
                     .cornerRadius(10)
                     .padding(.top, 20)
                     .padding(.horizontal)

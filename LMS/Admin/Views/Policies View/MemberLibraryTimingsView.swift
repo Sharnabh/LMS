@@ -1,16 +1,15 @@
 //
-//  LibraryTimings.swift
+//  MemberLibraryTimingsView.swift
 //  LMS
 //
-//  Created by Utkarsh Raj Saxena on 26/03/25.
+//  Created by Utkarsh Raj Saxena on 03/04/25.
 //
 
 import Foundation
 import SwiftUI
 
-struct LibraryTimingsView: View {
+struct MemberLibraryTimingsView: View {
     @StateObject private var viewModel = LibraryTimingsViewModel()
-    @State private var isEditing = false
     
     var body: some View {
         ScrollView {
@@ -81,33 +80,14 @@ struct LibraryTimingsView: View {
         .navigationTitle("Library Timings")
         .navigationBarTitleDisplayMode(.inline)
         .background(Color(.systemGroupedBackground))
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    isEditing = true
-                }) {
-                    Text("Edit")
-                        .font(.system(size: 17))
-                        .foregroundColor(.accentColor)
-                }
-            }
-        }
-        .sheet(isPresented: $isEditing) {
-            if let timings = viewModel.libraryTimings {
-                EditLibraryTimingsView(
-                    timings: timings,
-                    viewModel: viewModel,
-                    isPresented: $isEditing
-                )
-            }
-        }
         .task {
             await viewModel.fetchLibraryTimings()
         }
     }
 }
 
-struct TimingRow: View {
+// This is just in case the TimingRow is not accessible here
+struct MemberTimingRow: View {
     let title: String
     let time: Date
     
@@ -129,3 +109,7 @@ struct TimingRow: View {
         .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
     }
 }
+
+#Preview {
+    MemberLibraryTimingsView()
+} 

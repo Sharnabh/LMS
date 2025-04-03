@@ -97,8 +97,6 @@ struct CSVPreviewView: View {
             }
         }
         .navigationBarHidden(true)
-        .navigationTitle("Preview CSV Books")
-        .navigationBarTitleDisplayMode(.inline)
         .alert(isPresented: $showAlert) {
             Alert(
                 title: Text(isSuccess ? "Success" : "Error"),
@@ -466,7 +464,7 @@ struct CSVBookItemView: View {
                             .font(.caption)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
-                            .background(Color(.systemGray6))
+                            .background(Color.accentColor.opacity(0.1))
                             .cornerRadius(4)
                         
                         Spacer()

@@ -24,7 +24,7 @@ struct NotificationView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "bell.slash")
                         .font(.system(size: 50))
-                        .foregroundColor(.gray)
+                        .foregroundColor(.accentColor)
                     Text("No messages")
                         .font(.headline)
                         .foregroundColor(.gray)
@@ -77,7 +77,7 @@ struct MessageStyleNotificationCard: View {
                     .frame(width: 50, height: 50)
                     .overlay(
                         Image(systemName: typeIcon)
-                            .foregroundColor(.gray)
+                            .foregroundColor(.accentColor)
                             .font(.system(size: 20))
                     )
                 
@@ -137,7 +137,7 @@ struct AnnouncementDetailView: View {
                         .frame(width: 40, height: 40)
                         .overlay(
                             Image(systemName: typeIcon)
-                                .foregroundColor(.gray)
+                                .foregroundColor(.accentColor)
                                 .font(.system(size: 20))
                         )
                     

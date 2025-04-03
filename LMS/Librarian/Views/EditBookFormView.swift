@@ -106,7 +106,7 @@ struct EditBookFormView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(isLoading ? Color.blue.opacity(0.7) : Color.blue)
+                .background(isLoading ? Color.accentColor.opacity(0.7) : Color.accentColor)
                 .foregroundColor(.white)
                 .cornerRadius(8)
                 .disabled(isLoading)

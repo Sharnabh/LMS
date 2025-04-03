@@ -623,7 +623,7 @@ struct LibrariansList: View {
                                             .foregroundColor(librarian.isDisabled ?? false ? .gray : .primary)
                                         if !librarian.isFirstLogin {
                                             Image(systemName: "checkmark.seal.fill")
-                                                .foregroundColor(.blue)
+                                                .foregroundColor(.accentColor)
                                                 .font(.system(size: 14))
                                         }
                                     }

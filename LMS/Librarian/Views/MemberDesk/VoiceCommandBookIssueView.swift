@@ -34,10 +34,10 @@ struct VoiceCommandBookIssueView: View {
                 HStack {
                     ForEach(0..<3) { index in
                         Circle()
-                            .fill(step >= index ? Color.blue : Color.gray.opacity(0.3))
+                            .fill(step >= index ? Color.accentColor : Color.gray.opacity(0.3))
                             .frame(width: 12, height: 12)
                             .overlay(
-                                step == index ? Circle().stroke(Color.blue, lineWidth: 2).scaleEffect(1.3) : nil
+                                step == index ? Circle().stroke(Color.accentColor, lineWidth: 2).scaleEffect(1.3) : nil
                             )
                     }
                     .padding(.horizontal, 4)
@@ -88,7 +88,7 @@ struct VoiceCommandBookIssueView: View {
                             Text("Next")
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 10)
-                                .background(canProceed ? Color.blue : Color.gray)
+                                .background(canProceed ? Color.accentColor : Color.gray)
                                 .foregroundColor(.white)
                                 .cornerRadius(8)
                         }
@@ -164,7 +164,7 @@ struct VoiceCommandBookIssueView: View {
         VStack(spacing: 25) {
             Image(systemName: "person.badge.card")
                 .font(.system(size: 50))
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
             
             Text("Scan or Enter Member ID")
                 .font(.title3)
@@ -191,7 +191,7 @@ struct VoiceCommandBookIssueView: View {
                 }) {
                     Image(systemName: "magnifyingglass")
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.accentColor)
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
@@ -226,8 +226,8 @@ struct VoiceCommandBookIssueView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(Color.blue.opacity(0.1))
-                .foregroundColor(.blue)
+                .background(Color.accentColor.opacity(0.1))
+                .foregroundColor(.black)
                 .cornerRadius(8)
             }
             .accessibilityLabel("Scan member QR code")
@@ -238,7 +238,7 @@ struct VoiceCommandBookIssueView: View {
         VStack(spacing: 25) {
             Image(systemName: "books.vertical")
                 .font(.system(size: 50))
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
             
             Text("Scan or Enter Book IDs")
                 .font(.title3)
@@ -272,7 +272,7 @@ struct VoiceCommandBookIssueView: View {
                 }) {
                     Image(systemName: "barcode.viewfinder")
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.accentColor)
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
@@ -299,7 +299,7 @@ struct VoiceCommandBookIssueView: View {
                     }
                 }
                 .padding()
-                .background(Color.blue.opacity(0.1))
+                .background(Color.accentColor.opacity(0.1))
                 .cornerRadius(8)
                 .accessibilityElement(children: .contain)
             }

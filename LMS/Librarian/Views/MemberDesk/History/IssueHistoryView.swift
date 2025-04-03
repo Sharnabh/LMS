@@ -162,7 +162,7 @@ struct IssueHistoryView: View {
                             // Replace text and chevron with filter icon
                             Image(systemName: "line.3.horizontal.decrease.circle")
                                 .font(.system(size: 22))
-                                .foregroundColor(selectedFilter == "All" ? .primary : selectedFilter == "Fines" ? .blue : .purple)
+                                .foregroundColor(selectedFilter == "All" ? .primary : selectedFilter == "Fines" ? .accentColor : .accentColor)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .background(Color.white)
@@ -200,54 +200,7 @@ struct IssueHistoryView: View {
                     .padding(.bottom, 8)
                     .zIndex(1)
                     
-                    // Remove this entire block that uses showFilterOptions
-                    /* if showFilterOptions {
-                        VStack {
-                            HStack {
-                                Spacer()
-                                VStack(alignment: .leading, spacing: 0) {
-                                    Button(action: {
-                                        selectedFilter = "All"
-                                        showFilterOptions = false
-                                    }) {
-                                        Text("All")
-                                            .font(.system(size: 16))
-                                            .padding(.vertical, 12)
-                                            .padding(.horizontal, 16)
-                                            .frame(width: 150, alignment: .leading)
-                                            .background(selectedFilter == "All" ? Color.blue.opacity(0.1) : Color.white)
-                                    }
-                                    .foregroundColor(.primary)
-                                    
-                                    Divider()
-                                    
-                                    Button(action: {
-                                        selectedFilter = "Overdue Fines"
-                                        showFilterOptions = false
-                                    }) {
-                                        Text("Overdue Fines")
-                                            .font(.system(size: 16))
-                                            .padding(.vertical, 12)
-                                            .padding(.horizontal, 16)
-                                            .frame(width: 150, alignment: .leading)
-                                            .background(selectedFilter == "Overdue Fines" ? Color.blue.opacity(0.1) : Color.white)
-                                    }
-                                    .foregroundColor(.primary)
-                                }
-                                .background(Color.white)
-                                .cornerRadius(10)
-                                .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 5)
-                                .padding(.trailing, 16)
-                                .padding(.top, 4)
-                            }
-                            Spacer()
-                        }
-                        .background(Color.black.opacity(0.001))
-                        .onTapGesture {
-                            showFilterOptions = false
-                        }
-                        .zIndex(2)
-                    } */
+                   
                     
                     // Content area with fixed layout
                     ZStack {
@@ -304,7 +257,7 @@ struct IssueHistoryView: View {
                                     .font(.system(size: 24))
                                     .foregroundColor(.white)
                                     .frame(width: 60, height: 60)
-                                    .background(Color.blue)
+                                    .background(Color.accentColor)
                                     .clipShape(Circle())
                                     .shadow(radius: 4)
                             }
@@ -466,7 +419,7 @@ struct MemberCard: View {
                 HStack {
                     Image(systemName: "person.circle.fill")
                         .font(.system(size: 40))
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                     
                     VStack(alignment: .leading, spacing: 4) {
                         Text("\(member.firstName ?? "Unknown") \(member.lastName ?? "")")

@@ -252,7 +252,7 @@ struct AnnouncementRow: View {
             HStack {
                 Label(announcement.type.rawValue.capitalized, systemImage: "person.2")
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
                 
                 Spacer()
                 

@@ -18,13 +18,14 @@ struct LibrarianCSVUploadView: View {
                 Color(UIColor.systemBackground).edgesIgnoringSafeArea(.all)
                 
                 ScrollView(.vertical, showsIndicators: true) {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 24) {
                         // Required format section
                         GroupBox {
                             // Format header with download button
                             HStack {
                                 Label("Required CSV Format", systemImage: "list.bullet.rectangle")
                                     .font(.headline)
+                                    .padding(.top, 8)
                                 
                                 Spacer()
                                 
@@ -128,6 +129,10 @@ struct LibrarianCSVUploadView: View {
                         .background(Color(UIColor.secondarySystemGroupedBackground))
                         .cornerRadius(8)
                         .padding(.horizontal)
+                        
+                        // Add spacer to push content up and create space before button
+                        Spacer()
+                            .frame(height: 40)
                     }
                     .padding(.vertical)
                 }

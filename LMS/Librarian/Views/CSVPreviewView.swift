@@ -10,8 +10,10 @@ struct CSVPreviewView: View {
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var isSuccess = false
-    @State private var selectedBookIndex: Int? = nil // Track which book is being edited
+    @State private var selectedBookIndex: Int? = nil
     @State private var showShelfLocationEditor = false
+    @State private var showBookEditor = false
+    @State private var tempBook: LibrarianBook? = nil
     @State private var tempShelfLocation = ""
     
     // Initialize with the books passed in
@@ -20,65 +22,83 @@ struct CSVPreviewView: View {
     }
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                Color.appBackground.ignoresSafeArea()
-                
-                VStack {
-                    // Summary header
-                    SummaryHeaderView(booksCount: booksToImport.count)
-                    
-                    // Books list
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(Array(booksToImport.enumerated()), id: \.element.id) { index, book in
-                                CSVBookItemView(book: book, shelfLocation: book.shelfLocation ?? "Not Set")
-                                    .onTapGesture {
-                                        // Show shelf location editor when book is tapped
-                                        selectedBookIndex = index
-                                        tempShelfLocation = book.shelfLocation ?? ""
-                                        showShelfLocationEditor = true
-                                    }
-                            }
-                        }
-                        .padding(.horizontal)
+        ZStack {
+            Color(.systemBackground).ignoresSafeArea()
+            
+            VStack {
+                // Navigation bar with Import/Cancel buttons
+                HStack {
+                    Button("Cancel") {
+                        dismiss()
                     }
+                    .foregroundColor(.accentColor)
+                    
+                    Spacer()
+                    
+                    Text("Preview CSV Books")
+                        .font(.headline)
+                    
+                    Spacer()
+                    
+                    Button("Import") {
+                        importBooks()
+                    }
+                    .disabled(booksToImport.isEmpty)
+                    .foregroundColor(booksToImport.isEmpty ? .gray : .accentColor)
                 }
+                .padding()
                 
-                // Loading overlay
-                if isImporting {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                        .overlay(
-                            VStack(spacing: 20) {
-                                ProgressView()
-                                    .scaleEffect(1.5)
-                                Text("Importing books...")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                            }
-                            .padding(30)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color(.systemBackground))
+                // Summary header
+                SummaryHeaderView(booksCount: booksToImport.count)
+                
+                // Books list
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        ForEach(Array(booksToImport.enumerated()), id: \.element.id) { index, book in
+                            CSVBookItemView(
+                                book: book,
+                                shelfLocation: book.shelfLocation ?? "Not Set",
+                                onEditDetails: {
+                                    selectedBookIndex = index
+                                    tempBook = book
+                                    showBookEditor = true
+                                },
+                                onSetLocation: {
+                                    selectedBookIndex = index
+                                    tempShelfLocation = book.shelfLocation ?? ""
+                                    showShelfLocationEditor = true
+                                }
                             )
-                            .shadow(radius: 10)
-                        )
+                        }
+                    }
+                    .padding(.horizontal)
                 }
             }
-            .navigationTitle("Preview CSV Books")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Cancel") {
-                    dismiss()
-                },
-                trailing: Button("Import") {
-                    importBooks()
-                }
-                .disabled(booksToImport.isEmpty)
-                .foregroundColor(booksToImport.isEmpty ? .gray : .blue)
-            )
+            
+            // Loading overlay
+            if isImporting {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                    .overlay(
+                        VStack(spacing: 20) {
+                            ProgressView()
+                                .scaleEffect(1.5)
+                            Text("Importing books...")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                        }
+                        .padding(30)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color(.systemBackground))
+                        )
+                        .shadow(radius: 10)
+                    )
+            }
         }
+        .navigationBarHidden(true)
+        .navigationTitle("Preview CSV Books")
+        .navigationBarTitleDisplayMode(.inline)
         .alert(isPresented: $showAlert) {
             Alert(
                 title: Text(isSuccess ? "Success" : "Error"),
@@ -91,8 +111,6 @@ struct CSVPreviewView: View {
             )
         }
         .sheet(isPresented: $showShelfLocationEditor) {
-            // If sheet is dismissed, don't update
-        } content: {
             ShelfLocationEditorView(
                 bookTitle: selectedBookIndex != nil ? booksToImport[selectedBookIndex!].title : "",
                 shelfLocation: $tempShelfLocation,
@@ -109,6 +127,30 @@ struct CSVPreviewView: View {
                     showShelfLocationEditor = false
                 }
             )
+        }
+        .sheet(isPresented: $showBookEditor) {
+            // If sheet is dismissed, don't update
+        } content: {
+            BookEditorView(
+                book: $tempBook,
+                onSave: {
+                    if let index = selectedBookIndex {
+                        // Update the book with edited values
+                        updateBook(index: index)
+                    }
+                    showBookEditor = false
+                },
+                onCancel: {
+                    showBookEditor = false
+                }
+            )
+        }
+    }
+    
+    // Helper function to update the book with edited values
+    private func updateBook(index: Int) {
+        if let editedBook = tempBook {
+            booksToImport[index] = editedBook
         }
     }
     
@@ -135,34 +177,186 @@ struct CSVPreviewView: View {
         isImporting = true
         
         Task {
-            var newBooksCount = 0
-            var updatedBooksCount = 0
+            var importedCount = 0
+            var updatedCount = 0
             
             for book in booksToImport {
-                let result = await bookStore.addOrUpdateBook(book)
-                if result.isNewBook {
-                    newBooksCount += 1
-                } else {
-                    updatedBooksCount += 1
+                if book.shelfLocation == nil || book.shelfLocation!.isEmpty {
+                    await MainActor.run {
+                        isImporting = false
+                        alertMessage = "Please set shelf location for all books before importing."
+                        showAlert = true
+                    }
+                    return
                 }
                 
-                // Small delay to avoid overwhelming the database
-                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+                do {
+                    let (isNewBook, _) = await bookStore.addOrUpdateBook(book)
+                    if isNewBook {
+                        importedCount += 1
+                    } else {
+                        updatedCount += 1
+                    }
+                } catch {
+                    print("Error importing book: \(error)")
+                }
             }
             
-            // Explicitly reload books to ensure they're updated across all views
-            await bookStore.loadBooks()
-            
-            // Short delay to ensure UI updates
-            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
-            
             await MainActor.run {
-                isSuccess = true
-                alertMessage = "Import summary:\n• Added \(newBooksCount) new books\n• Updated quantities for \(updatedBooksCount) existing books"
                 isImporting = false
+                isSuccess = true
+                alertMessage = """
+                    Import completed successfully!
+                    New books added: \(importedCount)
+                    Existing books updated: \(updatedCount)
+                    """
                 showAlert = true
             }
         }
+    }
+}
+
+struct BookEditorView: View {
+    @Binding var book: LibrarianBook?
+    let onSave: () -> Void
+    let onCancel: () -> Void
+    
+    @State private var title: String = ""
+    @State private var authorText: String = ""
+    @State private var genre: String = ""
+    @State private var isbn: String = ""
+    @State private var publicationDate: String = ""
+    @State private var totalCopies: String = ""
+    
+    var isValid: Bool {
+        !title.isEmpty && 
+        !authorText.isEmpty && 
+        !genre.isEmpty && 
+        !isbn.isEmpty && 
+        !publicationDate.isEmpty && 
+        !totalCopies.isEmpty &&
+        Int(totalCopies) != nil
+    }
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("Edit Book Details")
+                        .font(.headline)
+                        .padding(.top)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    
+                    Group {
+                        Text("Title")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        TextField("Book title", text: $title)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        
+                        Text("Author")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        TextField("Author names (use ; for multiple authors)", text: $authorText)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        
+                        Text("Genre")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        TextField("Genre (e.g., Fiction, Science, Technology)", text: $genre)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        
+                        Text("ISBN")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        TextField("ISBN-13 format", text: $isbn)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                    }
+                    
+                    Group {
+                        Text("Publication Date")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        TextField("Year of publication", text: $publicationDate)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        
+                        Text("Total Copies")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        TextField("Number of copies", text: $totalCopies)
+                            .keyboardType(.numberPad)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                    }
+                }
+                .padding()
+            }
+            .onAppear {
+                if let book = book {
+                    title = book.title
+                    authorText = book.author.joined(separator: "; ")
+                    genre = book.genre
+                    isbn = book.ISBN
+                    publicationDate = book.publicationDate
+                    totalCopies = "\(book.totalCopies)"
+                }
+            }
+            .onChange(of: title) { updateBook() }
+            .onChange(of: authorText) { updateBook() }
+            .onChange(of: genre) { updateBook() }
+            .onChange(of: isbn) { updateBook() }
+            .onChange(of: publicationDate) { updateBook() }
+            .onChange(of: totalCopies) { updateBook() }
+            .navigationBarItems(
+                leading: Button("Cancel", action: onCancel),
+                trailing: Button("Save", action: onSave)
+                    .disabled(!isValid)
+                    .foregroundColor(isValid ? .accentColor : .gray)
+            )
+        }
+    }
+    
+    private func updateBook() {
+        guard let existingBook = book else { return }
+        
+        // Parse author string into array
+        let authorArray = authorText.split(separator: ";").map { 
+            String($0.trimmingCharacters(in: .whitespaces))
+        }
+        
+        // Create updated book
+        book = LibrarianBook(
+            id: existingBook.id,
+            title: title,
+            author: authorArray,
+            genre: genre,
+            publicationDate: publicationDate,
+            totalCopies: Int(totalCopies) ?? existingBook.totalCopies,
+            availableCopies: Int(totalCopies) ?? existingBook.availableCopies,
+            ISBN: isbn,
+            Description: existingBook.Description,
+            shelfLocation: existingBook.shelfLocation,
+            dateAdded: existingBook.dateAdded,
+            publisher: existingBook.publisher,
+            imageLink: existingBook.imageLink
+        )
     }
 }
 
@@ -230,6 +424,8 @@ struct SummaryHeaderView: View {
 struct CSVBookItemView: View {
     let book: LibrarianBook
     let shelfLocation: String
+    var onEditDetails: () -> Void
+    var onSetLocation: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -270,7 +466,7 @@ struct CSVBookItemView: View {
                             .font(.caption)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
-                            .background(Color.blue.opacity(0.1))
+                            .background(Color(.systemGray6))
                             .cornerRadius(4)
                         
                         Spacer()
@@ -291,17 +487,23 @@ struct CSVBookItemView: View {
             }
             
             HStack {
-                Image(systemName: "mappin.and.ellipse")
-                    .foregroundColor(shelfLocation == "Not Set" ? .red : .green)
-                Text(shelfLocation)
-                    .font(.caption)
-                    .foregroundColor(shelfLocation == "Not Set" ? .red : .primary)
+                Button(action: onSetLocation) {
+                    HStack {
+                        Image(systemName: "mappin.and.ellipse")
+                            .foregroundColor(shelfLocation == "Not Set" ? .red : .green)
+                        Text(shelfLocation)
+                            .font(.caption)
+                            .foregroundColor(shelfLocation == "Not Set" ? .red : .primary)
+                    }
+                }
                 
                 Spacer()
                 
-                Text("Tap to edit")
-                    .font(.caption2)
-                    .foregroundColor(.blue)
+                Button(action: onEditDetails) {
+                    Label("Edit Details", systemImage: "pencil")
+                        .font(.caption)
+                        .foregroundColor(.accentColor)
+                }
             }
         }
         .padding()
@@ -310,6 +512,9 @@ struct CSVBookItemView: View {
                 .fill(Color(.systemBackground))
         )
         .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+        .onTapGesture {
+            onSetLocation()
+        }
     }
     
     private var bookPlaceholder: some View {

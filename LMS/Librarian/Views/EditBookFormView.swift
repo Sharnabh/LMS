@@ -11,6 +11,8 @@ struct EditBookFormView: View {
     @State private var errorMessage: String? = nil
     @State private var showSuccessMessage = false
     @State private var isLoading = false
+    @State private var alertMessage: String? = nil
+    @State private var showAlert = false
     
     // List of common book genres
     private let genres = [
@@ -166,49 +168,61 @@ struct EditBookFormView: View {
         
         isLoading = true
         
-        // Calculate new available copies based on the difference in total copies
-        let difference = quantityInt - book.totalCopies
-        let newAvailableCopies = max(0, book.availableCopies + difference)
-        
-        // Create updated book
-        var updatedBook = book
-        updatedBook = LibrarianBook(
-            id: book.id,
-            title: book.title,
-            author: book.author,
-            genre: selectedGenre,
-            publicationDate: book.publicationDate,
-            totalCopies: quantityInt,
-            availableCopies: newAvailableCopies,
-            ISBN: book.ISBN,
-            Description: book.Description,
-            shelfLocation: shelfLocation,
-            dateAdded: book.dateAdded,
-            publisher: book.publisher,
-            imageLink: book.imageLink
-        )
-        
-        // Update the book in the store
-        bookStore.updateBook(updatedBook)
-        
-        // Simulate a small delay to show loading state
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            isLoading = false
-            
-            // Show success message
-            withAnimation {
-                showSuccessMessage = true
+        Task {
+            // Check if librarian is disabled
+            if try await LibrarianService.checkLibrarianStatus() {
+                await MainActor.run {
+                    isLoading = false
+                    alertMessage = "Your account has been disabled. Please contact the administrator."
+                    showAlert = true
+                }
+                return
             }
             
-            // Wait 1.5 seconds before dismissing
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            // Calculate new available copies based on the difference in total copies
+            let difference = quantityInt - book.totalCopies
+            let newAvailableCopies = max(0, book.availableCopies + difference)
+            
+            // Create updated book
+            var updatedBook = book
+            updatedBook = LibrarianBook(
+                id: book.id,
+                title: book.title,
+                author: book.author,
+                genre: selectedGenre,
+                publicationDate: book.publicationDate,
+                totalCopies: quantityInt,
+                availableCopies: newAvailableCopies,
+                ISBN: book.ISBN,
+                Description: book.Description,
+                shelfLocation: shelfLocation,
+                dateAdded: book.dateAdded,
+                publisher: book.publisher,
+                imageLink: book.imageLink
+            )
+            
+            // Update the book in the store
+            bookStore.updateBook(updatedBook)
+            
+            // Simulate a small delay to show loading state
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                isLoading = false
+                
+                // Show success message
                 withAnimation {
-                    showSuccessMessage = false
+                    showSuccessMessage = true
                 }
                 
-                // Dismiss the sheet after a short delay to allow the animation to complete
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    dismiss()
+                // Wait 1.5 seconds before dismissing
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    withAnimation {
+                        showSuccessMessage = false
+                    }
+                    
+                    // Dismiss the sheet after a short delay to allow the animation to complete
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        dismiss()
+                    }
                 }
             }
         }

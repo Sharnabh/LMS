@@ -128,6 +128,14 @@ struct AdminCSVPreviewView: View {
                     // Convert LibrarianBook to BookService format
                     let authorString = book.author.joined(separator: "; ")
                     
+                    // Convert Date to Unix timestamp
+                    let timestamp: Int
+                    if let date = book.dateAdded {
+                        timestamp = Int(date.timeIntervalSince1970)
+                    } else {
+                        timestamp = Int(Date().timeIntervalSince1970)
+                    }
+                    
                     // Check if book already exists by ISBN
                     let existingBooks = try await BookService.shared.findBooksByISBN(book.ISBN)
                     

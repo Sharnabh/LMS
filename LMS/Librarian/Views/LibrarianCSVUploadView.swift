@@ -157,6 +157,11 @@ struct LibrarianCSVUploadView: View {
     }
     
     private func parseCSVFile(url: URL) async throws -> [LibrarianBook] {
+        // Check if librarian is disabled
+        if try await LibrarianService.checkLibrarianStatus() {
+            throw NSError(domain: "", code: 403, userInfo: [NSLocalizedDescriptionKey: "Your account has been disabled. Please contact the administrator."])
+        }
+        
         let csvContent = try String(contentsOf: url, encoding: .utf8)
         let rows = csvContent.components(separatedBy: .newlines)
         
@@ -198,7 +203,7 @@ struct LibrarianCSVUploadView: View {
             // Try to fetch book details from Google Books
             var bookDetails: LibrarianBook? = nil
             do {
-                bookDetails = try await GoogleBooksService.fetchBookByISBN(isbn: isbn)
+                bookDetails = try await GoogleBooksService.fetchBookByISBN(isbn: isbn, useGeminiPrediction: false)
             } catch {
                 print("Could not fetch book details from GoogleBooks API: \(error)")
             }

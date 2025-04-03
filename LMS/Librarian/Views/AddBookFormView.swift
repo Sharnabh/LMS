@@ -16,6 +16,8 @@ struct AddBookFormView: View {
     @State private var isLoadingShelves = true
     @State private var showAddNewShelfSheet = false
     @State private var newShelfName = ""
+    @State private var alertMessage: String? = nil
+    @State private var showAlert = false
     
     // List of common book genres
     private let genres = [
@@ -234,18 +236,27 @@ struct AddBookFormView: View {
     private func addNewShelf() {
         guard !newShelfName.isEmpty else { return }
         
-        // Check if shelf already exists
-        if !shelfLocationStore.shelfLocations.contains(where: { $0.shelfNo == newShelfName }) {
-            let newShelf = BookShelfLocation(
-                id: UUID(),
-                shelfNo: newShelfName,
-                bookID: []
-            )
+        Task {
+            // Check if librarian is disabled
+            if try await LibrarianService.checkLibrarianStatus() {
+                await MainActor.run {
+                    alertMessage = "Your account has been disabled. Please contact the administrator."
+                    showAlert = true
+                }
+                return
+            }
             
-            shelfLocationStore.addShelfLocation(newShelf)
-            
-            // Wait briefly for the new shelf to be added to the database
-            Task {
+            // Check if shelf already exists
+            if !shelfLocationStore.shelfLocations.contains(where: { $0.shelfNo == newShelfName }) {
+                let newShelf = BookShelfLocation(
+                    id: UUID(),
+                    shelfNo: newShelfName,
+                    bookID: []
+                )
+                
+                shelfLocationStore.addShelfLocation(newShelf)
+                
+                // Wait briefly for the new shelf to be added to the database
                 try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 sec
                 await shelfLocationStore.loadShelfLocations()
                 
@@ -254,12 +265,12 @@ struct AddBookFormView: View {
                     showAddNewShelfSheet = false
                     newShelfName = ""
                 }
+            } else {
+                // Just select the existing shelf and close
+                shelfLocation = newShelfName
+                showAddNewShelfSheet = false
+                newShelfName = ""
             }
-        } else {
-            // Just select the existing shelf and close
-            shelfLocation = newShelfName
-            showAddNewShelfSheet = false
-            newShelfName = ""
         }
     }
     
@@ -276,25 +287,34 @@ struct AddBookFormView: View {
             return
         }
         
-        // Create a new book with the quantity and shelf location
-        let newBook = LibrarianBook(
-            id: UUID(), // Explicitly create a UUID
-            title: book.title,
-            author: book.author,
-            genre: selectedGenre,
-            publicationDate: book.publicationDate,
-            totalCopies: quantityInt,
-            availableCopies: quantityInt,
-            ISBN: book.ISBN,
-            Description: book.Description,
-            shelfLocation: shelfLocation,
-            dateAdded: Date(),
-            publisher: book.publisher,
-            imageLink: book.imageLink
-        )
-        
-        // Add the book to the database directly for better error tracking
         Task {
+            // Check if librarian is disabled
+            if try await LibrarianService.checkLibrarianStatus() {
+                await MainActor.run {
+                    alertMessage = "Your account has been disabled. Please contact the administrator."
+                    showAlert = true
+                }
+                return
+            }
+            
+            // Create a new book with the quantity and shelf location
+            let newBook = LibrarianBook(
+                id: UUID(), // Explicitly create a UUID
+                title: book.title,
+                author: book.author,
+                genre: selectedGenre,
+                publicationDate: book.publicationDate,
+                totalCopies: quantityInt,
+                availableCopies: quantityInt,
+                ISBN: book.ISBN,
+                Description: book.Description,
+                shelfLocation: shelfLocation,
+                dateAdded: Date(),
+                publisher: book.publisher,
+                imageLink: book.imageLink
+            )
+            
+            // Add the book to the database directly for better error tracking
             do {
                 print("Adding book to collection with ID: \(newBook.id?.uuidString ?? "nil")")
                 

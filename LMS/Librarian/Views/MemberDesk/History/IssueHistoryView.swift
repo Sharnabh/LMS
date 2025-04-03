@@ -16,8 +16,9 @@ struct IssueHistoryView: View {
     @State private var isEditing = false
     @State private var searchText = ""
     @State private var selectedFilter = "All"
-    @State private var memberFines: [String: Double] = [:] // Add this to store member fines
-    @State private var memberDefaultCounts: [String: Int] = [:] // Add this to store defaulter counts
+    @State private var memberFines: [String: Double] = [:]
+    @State private var memberDefaultCounts: [String: Int] = [:]
+    @State private var showLostBookPage: Bool = false
     
     // Filtered members based on search text with prioritized exact matches
     private var filteredMembers: [MemberModel] {
@@ -298,7 +299,9 @@ struct IssueHistoryView: View {
                         HStack {
                             Spacer()
                             Button {
-                                showingQRScanner = true
+                                Task {
+                                    showingQRScanner = true
+                                }
                             } label: {
                                 Image(systemName: "qrcode.viewfinder")
                                     .font(.system(size: 24))
@@ -316,6 +319,16 @@ struct IssueHistoryView: View {
             .navigationTitle("Member Desk")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showLostBookPage.toggle()
+                    } label: {
+                        Image(systemName: "bell.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(Color.accentColor)
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(isEditing ? "Done" : "Edit") {
                         isEditing.toggle()
@@ -328,6 +341,14 @@ struct IssueHistoryView: View {
                 QRScanner(isPresentedAsFullScreen: true)
                     .navigationBarItems(trailing: Button("Close") {
                         showingQRScanner = false
+                    })
+            }
+        }
+        .sheet(isPresented: $showLostBookPage) {
+            NavigationView {
+                LostBookView()
+                    .navigationBarItems(trailing: Button("Close") {
+                        showLostBookPage = false
                     })
             }
         }
@@ -602,7 +623,7 @@ struct MemberCard: View {
 }
 
 #Preview {
-    NavigationView {
+    NavigationStack {
         IssueHistoryView()
     }
 }

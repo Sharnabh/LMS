@@ -139,21 +139,21 @@ struct Admin: Codable, Identifiable {
     }
 }
 
-struct Librarian: Codable, Identifiable {
-    var id: UUID
-    var name: String
-    var email: String
-    var password: String
-    var createdAt: Date
-}
-
-struct Member: Codable, Identifiable {
-    var id: UUID
-    var name: String
-    var email: String
-    var password: String
-    var createdAt: Date
-}
+//struct Librarian: Codable, Identifiable {
+//    var id: UUID
+//    var name: String
+//    var email: String
+//    var password: String
+//    var createdAt: Date
+//}
+//
+//struct Member: Codable, Identifiable {
+//    var id: UUID
+//    var name: String
+//    var email: String
+//    var password: String
+//    var createdAt: Date
+//}
 
 //struct Book: Codable, Identifiable {
 //    var id: UUID

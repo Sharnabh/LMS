@@ -288,7 +288,7 @@ struct LibrarianProfileSetupView: View {
                 }
                 
                 // Update librarian profile with all information including avatar URL
-                try await LibrarianService.shared.updateLibrarianProfile(
+                try await LibrarianService.updateLibrarianProfile(
                     librarianId: librarianId,
                     name: fullName,
                     dateOfBirth: dateOfBirth,
@@ -455,7 +455,7 @@ class LibrarianService {
     
     private init() {}
     
-    func fetchLibrarianProfile(librarianId: String) async throws -> LibrarianModel {
+    static func fetchLibrarianProfile(librarianId: String) async throws -> LibrarianModel {
         // Fetch librarian profile from Supabase
         do {
             let dataController = SupabaseDataController()
@@ -477,7 +477,60 @@ class LibrarianService {
         }
     }
     
-    func updateLibrarianProfile(librarianId: String, name: String, dateOfBirth: Date, avatarUrl: String?) async throws {
+    static func checkLibrarianStatus() async throws -> Bool {
+        guard let librarianId = UserDefaults.standard.string(forKey: "currentLibrarianID") else {
+            return false
+        }
+        
+        do {
+            let dataController = SupabaseDataController()
+            let response: [LibrarianModel] = try await dataController.client.from("Librarian")
+                .select()
+                .eq("id", value: librarianId)
+                .execute()
+                .value
+            
+            guard let librarianModel = response.first else {
+                return false
+            }
+            
+            return librarianModel.isDisabled ?? false
+        } catch {
+            print("Error checking librarian status: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
+    static func showDisabledAlert() {
+        DispatchQueue.main.async {
+            let alert = UIAlertController(
+                title: "Account Disabled",
+                message: "Your account has been disabled. Please contact the administrator.",
+                preferredStyle: .alert
+            )
+            
+            alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+                // Logout the librarian
+                UserDefaults.standard.removeObject(forKey: "currentLibrarianID")
+                UserDefaults.standard.removeObject(forKey: "currentLibrarianEmail")
+                UserDefaults.standard.set(false, forKey: "librarianIsLoggedIn")
+                
+                // Reset to first screen
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let window = windowScene.windows.first {
+                    window.rootViewController = UIHostingController(rootView: ContentView())
+                }
+            })
+            
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first,
+               let rootViewController = window.rootViewController {
+                rootViewController.present(alert, animated: true)
+            }
+        }
+    }
+    
+    static func updateLibrarianProfile(librarianId: String, name: String, dateOfBirth: Date, avatarUrl: String?) async throws {
         // Update librarian profile in Supabase
         do {
             let dataController = SupabaseDataController()

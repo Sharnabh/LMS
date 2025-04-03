@@ -25,6 +25,11 @@ struct LibrarianInitialView: View {
     // Tab selection state
     @State private var selectedTab = 0
     
+    // Alert related states
+    @State private var showAlert = false
+    @State private var alertMessage = ""
+    @State private var isLibrarianDisabled = false
+    
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
@@ -161,10 +166,11 @@ struct LibrarianInitialView: View {
     private func checkLibrarianStatus() async {
         if let librarianId = UserDefaults.standard.string(forKey: "currentLibrarianID") {
             do {
-                let isDisabled = try await dataController.checkLibrarianStatus(librarianId: librarianId)
-                if isDisabled {
+                isLibrarianDisabled = try await dataController.checkLibrarianStatus(librarianId: librarianId)
+                if isLibrarianDisabled {
                     await MainActor.run {
-                        showDisabledAlert = true
+                        alertMessage = "Your account has been disabled. Please contact the administrator."
+                        showAlert = true
                     }
                 }
             } catch {
@@ -180,24 +186,35 @@ struct LibrarianInitialView: View {
         // Create a temporary BookStore to handle the book addition
         let bookStore = BookStore()
         
-        do {
-            // First, fetch the book details from Google Books API
-            let fetchedBook = try await GoogleBooksService.fetchBookByISBN(isbn: isbn)
+        Task {
+            // Check if librarian is disabled
+            if try await LibrarianService.checkLibrarianStatus() {
+                await MainActor.run {
+                    alertMessage = "Your account has been disabled. Please contact the administrator."
+                    showAlert = true
+                }
+                return
+            }
             
-            // Set default copies to 1 for scanned books
-            var bookToAdd = fetchedBook
-            bookToAdd.totalCopies = 1
-            bookToAdd.availableCopies = 1
-            
-            // Add the book to Supabase
-            print("Adding book to Supabase: \(bookToAdd.title) by librarian: \(librarianEmail)")
-            bookStore.addBook(bookToAdd)
-            
-            // Show success feedback to user
-            UIAccessibility.post(notification: .announcement, argument: "Book added successfully: \(bookToAdd.title)")
-        } catch {
-            print("Error processing ISBN: \(error)")
-            UIAccessibility.post(notification: .announcement, argument: "Error: Could not find book with ISBN \(isbn)")
+            do {
+                // First, fetch the book details from Google Books API
+                let fetchedBook = try await GoogleBooksService.fetchBookByISBN(isbn: isbn)
+                
+                // Set default copies to 1 for scanned books
+                var bookToAdd = fetchedBook
+                bookToAdd.totalCopies = 1
+                bookToAdd.availableCopies = 1
+                
+                // Add the book to Supabase
+                print("Adding book to Supabase: \(bookToAdd.title) by librarian: \(librarianEmail)")
+                bookStore.addBook(bookToAdd)
+                
+                // Show success feedback to user
+                UIAccessibility.post(notification: .announcement, argument: "Book added successfully: \(bookToAdd.title)")
+            } catch {
+                print("Error processing ISBN: \(error)")
+                UIAccessibility.post(notification: .announcement, argument: "Error: Could not find book with ISBN \(isbn)")
+            }
         }
     }
 }

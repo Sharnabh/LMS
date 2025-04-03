@@ -282,7 +282,7 @@ struct LibrarianProfileView: View {
         
         Task {
             do {
-                let librarianModel = try await LibrarianService.shared.fetchLibrarianProfile(librarianId: librarianId)
+                let librarianModel = try await LibrarianService.fetchLibrarianProfile(librarianId: librarianId)
                 
                 // Debug: Print all properties to see what we're working with
                 let mirror = Mirror(reflecting: librarianModel)
@@ -433,72 +433,78 @@ struct LibrarianProfileView: View {
     
     // Update profile
     private func updateProfile() {
-        guard let librarianId = UserDefaults.standard.string(forKey: "currentLibrarianID") else {
-            alertTitle = "Error"
-            alertMessage = "Librarian ID not found"
-            showAlert = true
-            return
-        }
-        
         isLoading = true
         
         Task {
-            do {
-                var avatarUrlToUpdate: String? = avatarUrl
-                
-                // Upload new image if selected
-                if let profileImage = profileImage {
-                    let resizedImage = resizeImage(image: profileImage, targetSize: CGSize(width: 300, height: 300))
-                    
-                    guard let imageData = resizedImage.jpegData(compressionQuality: 0.7) else {
-                        throw NSError(domain: "Image processing failed", code: 1001)
-                    }
-                    
-                    let timestamp = Int(Date().timeIntervalSince1970)
-                    let filename = "\(librarianId)_\(timestamp).jpg"
-                    
-                    avatarUrlToUpdate = try await LibrarianStorageService.shared.uploadLibrarianAvatar(
-                        data: imageData,
-                        filename: filename
-                    )
-                }
-                
-                // Create an encodable struct for the update data
-                struct LibrarianProfileUpdate: Encodable {
-                    let username: String
-                    let avatar_url: String?
-                }
-                
-                // Create the update data
-                let updateData = LibrarianProfileUpdate(
-                    username: fullName,
-                    avatar_url: avatarUrlToUpdate
-                )
-                
-                // Update profile
-                let dataController = SupabaseDataController()
-                try await dataController.client.from("Librarian")
-                    .update(updateData)
-                    .eq("id", value: librarianId)
-                    .execute()
-                
-                await MainActor.run {
-                    isLoading = false
-                    isEditing = false
-                    alertTitle = "Success"
-                    alertMessage = "Profile updated successfully"
-                    showAlert = true
-                    
-                    // Refresh profile data
-                    fetchLibrarianProfile()
-                }
-            } catch {
+            // Check if librarian is disabled
+            let isDisabled = try await LibrarianService.checkLibrarianStatus()
+            if isDisabled {
                 await MainActor.run {
                     isLoading = false
                     alertTitle = "Error"
-                    alertMessage = "Failed to update profile: \(error.localizedDescription)"
+                    alertMessage = "Your account has been disabled. Please contact the administrator."
                     showAlert = true
                 }
+                return
+            }
+            
+            guard let librarianId = UserDefaults.standard.string(forKey: "currentLibrarianID") else {
+                await MainActor.run {
+                    isLoading = false
+                    alertTitle = "Error"
+                    alertMessage = "Could not find librarian ID"
+                    showAlert = true
+                }
+                return
+            }
+            
+            var avatarUrlToUpdate: String? = avatarUrl
+            
+            // Upload new image if selected
+            if let profileImage = profileImage {
+                let resizedImage = resizeImage(image: profileImage, targetSize: CGSize(width: 300, height: 300))
+                
+                guard let imageData = resizedImage.jpegData(compressionQuality: 0.7) else {
+                    throw NSError(domain: "Image processing failed", code: 1001)
+                }
+                
+                let timestamp = Int(Date().timeIntervalSince1970)
+                let filename = "\(librarianId)_\(timestamp).jpg"
+                
+                avatarUrlToUpdate = try await LibrarianStorageService.shared.uploadLibrarianAvatar(
+                    data: imageData,
+                    filename: filename
+                )
+            }
+            
+            // Create an encodable struct for the update data
+            struct LibrarianProfileUpdate: Encodable {
+                let username: String
+                let avatar_url: String?
+            }
+            
+            // Create the update data
+            let updateData = LibrarianProfileUpdate(
+                username: fullName,
+                avatar_url: avatarUrlToUpdate
+            )
+            
+            // Update profile
+            let dataController = SupabaseDataController()
+            try await dataController.client.from("Librarian")
+                .update(updateData)
+                .eq("id", value: librarianId)
+                .execute()
+            
+            await MainActor.run {
+                isLoading = false
+                isEditing = false
+                alertTitle = "Success"
+                alertMessage = "Profile updated successfully"
+                showAlert = true
+                
+                // Refresh profile data
+                fetchLibrarianProfile()
             }
         }
     }

@@ -193,10 +193,25 @@ struct ReturnConfirmationView: View {
     }
     
     private func confirmReturn() {
+        guard !isProcessing else { return }
+        
         isProcessing = true
         
         Task {
             do {
+                // Check if librarian is disabled
+                if try await LibrarianService.checkLibrarianStatus() {
+                    await MainActor.run {
+                        isProcessing = false
+                        alertMessage = "Your account has been disabled. Please contact the administrator."
+                        showAlert = true
+                        
+                        // Announce for accessibility
+                        UIAccessibility.post(notification: .announcement, argument: "Error: Your account has been disabled. Please contact the administrator.")
+                    }
+                    return
+                }
+                
                 let returnDate = Date()
                 let formatter = ISO8601DateFormatter()
                 
@@ -452,78 +467,93 @@ struct QRScanner: View {
             return 
         }
         
-        // First try to parse as return QR code
-        if let returnData = try? JSONDecoder().decode(ReturnQRCode.self, from: code.data(using: .utf8) ?? Data()) {
-            if returnData.action == "return" {
-                handleReturnQRCode(returnData)
-                return
-            }
-        }
-        
-        // If not a return QR code, try to parse as book issue QR code
-        let result = QRCodeParser.parseBookInfo(from: code)
-        
-        switch result {
-        case .success(let parsedInfo):
-            // Check if the QR code is expired
-            let expirationDate = Date(timeIntervalSince1970: parsedInfo.expirationDate)
-            if Date() > expirationDate {
-                alertItem = AlertContext.expiredQRCode
-                isProcessing = false
+        Task {
+            // Check if librarian is disabled
+            if try await LibrarianService.checkLibrarianStatus() {
+                await MainActor.run {
+                    alertItem = AlertItem(
+                        title: "Account Disabled",
+                        message: "Your account has been disabled. Please contact the administrator.",
+                        dismissButton: .default(Text("OK"))
+                    )
+                    isProcessing = false
+                }
                 return
             }
             
-            // Check if the issue status is valid
-            if parsedInfo.issueStatus != "Pending" {
-                alertItem = AlertItem(
-                    title: "Invalid Issue Status",
-                    message: "This QR code has already been processed or is invalid.",
-                    dismissButton: .default(Text("OK"))
-                )
-                isProcessing = false
-                return
-            }
-            
-            // Check borrowing limit before showing book info
-            Task {
-                do {
-                    let newBooksCount = parsedInfo.bookIds.count
-                    _ = try await checkBorrowingLimit(memberId: parsedInfo.memberId, newBooksCount: newBooksCount)
-                    
-                    await MainActor.run {
-                        bookInfo = parsedInfo
-                        isShowingBookInfo = true
-                    }
-                } catch {
-                    await MainActor.run {
-                        alertItem = AlertItem(
-                            title: "Borrowing Limit Exceeded",
-                            message: error.localizedDescription,
-                            dismissButton: .default(Text("OK"))
-                        )
-                        isProcessing = false
-                    }
+            // First try to parse as return QR code
+            if let returnData = try? JSONDecoder().decode(ReturnQRCode.self, from: code.data(using: .utf8) ?? Data()) {
+                if returnData.action == "return" {
+                    handleReturnQRCode(returnData)
+                    return
                 }
             }
             
-        case .failure(let error):
-            switch error {
-            case .invalidFormat:
-                alertItem = AlertContext.invalidQRCode
-            case .invalidJSON:
-                alertItem = AlertContext.invalidJSONFormat
-            case .missingFields:
-                alertItem = AlertContext.missingRequiredFields
-            case .expired:
-                alertItem = AlertContext.expiredQRCode
-            case .invalidAction:
-                alertItem = AlertItem(
-                    title: "Invalid Action",
-                    message: "This QR code contains an invalid action.",
-                    dismissButton: .default(Text("OK"))
-                )
+            // If not a return QR code, try to parse as book issue QR code
+            let result = QRCodeParser.parseBookInfo(from: code)
+            
+            switch result {
+            case .success(let parsedInfo):
+                // Check if the QR code is expired
+                let expirationDate = Date(timeIntervalSince1970: parsedInfo.expirationDate)
+                if Date() > expirationDate {
+                    alertItem = AlertContext.expiredQRCode
+                    isProcessing = false
+                    return
+                }
+                
+                // Check if the issue status is valid
+                if parsedInfo.issueStatus != "Pending" {
+                    alertItem = AlertItem(
+                        title: "Invalid Issue Status",
+                        message: "This QR code has already been processed or is invalid.",
+                        dismissButton: .default(Text("OK"))
+                    )
+                    isProcessing = false
+                    return
+                }
+                
+                // Check borrowing limit before showing book info
+                Task {
+                    do {
+                        let newBooksCount = parsedInfo.bookIds.count
+                        _ = try await checkBorrowingLimit(memberId: parsedInfo.memberId, newBooksCount: newBooksCount)
+                        
+                        await MainActor.run {
+                            bookInfo = parsedInfo
+                            isShowingBookInfo = true
+                        }
+                    } catch {
+                        await MainActor.run {
+                            alertItem = AlertItem(
+                                title: "Borrowing Limit Exceeded",
+                                message: error.localizedDescription,
+                                dismissButton: .default(Text("OK"))
+                            )
+                            isProcessing = false
+                        }
+                    }
+                }
+                
+            case .failure(let error):
+                switch error {
+                case .invalidFormat:
+                    alertItem = AlertContext.invalidQRCode
+                case .invalidJSON:
+                    alertItem = AlertContext.invalidJSONFormat
+                case .missingFields:
+                    alertItem = AlertContext.missingRequiredFields
+                case .expired:
+                    alertItem = AlertContext.expiredQRCode
+                case .invalidAction:
+                    alertItem = AlertItem(
+                        title: "Invalid Action",
+                        message: "This QR code contains an invalid action.",
+                        dismissButton: .default(Text("OK"))
+                    )
+                }
+                isProcessing = false
             }
-            isProcessing = false
         }
     }
     

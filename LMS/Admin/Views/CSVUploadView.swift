@@ -307,7 +307,7 @@ struct CSVUploadView: View {
             // Try to fetch book details from Google Books
             var bookDetails: LibrarianBook? = nil
             do {
-                bookDetails = try await GoogleBooksService.fetchBookByISBN(isbn: isbn)
+                bookDetails = try await GoogleBooksService.fetchBookByISBN(isbn: isbn, useGeminiPrediction: false)
             } catch {
                 print("Could not fetch book details from GoogleBooks API: \(error)")
             }

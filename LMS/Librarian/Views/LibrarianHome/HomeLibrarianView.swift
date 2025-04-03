@@ -16,6 +16,8 @@ struct HomeLibrarianView: View {
     @State private var isLoadingMembers: Bool = false // Track loading state for members
     @State private var totalCollectedFines: Double = 0 // Track total collected fines
     @State private var isLoadingFines: Bool = false // Track loading state for fines
+    @State private var alertMessage: String = ""
+    @State private var showAlert: Bool = false
     
     // For Needs Shelf Location section
     @State private var needsLocationCurrentBookIndex = 0 // Track which book is currently displayed in the needs location section
@@ -920,12 +922,31 @@ struct HomeLibrarianView: View {
     private func refreshBooks() {
         isRefreshing = true
         Task {
-            await bookStore.loadBooks()
-            await loadMembersCount() // Add this line to load members count
-            await loadCollectedFines() // Add this line to load collected fines
-            await MainActor.run {
-                isRefreshing = false
-                currentBookIndex = 0 // Reset to show newest book
+            do {
+                // Check if librarian is disabled
+                if try await LibrarianService.checkLibrarianStatus() {
+                    await MainActor.run {
+                        isRefreshing = false
+                        // Show alert for disabled account
+                        alertMessage = "Your account has been disabled. Please contact the administrator."
+                        showAlert = true
+                    }
+                    return
+                }
+                
+                await bookStore.loadBooks()
+                await loadMembersCount() // Add this line to load members count
+                await loadCollectedFines() // Add this line to load collected fines
+                await MainActor.run {
+                    isRefreshing = false
+                    currentBookIndex = 0 // Reset to show newest book
+                }
+            } catch {
+                await MainActor.run {
+                    isRefreshing = false
+                    alertMessage = "Error refreshing data: \(error.localizedDescription)"
+                    showAlert = true
+                }
             }
         }
     }
@@ -934,6 +955,16 @@ struct HomeLibrarianView: View {
     private func loadMembersCount() async {
         isLoadingMembers = true
         do {
+            // Check if librarian is disabled
+            if try await LibrarianService.checkLibrarianStatus() {
+                await MainActor.run {
+                    isLoadingMembers = false
+                    alertMessage = "Your account has been disabled. Please contact the administrator."
+                    showAlert = true
+                }
+                return
+            }
+            
             totalMembersCount = try await MemberService.shared.getTotalMembersCount()
         } catch {
             print("Error loading members count: \(error)")
@@ -945,6 +976,16 @@ struct HomeLibrarianView: View {
     private func loadCollectedFines() async {
         isLoadingFines = true
         do {
+            // Check if librarian is disabled
+            if try await LibrarianService.checkLibrarianStatus() {
+                await MainActor.run {
+                    isLoadingFines = false
+                    alertMessage = "Your account has been disabled. Please contact the administrator."
+                    showAlert = true
+                }
+                return
+            }
+            
             totalCollectedFines = try await AnalyticsService.shared.getTotalRevenue()
         } catch {
             print("Error loading collected fines: \(error)")

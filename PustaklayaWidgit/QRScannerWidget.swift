@@ -79,7 +79,7 @@ struct QRScannerWidgetEntryView : View {
 }
 
 struct QRScannerWidget: Widget {
-    let kind: String = "QRScannerWidget"
+    let kind: String = WidgetRegistry.qrScannerKind
 
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: QRScannerWidgetIntent.self, provider: QRScannerProvider()) { entry in

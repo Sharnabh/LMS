@@ -139,7 +139,45 @@ struct CSVPreviewView: View {
             var updatedBooksCount = 0
             
             for book in booksToImport {
-                let result = await bookStore.addOrUpdateBook(book)
+                do {
+                    // Check if librarian is disabled
+                    if try await LibrarianService.checkLibrarianStatus() {
+                        await MainActor.run {
+                            isImporting = false
+                            isSuccess = false
+                            alertMessage = "Your account has been disabled. Please contact the administrator."
+                            showAlert = true
+                        }
+                        return
+                    }
+                    
+                    // Convert Date to Unix timestamp
+                    let timestamp: Int
+                    if let date = book.dateAdded {
+                        timestamp = Int(date.timeIntervalSince1970)
+                    } else {
+                        // Handle the case where date is nil
+                        timestamp = Int(Date().timeIntervalSince1970)
+                    }
+                    
+                    // Create a new book with the timestamp converted back to Date
+                    let bookWithTimestamp = LibrarianBook(
+                        id: book.id,
+                        title: book.title,
+                        author: book.author,
+                        genre: book.genre,
+                        publicationDate: book.publicationDate,
+                        totalCopies: book.totalCopies,
+                        availableCopies: book.availableCopies,
+                        ISBN: book.ISBN,
+                        Description: book.Description,
+                        shelfLocation: book.shelfLocation,
+                        dateAdded: Date(timeIntervalSince1970: TimeInterval(timestamp)),
+                        publisher: book.publisher,
+                        imageLink: book.imageLink
+                    )
+                    
+                    let result = await bookStore.addOrUpdateBook(bookWithTimestamp)
                 if result.isNewBook {
                     newBooksCount += 1
                 } else {
@@ -148,6 +186,9 @@ struct CSVPreviewView: View {
                 
                 // Small delay to avoid overwhelming the database
                 try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+                } catch {
+                    print("Error importing book: \(error)")
+                }
             }
             
             // Explicitly reload books to ensure they're updated across all views

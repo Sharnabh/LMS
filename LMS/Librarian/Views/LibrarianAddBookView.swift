@@ -19,6 +19,12 @@ struct LibrarianAddBookView: View {
     @State private var isLoadingShelves = true
     @State private var showAddNewShelfSheet = false
     @State private var newShelfName = ""
+    @State private var isPredictingGenre = false
+    @State private var showGenrePrediction = false
+    @State private var predictedGenre: String? = nil
+    @State private var isbnWasAutoFilled = false
+    @State private var yearWasAutoFilled = false
+    @State private var authorWasAutoFilled = false
     
     let genres = ["Science", "Humanities", "Business", "Medicine", "Law", "Education", "Arts", "Religion", "Mathematics", "Technology", "Reference", "Fiction", "Non-Fiction", "Literature"]
     
@@ -48,9 +54,65 @@ struct LibrarianAddBookView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    Picker("Genre", selection: $genre) {
-                        ForEach(genres, id: \.self) { genre in
-                            Text(genre).tag(genre)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Genre")
+                                .foregroundColor(.secondary)
+                            Spacer()
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                        
+                        Picker("", selection: $genre) {
+                            Text("Select a genre").tag("")
+                            ForEach(genres, id: \.self) { genre in
+                                Text(genre).tag(genre)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5)
+                                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                        )
+                        
+                        if let predictedGenre = predictedGenre, showGenrePrediction {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "sparkles")
+                                        .font(.caption2)
+                                        .foregroundColor(.blue)
+                                    
+                                    Text("AI suggestion: ")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                    
+                                    Text(predictedGenre)
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.blue)
+                                        .lineLimit(1)
+                                    
+                                    Spacer()
+                                    
+                                    Button("Use") {
+                                        withAnimation {
+                                            genre = predictedGenre
+                                            showGenrePrediction = false
+                                        }
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.accentColor)
+                                    .padding(.vertical, 2)
+                                    .padding(.horizontal, 8)
+                                    .background(Color.accentColor.opacity(0.1))
+                                    .cornerRadius(4)
+                                }
+                                .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(8)
+                            .background(Color.secondary.opacity(0.05))
+                            .cornerRadius(8)
+                            .padding(.top, 4)
                         }
                     }
                     
@@ -96,6 +158,39 @@ struct LibrarianAddBookView: View {
                     }
                 }
                 
+                // Add Auto-Fill with AI button above the AI Prediction section
+                if !showGenrePrediction {
+                    Section {
+                        if isPredictingGenre {
+                            HStack {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                Text("Predicting book details with AI...")
+                                    .foregroundColor(.secondary)
+                                    .padding(.leading, 8)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.vertical, 4)
+                        } else {
+                            Button(action: {
+                                predictGenre()
+                            }) {
+                                HStack {
+                                    Image(systemName: "sparkles")
+                                        .foregroundColor(.blue)
+                                    Text("Auto-Fill with AI")
+                                        .foregroundColor(.primary)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding(.vertical, 4)
+                            }
+                            .disabled(title.isEmpty && author.isEmpty)
+                            .opacity((title.isEmpty && author.isEmpty) ? 0.5 : 1.0)
+                        }
+                    }
+                    .listRowBackground(Color.accentColor.opacity(0.1))
+                }
+                
                 if !isValid {
                     Section {
                         Text("Please fill in all required fields correctly")
@@ -125,6 +220,10 @@ struct LibrarianAddBookView: View {
             )
             .onAppear {
                 loadShelfLocations()
+                // Automatically predict genre if title or ISBN is provided
+                if !title.isEmpty || !isbn.isEmpty {
+                    predictGenre()
+                }
             }
             .sheet(isPresented: $showAddNewShelfSheet) {
                 addNewShelfView
@@ -186,55 +285,69 @@ struct LibrarianAddBookView: View {
     private func addNewShelf() {
         guard !newShelfName.isEmpty else { return }
         
-        if !shelfLocationStore.shelfLocations.contains(where: { $0.shelfNo == newShelfName }) {
-            let newShelf = BookShelfLocation(
-                id: UUID(),
-                shelfNo: newShelfName,
-                bookID: []
-            )
-            
-            shelfLocationStore.addShelfLocation(newShelf)
-            
-            Task {
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                await shelfLocationStore.loadShelfLocations()
+        Task {
+            do {
+                // Check if librarian is disabled
+                if try await LibrarianService.checkLibrarianStatus() {
+                    return
+                }
                 
-                await MainActor.run {
+                if !shelfLocationStore.shelfLocations.contains(where: { $0.shelfNo == newShelfName }) {
+                    let newShelf = BookShelfLocation(
+                        id: UUID(),
+                        shelfNo: newShelfName,
+                        bookID: []
+                    )
+                    
+                    shelfLocationStore.addShelfLocation(newShelf)
+                    
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    await shelfLocationStore.loadShelfLocations()
+                    
+                    await MainActor.run {
+                        shelfLocation = newShelfName
+                        showAddNewShelfSheet = false
+                        newShelfName = ""
+                    }
+                } else {
                     shelfLocation = newShelfName
                     showAddNewShelfSheet = false
                     newShelfName = ""
                 }
+            } catch {
+                print("Error adding new shelf: \(error)")
             }
-        } else {
-            shelfLocation = newShelfName
-            showAddNewShelfSheet = false
-            newShelfName = ""
         }
     }
     
     private func addBook() {
         isLoading = true
         
-        let authorArray = author.split(separator: ";").map { String($0.trimmingCharacters(in: .whitespaces)) }
-        
-        let newBook = LibrarianBook(
-            id: UUID(),
-            title: title,
-            author: authorArray,
-            genre: genre,
-            publicationDate: publicationDate,
-            totalCopies: Int(totalCopies) ?? 1,
-            availableCopies: Int(totalCopies) ?? 1,
-            ISBN: isbn,
-            Description: nil,
-            shelfLocation: shelfLocation,
-            dateAdded: Date(),
-            publisher: nil,
-            imageLink: nil
-        )
-        
         Task {
             do {
+                // Check if librarian is disabled
+                if try await LibrarianService.checkLibrarianStatus() {
+                    return
+                }
+                
+                let authorArray = author.split(separator: ";").map { String($0.trimmingCharacters(in: .whitespaces)) }
+                
+                let newBook = LibrarianBook(
+                    id: UUID(),
+                    title: title,
+                    author: authorArray,
+                    genre: genre,
+                    publicationDate: publicationDate,
+                    totalCopies: Int(totalCopies) ?? 1,
+                    availableCopies: Int(totalCopies) ?? 1,
+                    ISBN: isbn,
+                    Description: nil,
+                    shelfLocation: shelfLocation,
+                    dateAdded: Date(),
+                    publisher: nil,
+                    imageLink: nil
+                )
+                
                 let success = try await bookStore.dataController.addBook(newBook)
                 
                 if success {
@@ -276,6 +389,66 @@ struct LibrarianAddBookView: View {
                     alertMessage = "Error: \(error.localizedDescription)"
                     showAlert = true
                     isLoading = false
+                }
+            }
+        }
+    }
+    
+    private func predictGenre() {
+        isPredictingGenre = true
+        
+        Task {
+            do {
+                // Check if librarian is disabled
+                if try await LibrarianService.checkLibrarianStatus() {
+                    await MainActor.run {
+                        isPredictingGenre = false
+                    }
+                    return
+                }
+                
+                // Parse the author string into an array
+                let authorArray = author.split(separator: ";").map { String($0.trimmingCharacters(in: .whitespaces)) }
+                
+                // Use GenrePredictionService to predict book details
+                let prediction = try await GenrePredictionService.shared.predictGenre(
+                    title: title,
+                    description: "", 
+                    authors: authorArray,
+                    availableGenres: genres
+                )
+                
+                await MainActor.run {
+                    withAnimation {
+                        predictedGenre = prediction.genre
+                        showGenrePrediction = true
+                        
+                        // Update ISBN
+                        if !prediction.isbn.isEmpty {
+                            isbn = prediction.isbn
+                            isbnWasAutoFilled = true
+                        }
+                        
+                        // Update publication year
+                        if !prediction.publicationYear.isEmpty {
+                            publicationDate = prediction.publicationYear
+                            yearWasAutoFilled = true
+                        }
+                        
+                        // Update author if it's different from current value
+                        if !prediction.author.isEmpty && prediction.author != author {
+                            author = prediction.author
+                            authorWasAutoFilled = true
+                        }
+                        
+                        isPredictingGenre = false
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isPredictingGenre = false
+                    alertMessage = "Failed to predict book details: \(error.localizedDescription)"
+                    showAlert = true
                 }
             }
         }

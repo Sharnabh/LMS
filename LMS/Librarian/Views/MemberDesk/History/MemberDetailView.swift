@@ -30,7 +30,7 @@ struct MemberDetailView: View {
                     HStack {
                         Image(systemName: "person.circle.fill")
                             .font(.system(size: 60))
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text("\(member.firstName ?? "Unknown") \(member.lastName ?? "")")

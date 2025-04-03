@@ -91,7 +91,7 @@ struct LibrarianAddBookView: View {
                                 showAddNewShelfSheet = true
                             }
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                         }
                     }
                 }

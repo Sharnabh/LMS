@@ -76,7 +76,7 @@ struct CSVPreviewView: View {
                     importBooks()
                 }
                 .disabled(booksToImport.isEmpty)
-                .foregroundColor(booksToImport.isEmpty ? .gray : .blue)
+                .foregroundColor(booksToImport.isEmpty ? .gray : .accentColor)
             )
         }
         .alert(isPresented: $showAlert) {
@@ -301,7 +301,7 @@ struct CSVBookItemView: View {
                 
                 Text("Tap to edit")
                     .font(.caption2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
             }
         }
         .padding()

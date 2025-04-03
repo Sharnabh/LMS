@@ -162,7 +162,7 @@ struct IssueHistoryView: View {
                             // Replace text and chevron with filter icon
                             Image(systemName: "line.3.horizontal.decrease.circle")
                                 .font(.system(size: 22))
-                                .foregroundColor(selectedFilter == "All" ? .primary : selectedFilter == "Fines" ? .blue : .purple)
+                                .foregroundColor(selectedFilter == "All" ? .accentColor : selectedFilter == "Fines" ? .accentColor : .accentColor)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .background(Color.white)
@@ -304,7 +304,7 @@ struct IssueHistoryView: View {
                                     .font(.system(size: 24))
                                     .foregroundColor(.white)
                                     .frame(width: 60, height: 60)
-                                    .background(Color.blue)
+                                    .background(Color.accentColor)
                                     .clipShape(Circle())
                                     .shadow(radius: 4)
                             }

@@ -299,7 +299,7 @@ struct VoiceCommandBookIssueView: View {
                     }
                 }
                 .padding()
-                .background(Color.blue.opacity(0.1))
+                .background(Color.accentColor.opacity(0.1))
                 .cornerRadius(8)
                 .accessibilityElement(children: .contain)
             }

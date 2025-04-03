@@ -114,7 +114,7 @@ struct LibrarianProfileSetupView: View {
                                 .cornerRadius(12)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                                        .stroke(Color.accentColor.opacity(0.2), lineWidth: 1)
                                 )
                         }
                         
@@ -143,7 +143,7 @@ struct LibrarianProfileSetupView: View {
                                 .cornerRadius(12)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                                        .stroke(Color.accentColor.opacity(0.2), lineWidth: 1)
                                 )
                             }
                         }

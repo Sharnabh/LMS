@@ -156,7 +156,7 @@ struct LibrarianAddBookView: View {
                 .disabled(newShelfName.isEmpty)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(newShelfName.isEmpty ? Color.gray : Color.blue)
+                .background(newShelfName.isEmpty ? Color.gray : Color.accentColor)
                 .foregroundColor(.white)
                 .cornerRadius(8)
                 .padding()

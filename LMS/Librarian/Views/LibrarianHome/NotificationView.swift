@@ -148,7 +148,7 @@ struct NotificationCard: View {
                     Text(isExpanded ? "Show less" : "Read more")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                 }
                 .padding(.top, 2)
             }

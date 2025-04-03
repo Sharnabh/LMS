@@ -159,7 +159,7 @@ struct LibrarianLoginView: View {
                                     } else {
                                         Text("Resend Code")
                                             .font(.caption)
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(.accentColor)
                                     }
                                 }
                                 .disabled(isLoading || resendCountdown > 0)

@@ -441,7 +441,7 @@ struct AllBooksViewContent: View {
                                         toggleSelection(for: book)
                                     }) {
                                         Image(systemName: selectedBooks.contains(book) ? "checkmark.square.fill" : "square")
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(.accentColor)
                                     }
                                     .buttonStyle(PlainButtonStyle())
                                 }

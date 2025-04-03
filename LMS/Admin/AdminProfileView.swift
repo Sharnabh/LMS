@@ -176,19 +176,19 @@ struct AdminProfileView: View {
             }
             
             // Preferences Section
-            Section {
-                NavigationLink(destination: NotificationsView()) {
-                    Label {
-                        Text("Notifications")
-                    } icon: {
-                        Image(systemName: "bell.fill")
-                            .foregroundColor(.accentColor)
-                    }
-                }
-            } header: {
-                Text("Preferences")
-                    .textCase(.none)
-            }
+//            Section {
+//                NavigationLink(destination: NotificationsView()) {
+//                    Label {
+//                        Text("Notifications")
+//                    } icon: {
+//                        Image(systemName: "bell.fill")
+//                            .foregroundColor(.accentColor)
+//                    }
+//                }
+//            } header: {
+//                Text("Preferences")
+//                    .textCase(.none)
+//            }
             
             // Export Analytics Section
             Section {
@@ -205,7 +205,7 @@ struct AdminProfileView: View {
             } header: {
                 Text("Analytics")
             } footer: {
-                Text("Export all library statistics in CSV format")
+//                Text("Export all library statistics in CSV format")
             }
             
             // Logout Section

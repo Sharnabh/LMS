@@ -44,7 +44,7 @@ struct EditIssuingRulesView: View {
                             
                             Text("books")
                                 .font(.subheadline)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                         }
                         .padding()
                         .background(Color(.tertiarySystemBackground))
@@ -80,7 +80,7 @@ struct EditIssuingRulesView: View {
                             
                             Text("days")
                                 .font(.subheadline)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                         }
                         .padding()
                         .background(Color(.tertiarySystemBackground))
@@ -91,35 +91,7 @@ struct EditIssuingRulesView: View {
                     .cornerRadius(16)
                     .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
                     
-                    // Reissue Card
-//                    VStack(alignment: .leading, spacing: 16) {
-//                        HStack {
-//                            Text("Reissue")
-//                                .font(.headline)
-//                                .foregroundColor(.primary)
-//                            
-//                            Spacer()
-//                        }
-//                        
-//                        HStack {
-//                            Text("Reissue period:")
-//                                .font(.subheadline)
-//                                .foregroundColor(.secondary)
-//                            
-//                            Spacer()
-//                            
-//                            Stepper("\(reissuePeriod) days", value: $reissuePeriod, in: 1...14)
-//                                .font(.subheadline)
-//                                .foregroundColor(.blue)
-//                        }
-//                        .padding()
-//                        .background(Color(.tertiarySystemBackground))
-//                        .cornerRadius(8)
-//                    }
-//                    .padding()
-//                    .background(Color(.systemBackground))
-//                    .cornerRadius(16)
-//                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+                   
                 }
                 .padding()
             }

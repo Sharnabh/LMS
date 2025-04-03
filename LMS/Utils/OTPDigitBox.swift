@@ -29,7 +29,7 @@ struct OTPDigitBox: View {
         }
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(index < otp.count ? Color.blue : Color.clear, lineWidth: 1.5)
+                .stroke(index < otp.count ? Color.accentColor : Color.clear, lineWidth: 1.5)
         )
         .animation(.spring(response: 0.2), value: otp.count)
         .onTapGesture {

@@ -89,7 +89,7 @@ struct BookDetailedView: View {
                         // Book stats
                         VStack(spacing: 12) {
                             HStack {
-                                StatBox(title: "Total Copies", value: "\(book.totalCopies)", icon: "books.vertical.fill", color: .blue)
+                                StatBox(title: "Total Copies", value: "\(book.totalCopies)", icon: "books.vertical.fill", color: .accentColor)
                                 StatBox(title: "Available", value: "\(book.availableCopies)", icon: "book.closed.fill", color: .green)
                             }
                             

@@ -111,7 +111,7 @@ struct MemberDetailView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(Color.accentColor)
                     .cornerRadius(10)
                     .padding(.top, 20)
                     .padding(.horizontal)

@@ -28,7 +28,7 @@ struct ExpandableText: View {
                 Text(isExpanded ? "Read Less" : "Read More")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
             }
             .padding(.top, 4)
         }

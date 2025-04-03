@@ -67,7 +67,7 @@ struct ShelfLocationsView: View {
                             }) {
                                 Label("Add Shelf Location", systemImage: "plus")
                                     .padding()
-                                    .background(Color.blue)
+                                    .background(Color.accentColor)
                                     .foregroundColor(.white)
                                     .cornerRadius(10)
                             }

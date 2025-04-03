@@ -209,6 +209,20 @@ struct AdminLoginView: View {
                                             .padding(.trailing, 12)
                                     }
                                 }
+                                
+                                if !showOTPVerification {
+                                    HStack {
+                                        Spacer() // Push the button to the right
+                                        Button(action: {
+                                            showForgotPassword = true
+                                        }) {
+                                            Text("Forgot Password?")
+                                                .font(.subheadline)
+                                                .foregroundColor(.accent)
+                                        }
+                                    }
+                                    .padding(.top, 4)
+                                }
                             }
                             .opacity(animateContent ? 1 : 0)
                             .offset(y: animateContent ? 0 : 20)
@@ -240,20 +254,6 @@ struct AdminLoginView: View {
                         }
                         .disabled(isLoading)
                         .padding(.horizontal, 24)
-                        .opacity(animateContent ? 1 : 0)
-                        .offset(y: animateContent ? 0 : 20)
-                    }
-                    
-                    // Forgot Password Link
-                    if !showOTPVerification {
-                        Button(action: {
-                            showForgotPassword = true
-                        }) {
-                            Text("Forgot Password?")
-                                .font(.subheadline)
-                                .foregroundColor(.accent)
-                        }
-                        .padding(.top, 8)
                         .opacity(animateContent ? 1 : 0)
                         .offset(y: animateContent ? 0 : 20)
                     }

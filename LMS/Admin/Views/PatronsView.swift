@@ -709,19 +709,6 @@ struct MembersList: View {
                                 }
                                 
                                 Spacer()
-                                
-                                // Add fine and default count information
-                                if member.id != nil {
-                                    VStack(alignment: .trailing) {
-                                        let fine = member.fine ?? 0.0
-                                        Text("₹\(String(format: "%.2f", fine))")
-                                            .font(.headline)
-                                            .foregroundColor(fine > 0 ? .red : .green)
-                                        Text(fine > 0 ? "Fine Due" : "No Fine")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
                             }
                             .padding(.vertical, 4)
                         }

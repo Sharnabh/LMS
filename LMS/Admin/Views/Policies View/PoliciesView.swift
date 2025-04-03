@@ -15,7 +15,7 @@ struct PoliciesView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: 11) {
                     // Divider line between Navigation Title and Content
                     Rectangle()
                         .frame(height: 0.5)
@@ -29,7 +29,7 @@ struct PoliciesView: View {
                             .fontWeight(.bold)
                             .padding(.horizontal)
                         
-                        VStack(spacing: 16) {
+                        VStack(spacing: 11) {
                             NavigationLink(destination: BooksManagementPolicyView()) {
 //                                PolicyCard(
 //                                    title: "Books Management",
@@ -70,13 +70,13 @@ struct PoliciesView: View {
                     }
                     
                     // Member Policies Section
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 11) {
                         Text("Member Policies")
                             .font(.title2)
                             .fontWeight(.bold)
                             .padding(.horizontal)
                         
-                        VStack(spacing: 16) {
+                        VStack(spacing: 11) {
                             NavigationLink(destination: MemberBorrowingRulesView(
                                 borrowingLimit: viewModel.borrowingLimit,
                                 returnPeriod: viewModel.returnPeriod,
@@ -175,6 +175,7 @@ struct PolicyCard: View {
     
     var body: some View {
         HStack(spacing: 16) {
+            // Icon
             Image(systemName: icon)
                 .font(.system(size: 32))
                 .foregroundColor(color)
@@ -182,21 +183,22 @@ struct PolicyCard: View {
                 .background(color.opacity(0.15))
                 .cornerRadius(16)
             
-            VStack(alignment: .leading, spacing: 6) {
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
                     .foregroundColor(.primary)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Text(description)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
             
+            // Chevron
             Image(systemName: "chevron.right")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.secondary)

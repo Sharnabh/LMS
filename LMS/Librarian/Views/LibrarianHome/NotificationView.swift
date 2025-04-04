@@ -12,6 +12,9 @@ struct NotificationView: View {
     @State private var selectedSegment = 0
     @ObservedObject private var tracker = AnnouncementTracker.shared
     
+    // Timer for refreshing announcements
+    @State private var announcementsTimer: Timer? = nil
+    
     var body: some View {
         VStack(spacing: 0) {
             // Search bar
@@ -40,6 +43,31 @@ struct NotificationView: View {
             }
         }
         .navigationTitle("Announcement")
+        .onAppear {
+            // Start the timer for announcements
+            startAnnouncementsTimer()
+        }
+        .onDisappear {
+            // Stop the timer when the view disappears
+            stopAnnouncementsTimer()
+        }
+    }
+    
+    private func startAnnouncementsTimer() {
+        // Cancel any existing timer
+        stopAnnouncementsTimer()
+        
+        // Create a new timer that fires every 10 seconds instead of 2 seconds
+        announcementsTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { _ in
+            Task {
+                await announcementStore.loadAnnouncements()
+            }
+        }
+    }
+    
+    private func stopAnnouncementsTimer() {
+        announcementsTimer?.invalidate()
+        announcementsTimer = nil
     }
     
     var filteredAnnouncements: [AnnouncementModel] {

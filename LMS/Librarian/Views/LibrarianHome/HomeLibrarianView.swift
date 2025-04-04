@@ -1,4 +1,6 @@
 import SwiftUI
+import Supabase
+import LMS
 
 struct HomeLibrarianView: View {
     @EnvironmentObject var bookStore: BookStore
@@ -16,8 +18,11 @@ struct HomeLibrarianView: View {
     @State private var isLoadingMembers: Bool = false // Track loading state for members
     @State private var totalCollectedFines: Double = 0 // Track total collected fines
     @State private var isLoadingFines: Bool = false // Track loading state for fines
+    @State private var issuedBooksCount: Int = 0 // Track issued books count
+    @State private var isLoadingIssuedBooks: Bool = false // Track loading state for issued books
     @State private var alertMessage: String = ""
     @State private var showAlert: Bool = false
+    @StateObject private var supabaseController = SupabaseDataController()
     
     // For Needs Shelf Location section
     @State private var needsLocationCurrentBookIndex = 0 // Track which book is currently displayed in the needs location section
@@ -105,7 +110,7 @@ struct HomeLibrarianView: View {
                             // Issued Books Card
                             HomeCard(
                                 title: "Issued Books",
-                                value: "\(booksWithEmptyShelfLocation.count)",
+                                value: isLoadingIssuedBooks ? "Loading..." : "\(issuedBooksCount)",
                                 icon: "book.closed.fill",
                                 color: .orange
                             )
@@ -314,6 +319,11 @@ struct HomeLibrarianView: View {
             Task {
                 await loadMembersCount()
                 await loadCollectedFines()
+            }
+            
+            // Fetch issued books count
+            Task {
+                await fetchIssuedBooksCount()
             }
         }
         .onReceive(bookStore.objectWillChange) { _ in
@@ -991,6 +1001,24 @@ struct HomeLibrarianView: View {
             print("Error loading collected fines: \(error)")
         }
         isLoadingFines = false
+    }
+
+    // Function to fetch issued books count
+    private func fetchIssuedBooksCount() async {
+        isLoadingIssuedBooks = true
+        do {
+            let query = supabaseController.client.from("BookIssue")
+                .select("*", head: true, count: .exact)
+                .eq("status", value: "Issued")
+            
+            let response = try await query.execute()
+            issuedBooksCount = response.count ?? 0
+        } catch {
+            print("Error fetching issued books count: \(error)")
+            alertMessage = "Failed to fetch issued books count: \(error.localizedDescription)"
+            showAlert = true
+        }
+        isLoadingIssuedBooks = false
     }
 
     // Tinder-style card stack for books that need a shelf location
